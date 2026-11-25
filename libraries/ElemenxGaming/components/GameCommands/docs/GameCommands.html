@@ -1,0 +1,10 @@
+<p class="elemenx-caption">GameCommands reads the commands of the ship of the Scene it stands in: here, as if the ship were near a planet with two sites to land at (Show takes the commands as ShipCommands gives them).</p>
+<GameCommands #commands />
+<Button Label="Near a planet" (click)="Near" />
+<script>
+({
+	Near: function () {
+		this.$Ref('commands', true).Show([{ID: 'land', Markers: [{ID: 'hills', Name: 'Green Hills', Day: true}, {ID: 'base', Name: 'Sea Base', Day: false}]}, {ID: 'orbit', Hint: 'orbit'}]);
+	}
+})
+</script>

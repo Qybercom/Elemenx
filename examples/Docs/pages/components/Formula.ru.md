@@ -31,8 +31,8 @@
 - [runs a Reduce over a list of its parameters once for each item, the same of its Code, its js and its wasm](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints-ir.test.js#L415) — `tests/regression/blueprints-ir.test.js`
 - [makes a generator of formulas JavaScript, the same values as its interpreter, lists part by part](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L831) — `tests/regression/blueprints.test.js`
 - [reads a minus before a name, a bracket or a call, and the parameters a run is not given as those of the graph](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L862) — `tests/regression/blueprints.test.js`
+- [runs a tree of behaviour: a utility of scores choosing what to do, kept a while, the tasks of the application, the one left told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L1090) — `tests/regression/blueprints.test.js`
 - [makes its ground of the graphs of its Terrain (Graphs, as a world gives them), and of the library's again with none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L180) — `tests/regression/terrain-sketch.test.js`
 - [computes what a formula reads once in a branch only when that branch is taken](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Geometry/Geometry.test.js#L214) — `libraries/ElemenxCommon/services/Geometry/Geometry.test.js`
-- [opens the graph of a model of the library, shows each change of it on the model, gives it to the library and takes it back](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/ModelEditor/ModelEditor.test.js#L369) — `libraries/ElemenxGraphics/components/ModelEditor/ModelEditor.test.js`
 
-+7 ещё в тех же файлах
++8 ещё в тех же файлах

@@ -44,19 +44,9 @@ Elemenx.Trait('SceneShipSystems', {
 		/* The code of a graph of the systems (reactor, power, shield): of the object, of the scene, else of the library. */
 		function codeOf (object, name) {
 			var own = traitOf(object, 'Power') || {};
-			var graph = own[name.charAt(0).toUpperCase() + name.slice(1) + 'Graph'] || self.GraphOf(name.charAt(0).toUpperCase() + name.slice(1) + 'Graph', 'vehicles/' + name) || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/' + name);
-			var made = scene.SystemsCodes = scene.SystemsCodes || [];
-			var found = made.filter(function (one) {
-				return one.Graph === graph;
-			})[0];
+			var prop = name.charAt(0).toUpperCase() + name.slice(1) + 'Graph';
 
-			if (!found) {
-				found = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
-
-				made.push(found);
-			}
-
-			return found.Code;
+			return engine.GraphCode(prop, 'vehicles/' + name, own[prop]);
 		}
 
 		/* A kilometre in units of the scene: of its real sizes, else a thousand (on a ground a unit is a metre). */

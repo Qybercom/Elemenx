@@ -1,0 +1,10 @@
+<p class="elemenx-caption">GameArms reads the arms of the ship of the Scene it stands in: here, as if the ship had locked a raider while two missiles came at it (Show takes them as ArmsOf gives them).</p>
+<GameArms #arms />
+<Button Label="In a fight" (click)="Fight" />
+<script>
+({
+	Fight: function () {
+		this.$Ref('arms', true).Show({Missiles: 'ship-missile', Left: 6, Magazine: 8, Reloading: false, Locks: [{ID: 'raider', Progress: 1, Locked: true}], Locked: ['raider'], Flares: {Left: 20, Count: 24}, Defence: {Weapon: 'ship-pd', On: true}, Incoming: 2, Soonest: 3.4, LockedBy: ['raider'], Flying: 2});
+	}
+})
+</script>

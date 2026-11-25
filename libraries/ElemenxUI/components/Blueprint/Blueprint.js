@@ -208,6 +208,8 @@ Elemenx.Component('Blueprint', {
 		if (own.Sizes)
 			own.Sizes.disconnect();
 
+		(own.Rewires || []).forEach(window.clearTimeout);
+
 		if (own.Waiting)
 			own.Waiting.disconnect();
 
@@ -1026,6 +1028,19 @@ Elemenx.Component('Blueprint', {
 
 		this.Marks();
 		this.Wire();
+
+		/*
+		 * And again a little later, by the clock: a page in the background draws no frames, and the sizes of its blocks (their
+		 * style come late) were never told. Regression (under load): a link ended 190 pixels from its pin for ten seconds.
+		 */
+		(own.Rewires || []).forEach(window.clearTimeout);
+
+		own.Rewires = [120, 400, 1200].map(function (delay) {
+			return window.setTimeout(function () {
+				if (own.Canvas && own.Canvas.isConnected)
+					self.Wire();
+			}, delay);
+		});
 	},
 
 	BlockElement: function (block) {

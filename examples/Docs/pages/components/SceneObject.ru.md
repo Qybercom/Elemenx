@@ -50,13 +50,13 @@
 - [asks for all the programs it may draw at once, and a frame of its loop never waits for one the card is still making](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L388) — `tests/regression/library-scene.test.js`
 - [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L487) — `tests/regression/library-scene.test.js`
 - [drives the clouds of a body by a wind of the clock, never by its days made fast](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L531) — `tests/regression/library-scene.test.js`
-- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L555) — `tests/regression/library-scene.test.js`
-- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L617) — `tests/regression/library-scene.test.js`
-- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L723) — `tests/regression/library-scene.test.js`
-- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L740) — `tests/regression/library-scene.test.js`
-- [makes crafts as long as they are and ships as fast as they go in real sizes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L799) — `tests/regression/library-scene.test.js`
-- [draws the Sun from a ship near a planet in real sizes, bright](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L849) — `tests/regression/library-scene.test.js`
-- [writes what is round an object into the Ether each frame, of the envelope of the body it is by](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L921) — `tests/regression/library-scene.test.js`
-- [takes the air round an eye and the lands of a ground of the envelope of a body, the Earth as it was](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L977) — `tests/regression/library-scene.test.js`
+- [hides the names of the objects of a system and the marks of aiming on the map of the galaxy, shows them back in the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L556) — `tests/regression/library-scene.test.js`
+- [flies out of a system to the map as far as the galaxy is seen whole, its star in the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L594) — `tests/regression/library-scene.test.js`
+- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L637) — `tests/regression/library-scene.test.js`
+- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L699) — `tests/regression/library-scene.test.js`
+- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L805) — `tests/regression/library-scene.test.js`
+- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L822) — `tests/regression/library-scene.test.js`
+- [makes crafts as long as they are and ships as fast as they go in real sizes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L881) — `tests/regression/library-scene.test.js`
+- [draws the Sun from a ship near a planet in real sizes, bright](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L931) — `tests/regression/library-scene.test.js`
 
-+181 ещё в тех же файлах
++201 ещё в тех же файлах

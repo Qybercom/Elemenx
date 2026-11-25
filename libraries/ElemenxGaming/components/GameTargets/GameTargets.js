@@ -3,9 +3,12 @@
  * its slot hud (the trait SceneBehaviour): a frame on each and how far it is (the target its name too: the scene names the
  * rest), a foe red, a friend green, a place
  * a point; its target marked, and at a turret the lead (where to aim for a shot of its weapon to meet it as it moves: of
- * the Speed of the weapon; a ray needs none). Show auto shows by the mode of the seat (radar: all, turret: the foes and
+ * the Speed of the weapon; with a mass driver, SceneMissiles Driver, on its target in any mode; a ray needs none).
+ * Show auto shows by the mode of the seat (radar: all, turret: the foes and
  * the target, helm: the places and the target, strategic: the foes, the places and the target, else none), all or target only those. A press on a mark makes it the
- * target of the vehicle (SetTarget). For is the vehicle (empty: the one the hero sits in); Label names it for screen readers.
+ * target of the vehicle (SetTarget). Missiles (SceneMissiles): one at the vehicle always (red, how soon it meets it), the
+ * others where foes are shown; the locks of the vehicle as brackets closing on their targets, red when locked. For is
+ * the vehicle (empty: the one the hero sits in); Label names it for screen readers.
  */
 Elemenx.Component('GameTargets', {
 	$TemplateURL: 'GameTargets.html',
@@ -26,6 +29,7 @@ Elemenx.Component('GameTargets', {
 	Show: 'auto',
 	Label: '',
 	Marks: [],
+	Locks: [],
 	Lead: null,
 	Vehicle: '',
 
@@ -46,6 +50,13 @@ Elemenx.Component('GameTargets', {
 	/* Whether a contact is marked, by Show and the mode of the seat. */
 	Shown: function (one, mode) {
 		var show = this.Show || 'auto';
+
+		/* A missile at the vehicle always; others as the foes; flares never. */
+		if (one.Kind === 'missile')
+			return !!one.Incoming || show === 'all' || mode === 'radar' || mode === 'turret';
+
+		if (one.Kind === 'flare') return false;
+
 		if (show === 'all' || one.Target) return true;
 
 		if (show === 'target') return false;
@@ -66,10 +77,20 @@ Elemenx.Component('GameTargets', {
 		var scene = this.ParentScene();
 		var engine = scene.Engine();
 		var marks = [];
+		var locks = [];
 		var lead = null;
+		var soon = {};
+		var arms = this.Vehicle && typeof scene.ArmsOf === 'function' ? scene.ArmsOf(this.Vehicle) : null;
+		var at = {};
+
+		(this.Vehicle && typeof scene.Incoming === 'function' ? scene.Incoming(this.Vehicle) : []).forEach(function (one) {
+			soon[one.ID] = one.Seconds;
+		});
 
 		(contacts || []).forEach(function (one) {
 			var spot;
+
+			at[one.ID] = one.At;
 
 			if (!self.Shown(one, mode)) return;
 
@@ -77,13 +98,28 @@ Elemenx.Component('GameTargets', {
 
 			if (!spot.Visible || spot.X < 0 || spot.Y < 0 || spot.X > scene.Scene().Width || spot.Y > scene.Scene().Height) return;
 
+			if (one.Kind === 'missile') {
+				marks.push({ID: one.ID, X: spot.X, Y: spot.Y, Name: one.Name, Far: one.Incoming && isFinite(soon[one.ID]) ? soon[one.ID].toFixed(1) + ' s' : '', Kind: one.Incoming ? 'incoming' : 'missile', Target: false});
+
+				return;
+			}
+
 			marks.push({ID: one.ID, X: spot.X, Y: spot.Y, Name: one.Name, Far: Math.round(one.Distance) + ' m', Kind: one.Hostile ? 'enemy' : one.Team ? 'ally' : 'point', Target: !!one.Target});
 
-			if (one.Target && mode === 'turret')
-				lead = self.LeadOf(one, engine);
+			if (one.Target && mode === 'turret') lead = self.LeadOf(one, engine);
+			else if (one.Target && arms && arms.Driver) lead = self.DriverLead(one, engine, arms.Driver.Name);
+		});
+
+		/* The locks of its missiles: a bracket on each, closing as it locks. */
+		(arms ? arms.Locks : []).forEach(function (one) {
+			var spot = at[one.ID] ? engine.Project(at[one.ID]) : null;
+			if (!spot || !spot.Visible) return;
+
+			locks.push({ID: one.ID, X: spot.X, Y: spot.Y, Progress: one.Progress, Locked: one.Locked});
 		});
 
 		this.Marks = marks;
+		this.Locks = locks;
 		this.Lead = lead;
 	},
 
@@ -103,8 +139,27 @@ Elemenx.Component('GameTargets', {
 		return spot.Visible ? {X: spot.X, Y: spot.Y} : null;
 	},
 
+	/* Where a slug of the mass driver of the vehicle meets its target as it goes (the lead of SceneAgents), on the view. */
+	DriverLead: function (one, engine, name) {
+		var inner = this.ParentScene().Scene();
+		var ship = inner.Objects[this.Vehicle];
+		var target = inner.Objects[one.ID];
+		var type = inner.WeaponTypes ? inner.WeaponTypes[name] : null;
+		var spot;
+
+		if (!ship || !target || !type || !engine.AgentLead) return null;
+
+		spot = engine.Project(engine.AgentLead(ship, target, type).At);
+
+		return spot.Visible ? {X: spot.X, Y: spot.Y} : null;
+	},
+
 	MarkStyle: function (mark) {
 		return 'left: ' + mark.X.toFixed(1) + 'px; top: ' + mark.Y.toFixed(1) + 'px';
+	},
+
+	LockStyle: function (lock) {
+		return this.MarkStyle(lock) + '; --elemenx-game-lock-close: ' + lock.Progress.toFixed(3);
 	},
 
 	/* A press on a mark: it is the target of the vehicle. */

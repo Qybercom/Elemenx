@@ -21,7 +21,7 @@
 	</aside>
 	<Button class="elemenx-scene-takeoff" Size="small" Icon="arrow-up" *if="LandedOn" [label]="$T('graphics.scene.takeOff')" (click)="TakeOff" />
 	<div class="elemenx-scene-veil" *if="Veiled" [style.opacity]="Veiled" aria-hidden="true"></div>
-	<div class="elemenx-scene-landing elemenx-popup-anchor" *if="ShipCan || ShipOrbit">
+	<div class="elemenx-scene-landing elemenx-popup-anchor" *if="(ShipCan || ShipOrbit) && ShipButtons !== false && ShipButtons !== 'false'">
 		<Button Size="small" Icon="arrow-down" *if="ShipCan === 'land'" [label]="$T('graphics.scene.landing')" [Expanded]="LandingOpen" (click)="LandingOpened" />
 		<Button Size="small" Icon="arrow-up" *if="ShipCan === 'takeoff'" [label]="$T('graphics.scene.takeOff')" (click)="ShipTakeOff" />
 		<Button Size="small" Icon="refresh" *if="ShipOrbit" [label]="$T('graphics.scene.toOrbit')" (click)="ShipToOrbit" />

@@ -158,6 +158,29 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 	});
 
 	/*
+	 * A program is kept by the text it is made of, what Replaces put in it too. Regression: the light of the sky given anew (a
+	 * graph of a Scene, put in by Replaces) gave back the program made of the old one, for the text before it was the same.
+	 */
+	it('makes a program again when what Replaces puts in its text is another, and keeps it while it is the same', function () {
+		var canvas = document.createElement('canvas');
+		var own = Elemenx.Service('Renderer').Create(canvas, {Antialias: false});
+		var vertex = ['#version 300 es', 'in vec3 aPosition;', 'void main() { gl_Position = vec4(aPosition, 1.0); }'].join('\n');
+		var fragment = ['#version 300 es', 'precision highp float;', 'out vec4 outColor;', '/* tint */', 'void main() { outColor = vec4(tint(), 1.0); }'].join('\n');
+		var first;
+
+		own.Replaces['/* tint */'] = 'vec3 tint() { return vec3(1.0, 0.0, 0.0); }';
+		first = own.Program(vertex, fragment);
+
+		expect(own.Program(vertex, fragment)).toBe(first);
+
+		own.Replaces['/* tint */'] = 'vec3 tint() { return vec3(0.0, 1.0, 0.0); }';
+
+		expect(own.Program(vertex, fragment)).not.toBe(first);
+
+		own.Destroy();
+	});
+
+	/*
 	 * A pass of its own nearer than all drawn (DepthRange: the inside of a ship over the surface of a body, near and far each of
 	 * a frame of its own): what it draws lays its depth within its part of the buffer, before what is deeper.
 	 */

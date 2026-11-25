@@ -8,6 +8,11 @@ Elemenx.Component('CombatDemo', {
 	$TemplateURL: 'CombatDemo.html',
 	$StyleURL: 'CombatDemo.css',
 	$Traits: ['SceneDemo'],
+	$OnCreate: function () {
+		this.CombatWeapons = this.$Service('DemoData').Weapons;
+	},
+	/* Combat and magic: the weapons of the hero (DemoData.Weapons), what it aims at, the crosshair, what was hit. */
+	CombatWeapons: [],
 	CombatDied: function (event) {
 		if (event.ID === 'plate')
 			this.CombatNote = 'The steel plate holds no more (Death: keep): it stays where it stands.';
@@ -97,14 +102,7 @@ Elemenx.Component('CombatDemo', {
 	/* The targets again: what broke or fell comes back, the marks stay where they were. */
 	CombatReset: function () {
 		var scene = this.CombatScene ? this.CombatScene() : null;
-		var targets = [
-			{ID: 'crate', Kind: 'thing', Model: 'demo-crate', Size: 1.2, X: -6, Y: 14, Material: 'wood', Traits: {Fracture: {Material: 'wood', Pieces: 7}}},
-			{ID: 'plate', Kind: 'thing', Model: 'demo-plate', Size: 1.6, X: -2, Y: 14, Material: 'metal', Traits: {Health: {Max: 400, Death: 'keep'}, Fracture: {Material: 'metal', Pattern: 'parts'}}},
-			{ID: 'pane', Kind: 'thing', Model: 'demo-pane', Size: 1.7, X: 2, Y: 14, Material: 'glass', Traits: {Fracture: {Material: 'glass'}}},
-			{ID: 'wall', Kind: 'thing', Model: 'demo-wall', Size: 2.5, X: 7, Y: 16, Material: 'stone', Traits: {Fracture: {Material: 'stone', Pieces: 14}}},
-			{ID: 'robot-1', Kind: 'unit', Model: 'robot', X: -3, Y: 24, Team: 'red', Damage: 0, Sight: 1},
-			{ID: 'robot-2', Kind: 'unit', Model: 'robot', X: 3, Y: 26, Team: 'red', Damage: 0, Sight: 1}
-		];
+		var targets = this.$Service('DemoData').Range([0, 0], [0, 1], '');
 
 		if (!scene) return;
 
@@ -158,33 +156,9 @@ Elemenx.Component('CombatDemo', {
 			scene.Damage('wall', 90, {Point: [wall.World[0] + at[0], wall.World[1] + at[1], wall.World[2] - 0.52], Normal: [0, 0, -1]});
 		});
 	},
-	/* The models of the range: a crate of planks, a steel plate on posts, a pane of glass in a frame, a wall of stone. */
+	/* The models of the range (DemoData.RangeModels). */
 	CombatModels: function () {
-		var models = this.$Service('SceneModels');
-		if (models.Has('demo-crate')) return;
-
-		models.Define('demo-crate', {Group: 'props', Type: 'thing', Size: 1, Build: function (tools) {
-			var wood = [0.62, 0.45, 0.26];
-			var dark = [0.42, 0.29, 0.16];
-
-			return [tools.Piece('body', [tools.Box(1, 1, 1, [0, 0.5, 0], wood), tools.Box(1.02, 0.12, 1.02, [0, 0.08, 0], dark), tools.Box(1.02, 0.12, 1.02, [0, 0.92, 0], dark), tools.Box(0.12, 1.02, 1.02, [-0.45, 0.5, 0], dark), tools.Box(0.12, 1.02, 1.02, [0.45, 0.5, 0], dark)])];
-		}});
-
-		models.Define('demo-plate', {Group: 'props', Type: 'thing', Size: 1, Build: function (tools) {
-			var steel = [0.58, 0.6, 0.64];
-
-			return [tools.Piece('body', [tools.Box(1.2, 0.9, 0.06, [0, 0.95, 0], steel), tools.Box(0.08, 1.4, 0.08, [-0.5, 0.7, 0.06], [0.3, 0.3, 0.32]), tools.Box(0.08, 1.4, 0.08, [0.5, 0.7, 0.06], [0.3, 0.3, 0.32])])];
-		}});
-
-		models.Define('demo-pane', {Group: 'props', Type: 'thing', Size: 1, Build: function (tools) {
-			var frame = [0.25, 0.25, 0.28];
-
-			return [tools.Piece('body', [tools.Box(1, 1.3, 0.02, [0, 0.95, 0], [0.7, 0.85, 0.95]), tools.Box(1.1, 0.06, 0.06, [0, 0.3, 0], frame), tools.Box(1.1, 0.06, 0.06, [0, 1.6, 0], frame), tools.Box(0.06, 1.36, 0.06, [-0.55, 0.95, 0], frame), tools.Box(0.06, 1.36, 0.06, [0.55, 0.95, 0], frame), tools.Box(0.06, 0.3, 0.06, [0, 0.15, 0], frame)])];
-		}});
-
-		models.Define('demo-wall', {Group: 'buildings', Type: 'building', Size: 1, Build: function (tools) {
-			return [tools.Piece('body', [tools.Box(4, 2.5, 0.4, [0, 1.25, 0], [0.62, 0.6, 0.56]), tools.Box(4.1, 0.2, 0.5, [0, 2.5, 0], [0.5, 0.48, 0.45])])];
-		}});
+		this.$Service('DemoData').RangeModels(this.$Service('SceneModels'));
 	},
 	CombatBreak: function () {
 		var scene = this.CombatScene ? this.CombatScene() : null;
@@ -363,19 +337,6 @@ Elemenx.Component('CombatDemo', {
 		if (scene && scene.Get('hero'))
 			scene.Scene().Objects.hero.Values.Weapon = this.CombatWeapon;
 	},
-	/* Combat and magic: the weapons of the hero, what it aims at, the crosshair, what was hit. */
-	CombatWeapons: [
-		{Value: 'rifle', Label: 'Rifle', Icon: 'games:crosshair', Key: '1'},
-		{Value: 'pistol', Label: 'Pistol', Icon: 'games:joystick', Key: '2'},
-		{Value: 'shotgun', Label: 'Shotgun', Icon: 'games:star-power', Key: '3'},
-		{Value: 'sniper', Label: 'Sniper rifle', Icon: 'science:telescope', Key: '4'},
-		{Value: 'laser', Label: 'Laser', Icon: 'science:prism', Key: '5'},
-		{Value: 'railgun', Label: 'Railgun', Icon: 'science:magnet', Key: '6'},
-		{Value: 'plasma', Label: 'Plasma', Icon: 'science:atom', Key: '7'},
-		{Value: 'rocket', Label: 'Rocket (locks)', Icon: 'science:rocket', Key: '8'},
-		{Value: 'mortar', Label: 'Mortar', Icon: 'games:bomb', Key: '9'},
-		{Value: 'bow', Label: 'Bow', Icon: 'games:bow', Key: '0'}
-	],
 	/* The magic of the slots over the scene: each one a button of the rows above. */
 	CombatSpells: [
 		{Value: 'CombatBeam', Label: 'Beam the hero', Icon: 'games:wand', Color: '#ffd27a'},

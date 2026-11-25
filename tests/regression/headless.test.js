@@ -157,7 +157,7 @@ describe('Elemenx without a DOM', function () {
 		expect(Elemenx.Service('Barcodes').SVG('ean13', '4006381333931')).toMatch(/^<svg /);
 
 		/* Blueprints alone: the graphs of code; one of shaders needs BlueprintShaders, of ElemenxUI. */
-		expect(Elemenx.Service('Blueprints').Graphs()).toEqual(['generator', 'flow']);
+		expect(Elemenx.Service('Blueprints').Graphs()).toEqual(['generator', 'flow', 'behaviour']);
 		expect(function () {
 			Elemenx.Service('Blueprints').Compile({version: 1, type: 'pass', blocks: [], links: []});
 		}).toThrow(/unknown type of graph pass/);

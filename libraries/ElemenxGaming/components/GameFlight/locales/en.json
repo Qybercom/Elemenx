@@ -5,6 +5,14 @@
 			"speed": "Speed",
 			"height": "Height",
 			"travel": "Travel",
+			"autopilot": "Autopilot",
+			"masslock": "Mass lock",
+			"arrived": "there",
+			"autopilots": {
+				"hold": "holds its course",
+				"approach": "approach",
+				"follow": "follows"
+			},
 			"throttle": "Throttle",
 			"shield": "Shield {id}",
 			"tripped": "Shut down by heat",

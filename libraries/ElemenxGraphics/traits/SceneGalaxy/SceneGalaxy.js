@@ -29,7 +29,7 @@
  *   Class, Color...}). GalaxyPicked(): the ID of the star picked.
  * - EnterSystem(id, callback, options): the view flies into the star (options {Now: at once, as a ship jumped there}) and the scene shows its system (Setting space: its System of
  *   GalaxyData.System, its Cosmos of where it is in the galaxy); event enter {ID, Star, Key}. LeaveSystem(callback): out to
- *   the galaxy again, the view drawing back from the star; event leave {ID}. GalaxyEntered(): the ID of the star whose
+ *   the galaxy again, the view drawing back from the star till the galaxy is seen whole round it; event leave {ID}. GalaxyEntered(): the ID of the star whose
  *   system is shown ('' in none).
  */
 Elemenx.Trait('SceneGalaxy', {
@@ -47,6 +47,15 @@ Elemenx.Trait('SceneGalaxy', {
 		var state = {Key: null, Data: null, Loading: '', Glow: null, GlowCount: 0, Near: null, NearKey: '', Stars: [], Marks: null, Picked: '', Entered: '', Target: [0, 0, 0], Yaw: 0.6, Pitch: 0.75, Distance: 120000, Flight: null, Press: null, Touch: null, Programs: null};
 
 		engine.Galaxy = state;
+
+		/* Its graph of arms given anew (Scene: engine.Regraph): its galaxy made again of it, its programs too. */
+		engine.Regraphs = engine.Regraphs || [];
+
+		engine.Regraphs.push(function () {
+			state.Programs = null;
+			state.Key = null;
+			state.NearKey = '';
+		});
 
 		function number (value, fallback) {
 			return value === null || value === undefined || value === '' || isNaN(Number(value)) ? fallback : Number(value);
@@ -2539,11 +2548,15 @@ Elemenx.Trait('SceneGalaxy', {
 		this.Setting = 'galaxy';
 		state.Entered = '';
 
+		/*
+		 * Out from the star as far as the galaxy is seen whole round it (its radius and a fifth), the star in the middle.
+		 * Regression: the view stopped 40 light years out, the stars near round it all that was seen of the galaxy.
+		 */
 		if (star) {
 			state.Target = state.Now(star.Place);
 			state.Distance = 0.8;
 
-			state.Fly(state.Target, 40, 1.6);
+			state.Fly(state.Target, state.Data.Manifest.Radius * 1.2, 2.4);
 		}
 
 		this.$Emit('leave', {ID: id});

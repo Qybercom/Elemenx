@@ -802,4 +802,157 @@ describe('Contract: the inside of a ship, laid out by its class and walked in wh
 		expect(inner.Afoot.me).toBeUndefined();
 		expect(inner.Hero).toBe('flyer');
 	});
+
+	/*
+	 * Contract: EVA. G by the airlock of a ship in space (the hatch in its floor) lets one out after the airlock cycles (event
+	 * eva: cycle, out); out there one floats in a suit by the ship (Context: eva): its jets push one, the suit stops one when
+	 * none is asked for, the hull stops one, the line pulls one back past its length (blueprints/aboard/suit); G by the
+	 * airlock lets one in again onto its floor.
+	 */
+	it('goes out of a ship in space through its airlock, floats in a suit by it, and comes in again', async function () {
+		var ready = null;
+		var told = [];
+		var component = Elemenx.Component(unique('EvaHost'), {
+			$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Labels="false" Scale="real" (ready)="Ready" (eva)="Went"></Scene></div>',
+			Ready: function (space) {
+				ready = space;
+			},
+			Went: function (event) {
+				told.push(event && event.detail ? event.detail : event);
+			}
+		})();
+		var now = performance.now() + 1000;
+		var space;
+		var inner;
+		var engine;
+		var plan;
+		var hatch;
+		var state;
+		var at;
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		await waitFor(function () {
+			return ready;
+		}, 4000);
+
+		space = ready;
+		inner = space.Scene();
+		engine = space.Engine();
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 30);
+			}
+		}
+
+		function key (code) {
+			space.$Element().dispatchEvent(new KeyboardEvent('keydown', {code: code, key: code, bubbles: true}));
+		}
+
+		space.Add('unit', {ID: 'me', Size: 1.8, X: 0, Y: 0});
+		space.Add('ship', {ID: 'flyer', Size: 0.01, Vehicle: {Kind: 'ship', Length: 89, Speed: 3000}});
+
+		frames(2);
+
+		space.Control('me');
+
+		expect(space.Board('me', 'flyer')).toBe(true);
+
+		frames(4);
+
+		inner.Objects.me.Aboard = null;
+
+		key('KeyG');
+
+		frames(2);
+
+		state = inner.Afoot.me;
+		plan = space.Interior('flyer').Plan;
+		hatch = plan.Ramp.Hatch;
+
+		/* Far from the airlock G does nothing of it. */
+		expect(engine.AirlockNear('me')).toBe(null);
+
+		/* On the hatch: G, the airlock cycles (hidden in it), then out under the belly. */
+		state.At = [(hatch.Low[0] + hatch.High[0]) / 2, hatch.High[1], (hatch.Low[2] + hatch.High[2]) / 2];
+
+		expect(engine.AirlockNear('me')).toEqual({Vehicle: 'flyer', Out: true});
+
+		key('KeyG');
+
+		expect(told[0]).toMatchObject({Actor: 'me', Vehicle: 'flyer', Step: 'cycle', Out: false});
+		expect(inner.Objects.me.Hidden).toBe(true);
+
+		frames(60);
+
+		expect(told.map(function (one) {
+			return one.Step;
+		})).toEqual(['cycle', 'out']);
+		expect(inner.Objects.me.Hidden).toBe(false);
+		expect(space.Context('me')).toMatchObject({Kind: 'eva', Vehicle: 'flyer'});
+		expect(state.At[1]).toBeLessThan(hatch.Low[1] - 1.8);
+		/* The hull drawn round one out of it. */
+		expect(inner.InsideShip).toBe('');
+
+		/* No seat from out there. */
+		expect(engine.NearestSeat('me')).toBe(null);
+
+		/* It floats (the clip float), still or pushed. Regression: its pace was float, but standing it played the idle. */
+		expect(inner.Objects.me.Pose).toBe('float');
+
+		/* Its jets push one (C down, away from the belly); let go, the suit stops one. */
+		at = state.At.slice();
+		inner.Keys.KeyC = true;
+
+		frames(30);
+
+		delete inner.Keys.KeyC;
+
+		expect(state.At[1]).toBeLessThan(at[1] - 0.5);
+		expect(Math.hypot.apply(Math, state.Velocity)).toBeGreaterThan(0.5);
+
+		frames(150);
+
+		expect(Math.hypot.apply(Math, state.Velocity)).toBeLessThan(0.05);
+
+		/* The hull stops one: up into the belly, never through it. */
+		inner.Keys.Space = true;
+
+		frames(200);
+
+		delete inner.Keys.Space;
+
+		expect(state.At[1]).toBeLessThan(hatch.Low[1]);
+
+		/* Past the line, pulled back. */
+		state.At = [state.At[0], state.At[1] - 60, state.At[2]];
+		state.Velocity = [0, 0, 0];
+
+		frames(30);
+
+		expect(state.Velocity[1]).toBeGreaterThan(0);
+
+		/* Back by the airlock: G, in on its floor. */
+		state.At = [(hatch.Low[0] + hatch.High[0]) / 2, hatch.Low[1] - 3, (hatch.Low[2] + hatch.High[2]) / 2];
+		state.Velocity = [0, 0, 0];
+
+		expect(engine.AirlockNear('me')).toEqual({Vehicle: 'flyer', Out: false});
+
+		key('KeyG');
+
+		frames(60);
+
+		expect(told.map(function (one) {
+			return one.Step;
+		})).toEqual(['cycle', 'out', 'cycle', 'in']);
+		expect(state.Out).toBe(false);
+		expect(state.At[1]).toBeCloseTo(hatch.High[1], 1);
+		expect(space.Context('me').Kind).toBe('walk');
+		expect(inner.InsideShip).toBe('flyer');
+	});
 });

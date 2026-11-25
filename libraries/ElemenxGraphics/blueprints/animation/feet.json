@@ -1,0 +1,423 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-feet",
+	"parameters": [
+		{
+			"key": "MostDrop",
+			"type": "float",
+			"value": 0.3,
+			"comment": "Of its height, how far its hips go down at most for a foot to reach lower ground"
+		},
+		{
+			"key": "MostLift",
+			"type": "float",
+			"value": 0.3,
+			"comment": "Of its height, how far a foot goes up at most to higher ground"
+		},
+		{
+			"key": "Rate",
+			"type": "float",
+			"value": 14,
+			"comment": "How fast its feet and hips come to where they go (a part of the way each second)"
+		},
+		{
+			"key": "RunFade",
+			"type": "float",
+			"value": 7,
+			"comment": "Metres a second from which its feet keep to the ground less (a run lands where it lands)"
+		}
+	],
+	"blocks": [
+		{
+			"id": "animation-feet-input-downleft",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "DownLeft"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-input-downright",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "DownRight"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-input-size",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Size"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-input-speed",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Speed"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-input-grounded",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Grounded"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-parameter-mostdrop",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MostDrop"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-parameter-mostlift",
+			"type": "Parameter",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MostLift"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-parameter-rate",
+			"type": "Parameter",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rate"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-parameter-runfade",
+			"type": "Parameter",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RunFade"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-formula-drop",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-MostDrop * Size, min(0, min(DownLeft, DownRight))) * Grounded * (1 - 0.6 * smoothstep(RunFade * 0.6, RunFade, Speed))"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-result-drop",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Drop"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-formula-left",
+			"type": "Formula",
+			"x": 420,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-MostDrop * Size, min(MostLift * Size, DownLeft - max(-MostDrop * Size, min(0, min(DownLeft, DownRight))))) * Grounded * (1 - 0.6 * smoothstep(RunFade * 0.6, RunFade, Speed))"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-result-left",
+			"type": "Result",
+			"x": 800,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Left"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-formula-right",
+			"type": "Formula",
+			"x": 420,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-MostDrop * Size, min(MostLift * Size, DownRight - max(-MostDrop * Size, min(0, min(DownLeft, DownRight))))) * Grounded * (1 - 0.6 * smoothstep(RunFade * 0.6, RunFade, Speed))"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-result-right",
+			"type": "Result",
+			"x": 800,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Right"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-formula-rate",
+			"type": "Formula",
+			"x": 420,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Rate"
+				}
+			]
+		},
+		{
+			"id": "animation-feet-result-rate",
+			"type": "Result",
+			"x": 800,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rate"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-feet-link-0",
+			"p1": "animation-feet-input-downleft-out-Value",
+			"p2": "animation-feet-formula-drop-in-DownLeft",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-1",
+			"p1": "animation-feet-input-downright-out-Value",
+			"p2": "animation-feet-formula-drop-in-DownRight",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-2",
+			"p1": "animation-feet-input-size-out-Value",
+			"p2": "animation-feet-formula-drop-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-3",
+			"p1": "animation-feet-input-speed-out-Value",
+			"p2": "animation-feet-formula-drop-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-4",
+			"p1": "animation-feet-input-grounded-out-Value",
+			"p2": "animation-feet-formula-drop-in-Grounded",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-5",
+			"p1": "animation-feet-parameter-mostdrop-out-Value",
+			"p2": "animation-feet-formula-drop-in-MostDrop",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-6",
+			"p1": "animation-feet-parameter-runfade-out-Value",
+			"p2": "animation-feet-formula-drop-in-RunFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-7",
+			"p1": "animation-feet-formula-drop-out-Value",
+			"p2": "animation-feet-result-drop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-8",
+			"p1": "animation-feet-input-downleft-out-Value",
+			"p2": "animation-feet-formula-left-in-DownLeft",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-9",
+			"p1": "animation-feet-input-downright-out-Value",
+			"p2": "animation-feet-formula-left-in-DownRight",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-10",
+			"p1": "animation-feet-input-size-out-Value",
+			"p2": "animation-feet-formula-left-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-11",
+			"p1": "animation-feet-input-speed-out-Value",
+			"p2": "animation-feet-formula-left-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-12",
+			"p1": "animation-feet-input-grounded-out-Value",
+			"p2": "animation-feet-formula-left-in-Grounded",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-13",
+			"p1": "animation-feet-parameter-mostdrop-out-Value",
+			"p2": "animation-feet-formula-left-in-MostDrop",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-14",
+			"p1": "animation-feet-parameter-mostlift-out-Value",
+			"p2": "animation-feet-formula-left-in-MostLift",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-15",
+			"p1": "animation-feet-parameter-runfade-out-Value",
+			"p2": "animation-feet-formula-left-in-RunFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-16",
+			"p1": "animation-feet-formula-left-out-Value",
+			"p2": "animation-feet-result-left-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-17",
+			"p1": "animation-feet-input-downleft-out-Value",
+			"p2": "animation-feet-formula-right-in-DownLeft",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-18",
+			"p1": "animation-feet-input-downright-out-Value",
+			"p2": "animation-feet-formula-right-in-DownRight",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-19",
+			"p1": "animation-feet-input-size-out-Value",
+			"p2": "animation-feet-formula-right-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-20",
+			"p1": "animation-feet-input-speed-out-Value",
+			"p2": "animation-feet-formula-right-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-21",
+			"p1": "animation-feet-input-grounded-out-Value",
+			"p2": "animation-feet-formula-right-in-Grounded",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-22",
+			"p1": "animation-feet-parameter-mostdrop-out-Value",
+			"p2": "animation-feet-formula-right-in-MostDrop",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-23",
+			"p1": "animation-feet-parameter-mostlift-out-Value",
+			"p2": "animation-feet-formula-right-in-MostLift",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-24",
+			"p1": "animation-feet-parameter-runfade-out-Value",
+			"p2": "animation-feet-formula-right-in-RunFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-25",
+			"p1": "animation-feet-formula-right-out-Value",
+			"p2": "animation-feet-result-right-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-26",
+			"p1": "animation-feet-parameter-rate-out-Value",
+			"p2": "animation-feet-formula-rate-in-Rate",
+			"kind": "value"
+		},
+		{
+			"id": "animation-feet-link-27",
+			"p1": "animation-feet-formula-rate-out-Value",
+			"p2": "animation-feet-result-rate-in-Value",
+			"kind": "value"
+		}
+	]
+}

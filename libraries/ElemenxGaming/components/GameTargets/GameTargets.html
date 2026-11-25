@@ -2,5 +2,6 @@
 	<button class="elemenx-game-target" type="button" *for="mark of Marks" *key="mark.ID" [class]="[mark.Kind]" [class.chosen]="mark.Target" [attribute.style]="MarkStyle(mark)" [attribute.data-id]="mark.ID" [attribute.aria-label]="mark.Name + ', ' + mark.Far" (click)="Pressed">
 		<span class="elemenx-game-target-name">{{mark.Target ? mark.Name + ' · ' + mark.Far : mark.Far}}</span>
 	</button>
+	<span class="elemenx-game-target-lock" *for="lock of Locks" *key="lock.ID" [class.locked]="lock.Locked" [attribute.style]="LockStyle(lock)" aria-hidden="true"></span>
 	<span class="elemenx-game-target-lead" *if="Lead" [attribute.style]="MarkStyle(Lead)" aria-hidden="true"></span>
 </div>

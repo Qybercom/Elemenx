@@ -31,7 +31,7 @@
  *
  * Contacts(id) are what a vehicle knows round it (within the Range of its Sensors, km; 2 with none): vehicles, walkers,
  * what has a Team, places (NavPoint), blockers of warp (WarpBlocker), each {ID, Name, Kind (ship, vehicle, walker,
- * place, jammer, thing), Team, Hostile (of a team other than the vehicle's, its crew's or the Team of the scene), At,
+ * place, jammer, thing; missile and flare of SceneMissiles, Incoming: a missile at it), Team, Hostile (of a team other than the vehicle's, its crew's or the Team of the scene), At,
  * Distance, Bearing (degrees from the nose, right positive), Elevation (degrees), Velocity (m/s), Target}. The target
  * of a vehicle is one for all its seats: SetTarget(id, target) (the event target {Vehicle, Target}), TargetOf(id).
  */
@@ -328,6 +328,15 @@ Elemenx.Trait('SceneTactics', {
 				track = tracks[one.ID];
 
 				list.push({ID: one.ID, Name: one.Name || one.ID, Kind: kind, Team: teamOf(one), Hostile: !!own && !!teamOf(one) && teamOf(one) !== own, At: one.World.slice(), Distance: far, Bearing: Math.atan2(side, ahead) * 180 / Math.PI, Elevation: Math.asin(Math.max(-1, Math.min(1, vectors.Dot(way, frame.Up) / Math.max(1e-6, far)))) * 180 / Math.PI, Velocity: track && track.Velocity ? track.Velocity.slice() : [0, 0, 0], Target: one.ID === target});
+			});
+
+			/* The missiles and the flares round it (SceneMissiles): Incoming, a missile at it. */
+			(engine.MissileThings ? engine.MissileThings() : []).forEach(function (one) {
+				var way = vectors.Subtract(one.At, object.World);
+				var far = vectors.Length(way);
+				if (far > range) return;
+
+				list.push({ID: one.ID, Name: one.Name, Kind: one.Kind, Team: one.Team, Hostile: !!own && !!one.Team && one.Team !== own, At: one.At, Distance: far, Bearing: Math.atan2(vectors.Dot(way, vectors.Normalize(vectors.Cross(frame.Ahead, frame.Up))), vectors.Dot(way, frame.Ahead)) * 180 / Math.PI, Elevation: Math.asin(Math.max(-1, Math.min(1, vectors.Dot(way, frame.Up) / Math.max(1e-6, far)))) * 180 / Math.PI, Velocity: one.Velocity, Target: false, Incoming: one.Aimed === id});
 			});
 
 			return list.sort(function (a, b) {

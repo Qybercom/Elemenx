@@ -10,6 +10,7 @@
 				<Button [Label]="RaceAboard ? 'Get out' : 'Get in'" Icon="log-out" Variant="ghost" Size="small" [title]="'The driver gets out of the car by its side, the car going on as it was (it rolls on by itself), or into it again by it (G)'" (click)="RaceBoarded" />
 				<Button Label="Drives graph" Icon="code" Variant="ghost" Size="small" [pressed]="RaceGraphOpen === 'vehicles/drives'" [title]="'What each moving part, lamp and pop of the car is driven to, as blocks: the wheel, the pedals, the wipers, the brake lights...'" (click)="RaceGraphOpened('vehicles/drives')" />
 				<Button Label="Wheel graph" Icon="code" Variant="ghost" Size="small" [pressed]="RaceGraphOpen === 'vehicles/wheel'" [title]="'How each wheel turns, as blocks: its spin, its steering, its spring, its lean'" (click)="RaceGraphOpened('vehicles/wheel')" />
+				<Button Label="Body graph" Icon="code" Variant="ghost" Size="small" [pressed]="RaceGraphOpen === 'vehicles/body'" [title]="'How the body of the car leans on its springs, as blocks: nose up speeding up, down braking, out of a turn'" (click)="RaceGraphOpened('vehicles/body')" />
 				<span>{{RaceSpeed}} km/h{{RaceGear ? ' · ' + RaceGear : ''}}{{RaceLapText ? ' · ' + RaceLapText : ''}}{{RaceWrong ? ' · wrong way' : ''}}</span>
 			</RibbonGroup>
 			<RibbonGroup Title="Weather" Icon="sliders">

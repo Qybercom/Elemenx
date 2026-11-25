@@ -2,7 +2,20 @@
 	"version": 1,
 	"type": "generator",
 	"name": "vehicles-drives",
-	"parameters": [],
+	"parameters": [
+		{
+			"key": "GearHeight",
+			"type": "float",
+			"value": 60,
+			"comment": "Metres over the ground below which a ship in the air lets its gear down"
+		},
+		{
+			"key": "GearSpeed",
+			"type": "float",
+			"value": 120,
+			"comment": "Metres a second below which a ship low in the air lets its gear down"
+		}
+	],
 	"blocks": [
 		{
 			"id": "vehicles-drives-input-steer",
@@ -948,7 +961,7 @@
 			"properties": [
 				{
 					"key": "Expression",
-					"value": "Ship > 0 && Landed < 0.5 ? 1 : 0"
+					"value": "Ship > 0 && Landed < 0.5 && (Height > GearHeight || Airspeed > GearSpeed) ? 1 : 0"
 				}
 			]
 		},
@@ -1345,6 +1358,62 @@
 				{
 					"key": "Key",
 					"value": "thrust-ship"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-height",
+			"type": "Input",
+			"x": 0,
+			"y": 2060,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-input-airspeed",
+			"type": "Input",
+			"x": 0,
+			"y": 2150,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Airspeed"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-parameter-gearheight",
+			"type": "Parameter",
+			"x": 0,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "GearHeight"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-drives-parameter-gearspeed",
+			"type": "Parameter",
+			"x": 0,
+			"y": 2330,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "GearSpeed"
+				},
+				{
+					"key": "Type",
+					"value": "float"
 				}
 			]
 		}
@@ -1972,6 +2041,30 @@
 			"id": "vehicles-drives-link-103",
 			"p1": "vehicles-drives-formula-thrust-ship-out-Value",
 			"p2": "vehicles-drives-result-thrust-ship-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-104",
+			"p1": "vehicles-drives-input-height-out-Value",
+			"p2": "vehicles-drives-formula-airborne-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-105",
+			"p1": "vehicles-drives-input-airspeed-out-Value",
+			"p2": "vehicles-drives-formula-airborne-in-Airspeed",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-106",
+			"p1": "vehicles-drives-parameter-gearheight-out-Value",
+			"p2": "vehicles-drives-formula-airborne-in-GearHeight",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-drives-link-107",
+			"p1": "vehicles-drives-parameter-gearspeed-out-Value",
+			"p2": "vehicles-drives-formula-airborne-in-GearSpeed",
 			"kind": "value"
 		}
 	]

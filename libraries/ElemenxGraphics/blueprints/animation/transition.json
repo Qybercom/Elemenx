@@ -1,0 +1,389 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-transition",
+	"parameters": [
+		{
+			"key": "GaitFade",
+			"type": "float",
+			"value": 0.25,
+			"comment": "Seconds of a change from a gait to another (walk to jog), their steps kept in time"
+		},
+		{
+			"key": "PoseFade",
+			"type": "float",
+			"value": 0.3,
+			"comment": "Seconds of a change to or from a pose or the idle"
+		},
+		{
+			"key": "ActionFade",
+			"type": "float",
+			"value": 0.12,
+			"comment": "Seconds into an action played once (a blow, a hit, a reload)"
+		},
+		{
+			"key": "BackFade",
+			"type": "float",
+			"value": 0.3,
+			"comment": "Seconds out of an action played once, back to what it did"
+		},
+		{
+			"key": "HoldFade",
+			"type": "float",
+			"value": 0.15,
+			"comment": "Seconds into an action held at its end (death)"
+		},
+		{
+			"key": "Ease",
+			"type": "float",
+			"value": 1,
+			"comment": "1: the change eases in and out (smoothstep), 0: it is even"
+		}
+	],
+	"blocks": [
+		{
+			"id": "animation-transition-input-fromknown",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FromKnown"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-input-fromgait",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FromGait"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-input-togait",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ToGait"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-input-fromonce",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "FromOnce"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-input-toonce",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ToOnce"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-input-tohold",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "ToHold"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-parameter-gaitfade",
+			"type": "Parameter",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "GaitFade"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-parameter-posefade",
+			"type": "Parameter",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "PoseFade"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-parameter-actionfade",
+			"type": "Parameter",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ActionFade"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-parameter-backfade",
+			"type": "Parameter",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "BackFade"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-parameter-holdfade",
+			"type": "Parameter",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "HoldFade"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-parameter-ease",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Ease"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-formula-fade",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FromKnown < 0.5 ? 0 : (FromGait * ToGait > 0.5 ? GaitFade : (ToHold > 0.5 ? HoldFade : (ToOnce > 0.5 ? ActionFade : (FromOnce > 0.5 ? BackFade : PoseFade))))"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-result-fade",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Fade"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-formula-sync",
+			"type": "Formula",
+			"x": 420,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "FromGait * ToGait"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-result-sync",
+			"type": "Result",
+			"x": 800,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Sync"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-formula-ease",
+			"type": "Formula",
+			"x": 420,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Ease"
+				}
+			]
+		},
+		{
+			"id": "animation-transition-result-ease",
+			"type": "Result",
+			"x": 800,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Ease"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-transition-link-0",
+			"p1": "animation-transition-input-fromknown-out-Value",
+			"p2": "animation-transition-formula-fade-in-FromKnown",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-1",
+			"p1": "animation-transition-input-fromgait-out-Value",
+			"p2": "animation-transition-formula-fade-in-FromGait",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-2",
+			"p1": "animation-transition-input-togait-out-Value",
+			"p2": "animation-transition-formula-fade-in-ToGait",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-3",
+			"p1": "animation-transition-input-tohold-out-Value",
+			"p2": "animation-transition-formula-fade-in-ToHold",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-4",
+			"p1": "animation-transition-input-toonce-out-Value",
+			"p2": "animation-transition-formula-fade-in-ToOnce",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-5",
+			"p1": "animation-transition-input-fromonce-out-Value",
+			"p2": "animation-transition-formula-fade-in-FromOnce",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-6",
+			"p1": "animation-transition-parameter-gaitfade-out-Value",
+			"p2": "animation-transition-formula-fade-in-GaitFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-7",
+			"p1": "animation-transition-parameter-holdfade-out-Value",
+			"p2": "animation-transition-formula-fade-in-HoldFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-8",
+			"p1": "animation-transition-parameter-actionfade-out-Value",
+			"p2": "animation-transition-formula-fade-in-ActionFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-9",
+			"p1": "animation-transition-parameter-backfade-out-Value",
+			"p2": "animation-transition-formula-fade-in-BackFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-10",
+			"p1": "animation-transition-parameter-posefade-out-Value",
+			"p2": "animation-transition-formula-fade-in-PoseFade",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-11",
+			"p1": "animation-transition-formula-fade-out-Value",
+			"p2": "animation-transition-result-fade-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-12",
+			"p1": "animation-transition-input-fromgait-out-Value",
+			"p2": "animation-transition-formula-sync-in-FromGait",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-13",
+			"p1": "animation-transition-input-togait-out-Value",
+			"p2": "animation-transition-formula-sync-in-ToGait",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-14",
+			"p1": "animation-transition-formula-sync-out-Value",
+			"p2": "animation-transition-result-sync-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-15",
+			"p1": "animation-transition-parameter-ease-out-Value",
+			"p2": "animation-transition-formula-ease-in-Ease",
+			"kind": "value"
+		},
+		{
+			"id": "animation-transition-link-16",
+			"p1": "animation-transition-formula-ease-out-Value",
+			"p2": "animation-transition-result-ease-in-Value",
+			"kind": "value"
+		}
+	]
+}

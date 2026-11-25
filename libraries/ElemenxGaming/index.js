@@ -27,6 +27,8 @@
 	'components/GameDash/GameDash.js',
 	'components/GameFlight/GameFlight.js',
 	'components/GameTactics/GameTactics.js',
+	'components/GameCommands/GameCommands.js',
+	'components/GameArms/GameArms.js',
 	'components/GameRadar/GameRadar.js',
 	'components/GameConsole/GameConsole.js',
 	'components/GameTargets/GameTargets.js',

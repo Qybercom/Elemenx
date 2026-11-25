@@ -552,6 +552,88 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(engine.CloudDrift(earth) * 6371000 / Math.max(0.001, inner.Seconds)).toBeLessThan(26);
 	});
 
+	/* Regression: out of a system to the map of the galaxy (Setting galaxy) the names of its planets stood over the galaxy. */
+	it('hides the names of the objects of a system and the marks of aiming on the map of the galaxy, shows them back in the system', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready">' +
+			'<SceneObject ID="sun" Kind="star" Name="Sun"><SceneObject ID="earth" Kind="planet" Name="Earth" Distance="1" /></SceneObject>' +
+		'</Scene>', {});
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var labels = scene.$Element().querySelector('.elemenx-scene-labels');
+		var now = performance.now() + 100;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				scene.Engine().Frame(now += 33);
+			}
+		}
+
+		frames(3);
+
+		expect(labels.hidden).toBe(false);
+
+		scene.Setting = 'galaxy';
+
+		frames(2);
+
+		expect(labels.hidden).toBe(true);
+		/* The marks of aiming of a ship too (regression: their frames stood over the map). */
+		expect(scene.$Element().querySelector('.elemenx-scene-sight').hidden).toBe(true);
+
+		scene.Setting = 'space';
+
+		frames(2);
+
+		expect(labels.hidden).toBe(false);
+		expect(scene.$Element().querySelector('.elemenx-scene-sight').hidden).toBe(false);
+	});
+
+	/* Regression: out of a system the view stopped 40 light years from its star: the stars round it all that was seen of the map. */
+	it('flies out of a system to the map as far as the galaxy is seen whole, its star in the middle', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" Setting="galaxy" [galaxy]="Galaxy" (ready)="Ready"></Scene>', {Galaxy: {Seed: 'orbit', Kind: 'spiral'}});
+		var scene = mounted.Space;
+		var galaxies = Elemenx.Service('GalaxyData');
+		var now = performance.now() + 100;
+		var data;
+		var star;
+		var view;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				scene.Scene().Rest = 0;
+
+				scene.Engine().Frame(now += 33);
+			}
+		}
+
+		await waitFor(function () {
+			frames(1);
+
+			return scene.GalaxyData();
+		}, 60000);
+
+		data = scene.GalaxyData();
+		star = (galaxies.Search(data, {Centre: galaxies.Cosmos(data, '').Place, Radius: 60, Type: 'main', Limit: 1}).Items || [])[0];
+
+		scene.EnterSystem(star.ID, null, {Now: true});
+
+		frames(3);
+
+		expect(scene.Setting).toBe('space');
+
+		scene.LeaveSystem();
+
+		frames(120);
+
+		view = scene.GalaxyView();
+
+		expect(scene.Setting).toBe('galaxy');
+		expect(view.Distance).toBeCloseTo(data.Manifest.Radius * 1.2, -1);
+		expect(Math.hypot(view.Target[0] - star.Place[0], view.Target[1] - star.Place[1], view.Target[2] - star.Place[2])).toBeLessThan(data.Manifest.Radius * 0.05);
+	});
+
 	it('selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives', async function () {
 		var selected = [];
 		var arrived = [];
@@ -2618,7 +2700,11 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		frames(3);
 
 		expect(space.Context('me')).toEqual({Kind: 'walk', Vehicle: '', Seat: '', Role: '', Controls: false});
+		/* G by a car: in step by step (to its side, in, sat). */
 		expect(space.BoardKey()).toBe(true);
+
+		frames(120);
+
 		expect(space.Context('me')).toEqual({Kind: 'seat', Vehicle: 'car', Seat: 'driver', Role: 'driver', Controls: true});
 		expect(inner.Hero).toBe('car');
 		expect(inner.Objects.me.Hidden).toBe(true);
@@ -2650,6 +2736,112 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(Math.hypot(inner.Objects.car.World[0] - at[0], inner.Objects.car.World[2] - at[2])).toBeGreaterThan(0.5);
 		expect(inner.Objects.car.Car.Forward).toBeLessThan(going);
 		expect(space.Leave('me')).toBe(false);
+	});
+
+	/*
+	 * Contract: Board and Leave with {Animate: true}, the Entry of a seat, the graph of boarding (vehicles/board) and the event
+	 * boarding. In: to the point outside, its door opened, into the seat, sat, the door closed again; out: the door opened, out
+	 * to that point, closed. A door open already is left so; a car of no door goes in at once from where one stands.
+	 */
+	it('gets into a car and out of it step by step, its door opened and closed by its role', async function () {
+		var told = [];
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready" (boarding)="Stepped"><SceneObject ID="land" Kind="ground" Size="600" Height="0" Water="0" Seed="flat" /></Scene>', {Stepped: function (event) {
+			told.push(event && event.detail ? event.detail : event);
+		}});
+		var space = mounted.Space;
+		var inner = space.Scene();
+		var now = performance.now() + 1000;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				space.Engine().Frame(now += 30);
+			}
+		}
+
+		function steps () {
+			return told.map(function (one) {
+				return one.Step;
+			});
+		}
+
+		function door () {
+			return space.Engine().RigOf(inner.Objects.car).Openings.filter(function (one) {
+				return one.Name === 'role:doors';
+			})[0];
+		}
+
+		space.Add('unit', {ID: 'me', Size: 1.2, X: -3, Y: 0});
+		space.Add('unit', {ID: 'car', Size: 1.2, X: 2, Y: 0, Vehicle: {Kind: 'car', Openings: [{Name: 'role:doors', Open: 0}], Seats: [{ID: 'driver', Role: 'driver', At: [0.3, 0.5, 0], Controls: true, Entry: {At: [1.2, 0, 0]}}]}});
+
+		frames(3);
+
+		space.Control('me');
+
+		frames(3);
+
+		expect(space.Board('me', 'car', '', {Animate: true})).toBe(true);
+		expect(space.Board('me', 'car', '', {Animate: true})).toBe(false);
+		expect(told[0]).toMatchObject({Actor: 'me', Vehicle: 'car', Seat: 'driver', Step: 'approach', Out: false});
+
+		/* Walking to the point outside, not in yet. */
+		frames(10);
+
+		expect(inner.Objects.me.Walking).toBeGreaterThan(0);
+		expect(inner.Objects.me.World[0]).toBeGreaterThan(-3);
+		expect(space.Context('me').Kind).toBe('walk');
+
+		frames(400);
+
+		expect(steps()).toEqual(['approach', 'open', 'enter', 'sit', 'close', 'done']);
+		expect(space.Context('me')).toMatchObject({Kind: 'seat', Vehicle: 'car', Seat: 'driver'});
+		expect(inner.Hero).toBe('car');
+		expect(door().Open).toBe(0);
+		expect(inner.Objects.me.Boarding).toBe(undefined);
+
+		/* Out: the door opened first, then out to the point outside, the door closed. */
+		told.length = 0;
+
+		expect(space.Leave('me', {Animate: true})).toBe(true);
+		expect(door().Open).toBe(1);
+		expect(inner.Objects.me.Hidden).toBe(true);
+
+		frames(400);
+
+		expect(steps()).toEqual(['open', 'exit', 'close', 'done']);
+		expect(inner.Objects.me.Hidden).toBe(false);
+		expect(door().Open).toBe(0);
+		expect(space.Context('me').Kind).toBe('walk');
+
+		var outside = space.Engine().BoardingStep ? inner.Objects.car.World : null;
+
+		expect(Math.hypot(inner.Objects.me.World[0] - outside[0], inner.Objects.me.World[2] - outside[2])).toBeGreaterThan(0.8);
+
+		/* Its door open already: no open step, and it is left open. */
+		door().Open = 1;
+		told.length = 0;
+
+		expect(space.Board('me', 'car', '', {Animate: true})).toBe(true);
+
+		frames(400);
+
+		expect(steps()).toEqual(['approach', 'enter', 'sit', 'close', 'done']);
+		expect(door().Open).toBe(1);
+	});
+
+	/* Contract: how long each step is and which clip, of the graph of boarding (BoardGraph or the one of the library). */
+	it('times the steps of boarding by its graph, longer into a low car, a ship climbed into', function () {
+		var code = Elemenx.Service('Blueprints').Code(JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/board'))));
+		var low = code.Run({}, {Kind: 0, Height: 1.1, Door: 1});
+		var high = code.Run({}, {Kind: 0, Height: 1.8, Door: 0});
+		var ship = code.Run({}, {Kind: 1, Height: 4, Door: 0});
+
+		expect(low).toMatchObject({Open: 0.7, Sit: 0.4, Close: 0.5, Clip: 1, Duck: 0.6});
+		expect(low.Enter).toBeCloseTo(1.2, 5);
+		expect(high).toMatchObject({Open: 0, Enter: 1, Close: 0, Clip: 2});
+		expect(ship.Enter).toBeCloseTo(1.4, 5);
+		expect(ship.Clip).toBe(3);
 	});
 
 	/* Contract: ground, once a ground came (its field made): {Key, ID, Location}. */
@@ -2820,6 +3012,62 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		}).not.toThrow();
 	});
 
+	/*
+	 * Regression: the code of a graph of the library was compared with a new copy of it (Elemenx.Resources gives one each
+	 * time) and made again at every call, up to a millisecond each, some every frame (the shake of the camera, the season).
+	 */
+	it('makes the code of a graph once, and again only for another graph given to the scene', async function () {
+		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+		var blueprints = Elemenx.Service('Blueprints');
+		var code = blueprints.Code;
+		var made = 0;
+		var first;
+		var mine = Elemenx.Resources('Blueprints', 'ElemenxGraphics/camera/shake');
+
+		blueprints.Code = function () {
+			made++;
+
+			return code.apply(blueprints, arguments);
+		};
+
+		try {
+			first = engine.GraphCode('ShakeGraph', 'camera/shake');
+
+			engine.CameraShake({Time: 1, Shake: 1});
+			engine.LandingLook({Speed: 10});
+			engine.LandingLook({Speed: 20});
+			engine.CameraShake({Time: 2, Shake: 1});
+
+			expect(engine.GraphCode('ShakeGraph', 'camera/shake')).toBe(first);
+			expect(made).toBe(2);
+
+			scene.Graphs = {'camera/shake': mine};
+
+			await tick(20);
+
+			engine.GraphCode('ShakeGraph', 'camera/shake');
+			engine.CameraShake({Time: 3, Shake: 1});
+
+			expect(made).toBe(3);
+			expect(engine.GraphCode('', 'nothing/such')).toBe(null);
+
+			/* A graph of an object of its own (a vehicle's WheelGraph): made once for it, whatever the scene has. */
+			var own = Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/wheel');
+
+			engine.GraphCode('WheelGraph', 'vehicles/wheel', own);
+			engine.GraphCode('WheelGraph', 'vehicles/wheel', own);
+			engine.GraphCode('WheelGraph', 'vehicles/wheel');
+			engine.GraphCode('WheelGraph', 'vehicles/wheel');
+
+			expect(made).toBe(5);
+		}
+		finally {
+			blueprints.Code = code;
+		}
+	});
+
 	it('walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view', async function () {
 		var terrain = Elemenx.Service('SceneTerrainGenerator');
 		var mounted = await mount('<Scene Paused="true" (ready)="Ready"></Scene>');
@@ -2884,6 +3132,41 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(hero.Air).toBeCloseTo(0, 2);
 		expect(hero.Grounded).toBe(true);
+
+		/* Off a height it falls (fall), and down it lands (land, once); a jump does not. */
+		var played = [];
+		var play = engine.Play;
+
+		engine.Play = function (id, name) {
+			played.push(name);
+
+			return play.apply(engine, arguments);
+		};
+
+		hero.Air = 9;
+		hero.Grounded = false;
+
+		frames(30);
+
+		expect(hero.Pace).toBe('fall');
+		expect(played).toEqual([]);
+
+		frames(60);
+
+		expect(hero.Grounded).toBe(true);
+		expect(played).toEqual(['land']);
+
+		inner.Ground.Keys = {Space: true};
+
+		frames(1);
+
+		inner.Ground.Keys = {};
+
+		frames(60);
+
+		expect(played).toEqual(['land']);
+
+		engine.Play = play;
 
 		/* It faces the view and steps aside: the body does not turn to the way. */
 		inner.Yaw = 0;
@@ -4482,6 +4765,20 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect((/_cover = uTiled \* uWoods > 0\.5 \? textureGrad\(uReliefMap, ([^,]+), ([^,]+), ([^)]+)\)/.exec(made.Function) || []).slice(1)).toEqual(['At', 'DX', 'DY'].map(function (pin) {
 			return 'b' + picture[1].replace(/\D/g, '') + '_' + pin;
 		}));
+	});
+
+	/*
+	 * Regression: the sea round a location (the far ground, drawn by the ground graph) was dark and calm past a sharp edge,
+	 * the sea of the location bright: its water mirrored a sky of its own. Round a location (uMirror) it mirrors the sky by
+	 * the one model of the light of the sky (skyLight), of the air and the day of the location, as the sea does; else as it was.
+	 */
+	it('mirrors the sky of a location on the water of the far ground round it by the one light of the sky', function () {
+		var made = Elemenx.Service('Blueprints').Compile(Elemenx.Service('SceneBlueprints').LibraryGround());
+		var branch = /if \(uMirror\.a > 0\.0\) \{[^}]*mirrored = skyLight\(([^;]*)\) \* uMirror\.a/.exec(made.Function);
+
+		expect(branch).toBeTruthy();
+		expect(branch[1]).toContain('uMirror.rgb, uMirror.rgb * 0.3');
+		expect(made.Function).toMatch(/mirrored = mix\(mix\(uAir\.rgb, vec3\(1\.0\), 0\.45\)/);
 	});
 
 	/*
@@ -6181,6 +6478,1436 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		expect(stepped).toBe(2);
 		expect(gameSceneSource).toContain('if (!except && field.Blocked && field.Blocked(');
+	});
+
+	/*
+	 * Contract: Autopilot(id, mode, options), AutopilotOf(id) and the event autopilot. approach: turned to a point aside and to
+	 * it, stopping Distance short of it (arrived); follow: a ship nobody is in keeps its place by another as it flies; a key
+	 * of flight of the player lets the autopilot go (hand).
+	 */
+	it('flies a ship by its autopilot: to a point and stopping by it, a wing keeping its place by a leader, a key letting it go', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var told = [];
+		var ship;
+		var wing;
+		var point;
+		var goal;
+		var i;
+
+		function frames (count) {
+			for (var f = 0; f < count; f++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function apart (a, b) {
+			return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+		}
+
+		scene.$On('autopilot', function (event) {
+			told.push(event.ID + ':' + event.Mode + ':' + event.Phase + (event.Reason ? ':' + event.Reason : ''));
+		});
+
+		frames(2);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1]}});
+		scene.Add('ship', {ID: 'wing', Name: '', Size: 0.002, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0.4, 0, 3], Facing: [0, 0, 1]}});
+		scene.Control('me');
+
+		frames(3);
+
+		ship = inner.Objects.me;
+		wing = inner.Objects.wing;
+
+		/* No ship, no such target: not asked. */
+		expect(scene.Autopilot('nobody', 'hold')).toBe(false);
+		expect(scene.Autopilot('me', 'approach', {Target: 'nowhere'})).toBe(false);
+		expect(scene.Autopilot('me', 'loop')).toBe(false);
+		expect(scene.AutopilotOf('me')).toBe(null);
+
+		/* To a point aside: turned to it, there, stopped short of it. */
+		point = [ship.World[0] + 1.5, ship.World[1], ship.World[2]];
+
+		expect(scene.Autopilot('me', 'approach', {Target: point, Distance: 0.1})).toBe(true);
+		expect(scene.AutopilotOf('me')).toEqual({Mode: 'approach', Target: point, Arrived: false});
+
+		for (i = 0; i < 900 && !scene.AutopilotOf('me').Arrived; i++)
+			frames(1);
+
+		expect(scene.AutopilotOf('me').Arrived).toBe(true);
+		expect(apart(ship.World, point)).toBeLessThan(0.2);
+		expect(scene.Readout('me').Autopilot).toBe('approach:arrived');
+
+		frames(60);
+
+		expect(Math.hypot.apply(Math, ship.Ship.Way)).toBeLessThan(0.01);
+
+		/* A wing by the leader: as the leader goes on, the wing keeps its place by it (right and behind). */
+		expect(scene.Autopilot('wing', 'follow', {Target: 'me', Offset: [0.3, 0, -0.3]})).toBe(true);
+		expect(scene.Autopilot('me', 'approach', {Target: [ship.World[0], ship.World[1], ship.World[2] + 3], Distance: 0.1})).toBe(true);
+
+		frames(400);
+
+		goal = [0, 1, 2].map(function (axis) {
+			return ship.World[axis] + ship.Ship.Right[axis] * 0.3 - ship.Ship.Ahead[axis] * 0.3;
+		});
+
+		expect(apart(wing.World, goal)).toBeLessThan(0.15);
+
+		/* A key of flight of the player: the autopilot of its ship lets go; the wing's goes on. */
+		inner.Keys.KeyW = true;
+
+		frames(2);
+
+		delete inner.Keys.KeyW;
+
+		expect(scene.AutopilotOf('me')).toBe(null);
+		expect(scene.AutopilotOf('wing')).toMatchObject({Mode: 'follow', Target: 'me'});
+		expect(scene.Autopilot('wing', 'off')).toBe(true);
+		expect(told).toEqual(['me:approach:on', 'me:approach:arrived', 'wing:follow:on', 'me:approach:on', 'me:approach:off:hand', 'wing:follow:off:asked']);
+
+		/* Regression: to a point past a body the autopilot flew straight through it; it goes round it now. */
+		var world = inner.Objects.world;
+		var beyond = [0, 1, 2].map(function (axis) {
+			return world.World[axis] * 2 - ship.World[axis];
+		});
+		var nearest = Infinity;
+
+		expect(scene.Autopilot('me', 'approach', {Target: beyond, Distance: 0.1})).toBe(true);
+
+		for (i = 0; i < 900; i++) {
+			frames(1);
+
+			nearest = Math.min(nearest, apart(ship.World, world.World));
+		}
+
+		expect(nearest).toBeGreaterThan(world.Size * 1.1);
+		expect(apart(ship.World, beyond)).toBeLessThan(apart(world.World, beyond));
+	});
+
+	/*
+	 * Contract: SceneAgents (Values.Agent, a tree of behaviour: ai/fighter), AgentOf(id), AgentOrder(ids, order, target) and
+	 * the event agent. A wing flies by its leader, a ship of another team goes round its points; near, the wing attacks it
+	 * and fires; told to, it goes back to its place, holds, falls back; hurt hard, it falls back by itself.
+	 */
+	/*
+	 * Contract: the body of a car leans on its springs (BodyGraph, blueprints/vehicles/body): nose up speeding up, down
+	 * braking, out of a turn, a few degrees; its wheels stay on the road. Only seen: it goes as it went. Regression: a car
+	 * turned and braked flat, as if it had no springs.
+	 */
+	it('leans the body of a car on its springs as it speeds up, brakes and turns, its wheels on the road', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var math = Elemenx.Service('Math');
+		var now = performance.now() + 1000;
+		var car;
+		var most = 0;
+		var i;
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 30);
+
+				if (car && car.Lean)
+					most = Math.max(most, Math.abs(car.Lean.Roll), Math.abs(car.Lean.Pitch));
+			}
+		}
+
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 400, Height: 0.01, Water: 0, Seed: 'flat'})});
+		scene.Add('unit', {ID: 'car', Name: '', Size: 1.2, X: 0, Y: 0, Vehicle: {Kind: 'car'}});
+
+		frames(3);
+
+		scene.Control('car');
+
+		car = inner.Objects.car;
+
+		/* Speeding up: its nose up. */
+		inner.Ground.Keys = {KeyW: true};
+
+		frames(15);
+
+		expect(car.Lean.Pitch).toBeGreaterThan(0.004);
+
+		/* Braking: its nose down. */
+		frames(60);
+
+		inner.Ground.Keys = {KeyS: true};
+
+		frames(12);
+
+		expect(car.Car.Forward).toBeGreaterThan(1);
+		expect(car.Lean.Pitch).toBeLessThan(-0.004);
+
+		/* Turning: it rolls out of the turn (the sign of its speed by its turn), a few degrees at most. */
+		inner.Ground.Keys = {KeyW: true, KeyA: true};
+
+		frames(40);
+
+		expect(Math.abs(car.Lean.Roll)).toBeGreaterThan(0.004);
+		expect(Math.sign(car.Lean.Roll)).toBe(Math.sign(car.Car.Forward * car.Car.Rate));
+		expect(most).toBeLessThan(6 * Math.PI / 180);
+
+		/* A wheel goes down on its spring by as much as the lean lifts it: its middle stays where it was. */
+		var wheel = {Middle: [0.8, 0.35, 1.3], Corner: 0, Front: true};
+		var leaned = {Values: {Vehicle: {}}, Car: {Spin: 0, Steer: 0}, Strokes: [0, 0, 0, 0], Size: 1, Lean: {Pitch: 0.04, Roll: -0.05}};
+		var flat = Object.assign({}, leaned, {Lean: null});
+		var place = math.Apply(math.Multiply(math.Multiply(math.Rotation([1, 0, 0], -0.04), math.Rotation([0, 0, 1], -0.05)), engine.WheelTurn(leaned, wheel)), wheel.Middle);
+		var still = math.Apply(engine.WheelTurn(flat, wheel), wheel.Middle);
+
+		expect(place[1]).toBeCloseTo(still[1], 2);
+	});
+
+	/*
+	 * Contract: a ship in space banks into its turn (BankGraph, blueprints/vehicles/bank: less than in the air), its views
+	 * with it (View, all by default); none while landed. Only seen: it flies as it flew. Regression: it turned flat.
+	 */
+	it('banks a ship into its turn, its views with it', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var vectors = Elemenx.Service('Math').Vectors;
+		var now = performance.now() + 100;
+		var ship;
+		var i;
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		frames(2);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1]}});
+		scene.Control('me');
+
+		frames(10);
+
+		ship = inner.Objects.me;
+
+		/* Going ahead, then turning to its right (D): its top leans to its right, as far as its views. */
+		inner.Keys.KeyW = true;
+
+		frames(30);
+
+		expect(Math.abs(ship.Bank.Roll)).toBeLessThan(0.02);
+
+		inner.Keys.KeyD = true;
+
+		frames(30);
+
+		var model = ship.Turn;
+		var up = vectors.Normalize([model[4], model[5], model[6]]);
+		var right = ship.Seen.Right;
+
+		expect(Math.abs(ship.Bank.Roll)).toBeGreaterThan(0.05);
+		expect(Math.abs(ship.Bank.Roll)).toBeLessThan(0.6 + 0.001);
+		expect(vectors.Dot(ship.Seen.Up, up)).toBeGreaterThan(0.999);
+
+		/* It banks the way its nose goes (its top to the side it turns to). */
+		var before = ship.Seen.Ahead.slice();
+
+		frames(1);
+
+		expect(Math.sign(ship.Bank.Roll)).toBe(Math.sign(vectors.Dot(vectors.Subtract(ship.Seen.Ahead, before), right)));
+
+		/* Straight again: it comes level. */
+		delete inner.Keys.KeyD;
+
+		frames(90);
+
+		expect(Math.abs(ship.Bank.Roll)).toBeLessThan(0.02);
+	});
+
+	it('lets ships fly by minds of their own: a wing by its leader, a patrol, an attack that fires, the orders of a commander', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" Team="blue" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var tasks = [];
+		var fired = [];
+		var wing;
+		var foe;
+		var i;
+
+		function frames (count) {
+			for (var f = 0; f < count; f++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function task (id) {
+			return scene.AgentOf(id) ? scene.AgentOf(id).Task : '';
+		}
+
+		scene.$On('agent', function (event) {
+			tasks.push(event.ID + ':' + event.Task);
+		});
+		scene.$On('fire', function (event) {
+			fired.push(event.ID);
+		});
+
+		frames(2);
+
+		/* A gun of the reach of this small scene. */
+		scene.Weapons({'short-gun': {Kind: 'bullet', Damage: 5, Rate: 4, Range: 0.4}});
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1]}});
+		scene.Add('ship', {ID: 'w1', Name: '', Size: 0.002, Parent: 'world', Team: 'blue', Weapon: 'short-gun', Health: 100, Agent: {Leader: 'me', Slot: [0.2, 0, -0.2], Range: 1}, Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0.3, 0, 3], Facing: [0, 0, 1]}});
+		scene.Add('ship', {ID: 'e1', Name: '', Size: 0.002, Parent: 'world', Team: 'red', Weapon: 'short-gun', Health: 100, Agent: {Range: 0.01, Patrol: [[3, 0, 6], [3, 0, 8]]}, Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [8, 0, 3], Facing: [0, 0, 1]}});
+		scene.Control('me');
+
+		frames(20);
+
+		wing = inner.Objects.w1;
+		foe = inner.Objects.e1;
+
+		/* Nothing near: the wing by its leader, the other one round its points; the ship played is no agent. */
+		expect(task('w1')).toBe('follow');
+		expect(task('e1')).toBe('patrol');
+		expect(scene.AgentOf('me')).toBe(null);
+		expect(scene.AgentOf('w1')).toMatchObject({Brain: 'ai-fighter', Order: '', Enemy: ''});
+		expect(scene.AutopilotOf('w1')).toMatchObject({Mode: 'follow', Target: 'me'});
+		expect(scene.AutopilotOf('e1')).toMatchObject({Mode: 'approach'});
+
+		/* Their minds read once, not at each step. Regression: kept anew at each call, the list of minds grew without end. */
+		var resources = Elemenx.Resources;
+		var reads = 0;
+
+		Elemenx.Resources = function (group, name) {
+			if (group === 'Blueprints' && /\/ai\//.test(String(name)))
+				reads++;
+
+			return resources.apply(Elemenx, arguments);
+		};
+
+		try {
+			frames(30);
+		}
+		finally {
+			Elemenx.Resources = resources;
+		}
+
+		expect(reads).toBe(0);
+
+		/* Near: the wing turns on it and fires as it faces it. */
+		foe.Ship.At = [wing.Ship.At[0] + 0.3, wing.Ship.At[1], wing.Ship.At[2] + 0.3];
+		foe.Ship.Way = [0, 0, 0];
+		foe.Ship.Throttle = 0;
+
+		for (i = 0; i < 300 && fired.indexOf('w1') < 0; i++)
+			frames(1);
+
+		expect(task('w1')).toBe('attack');
+		expect(scene.AgentOf('w1').Enemy).toBe('e1');
+		expect(scene.AgentOf('w1').Board.EnemyNear).toBe(1);
+		expect(fired).toContain('w1');
+
+		/* Orders: back to its place, holding, falling back. */
+		expect(scene.AgentOrder(['w1', 'nobody', 'me'], 'form')).toBe(1);
+		expect(scene.AgentOrder(['w1'], 'dance')).toBe(0);
+
+		frames(12);
+
+		expect(task('w1')).toBe('follow');
+
+		scene.AgentOrder(['w1'], 'hold');
+
+		frames(12);
+
+		expect(task('w1')).toBe('hold');
+
+		scene.AgentOrder(['w1'], 'retreat');
+
+		frames(12);
+
+		expect(task('w1')).toBe('retreat');
+
+		/* No order, the other one near again, hurt hard: it falls back by itself. */
+		scene.AgentOrder(['w1'], '');
+
+		foe.Ship.At = [wing.Ship.At[0] + 0.3, wing.Ship.At[1], wing.Ship.At[2] + 0.3];
+
+		frames(12);
+
+		wing.Values.Health = 12;
+
+		frames(60);
+
+		expect(task('w1')).toBe('retreat');
+		expect(scene.AgentOf('w1').Board.Health).toBeCloseTo(0.12, 2);
+		expect(tasks).toEqual(expect.arrayContaining(['w1:follow', 'e1:patrol', 'w1:attack', 'w1:hold', 'w1:retreat']));
+
+		/*
+		 * Where a shot meets what moves (the lead of an attack): a body of 20 m/s at a target 10 m off going 5 m/s across meets
+		 * it where both come in the same seconds; a ray at once, where it is.
+		 */
+		var lead = engine.AgentLead({ID: 's', World: [0, 0, 0], WorldWay: [0, 0, 0], Values: {}, Traits: {}}, {ID: 't', World: [10, 0, 0], WorldWay: [0, 0, 5], Values: {}, Traits: {}}, {Kind: 'projectile', Speed: 20});
+
+		expect(lead.Far).toBeCloseTo(20 * lead.Seconds, 6);
+		expect(lead.At[0]).toBeCloseTo(10, 6);
+		expect(lead.At[2]).toBeCloseTo(5 * lead.Seconds, 6);
+		expect(engine.AgentLead({ID: 's', World: [0, 0, 0], Values: {}, Traits: {}}, {ID: 't', World: [10, 0, 0], WorldWay: [0, 0, 5], Values: {}, Traits: {}}, {Kind: 'rail'}).At).toEqual([10, 0, 0]);
+	});
+
+	/*
+	 * Contract: the soft mass lock (blueprints/vehicles/masslock, Readout MassLock) and weapons of metres in space of real
+	 * sizes. Regression: there a laser of 400 m reached 400 units (past the planets), a shot of a ship going at hundreds of
+	 * km/s was left behind it, and two fighters passed each other in a frame.
+	 */
+	it('slows ships near ships of another team, and fires shots of metres that go on with their ship in space of real sizes', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" Scale="real" Team="blue" MassLock="true" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var metre;
+		var ship;
+		var other;
+		var shot;
+		var beam;
+
+		function frames (count) {
+			for (var f = 0; f < count; f++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		frames(2);
+
+		scene.Add('ship', {ID: 'a', Name: '', Size: 0.002, Parent: 'world', Weapon: 'plasma', Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1]}});
+		scene.Add('ship', {ID: 'b', Name: '', Size: 0.002, Parent: 'world', Team: 'red', Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 6], Facing: [0, 0, 1]}});
+		scene.Control('a');
+		/* The other one on its autopilot: flown, it goes on. */
+		scene.Autopilot('b', 'hold');
+
+		frames(4);
+
+		metre = engine.Metre();
+		ship = inner.Objects.a;
+		other = inner.Objects.b;
+
+		expect(metre).toBeGreaterThan(0);
+
+		/* Far: as fast as it may go there. */
+		expect(engine.ShipTop(ship) / metre).toBeGreaterThan(1000);
+		expect(scene.Readout('a').MassLock).toBe(0);
+
+		/* 2 km from a ship of another team: no faster than a fight (300 m/s by it). */
+		other.Ship.At = [ship.Ship.At[0] + 2000 * metre, ship.Ship.At[1], ship.Ship.At[2]];
+		/* Still by the planet (its speed is what the fight is by). */
+		other.Ship.Way = [0, 0, 0];
+		other.Ship.Throttle = 0;
+
+		frames(3);
+
+		expect(scene.Readout('a').MassLock).toBe(1);
+		/* 300 m/s by it: as fast as it goes and so much more. */
+		expect(engine.ShipTop(ship) / metre).toBeCloseTo(300, -1);
+
+		/*
+		 * 10 km off, nearly locked: a little faster, by far not the most it could. Regression: blended in a line to a top of
+		 * thousands of km/s, nearly locked it still went 20 km/s and passed the fight by kilometres each way.
+		 */
+		other.Ship.At = [ship.Ship.At[0] + 10000 * metre, ship.Ship.At[1], ship.Ship.At[2]];
+
+		frames(3);
+
+		expect(scene.Readout('a').MassLock).toBeGreaterThan(0.9);
+		expect(engine.ShipTop(ship) / metre).toBeLessThan(1000);
+
+		other.Ship.At = [ship.Ship.At[0] + 2000 * metre, ship.Ship.At[1], ship.Ship.At[2]];
+
+		frames(3);
+
+		/* The other of 30 m (a shot meets a ship of its frame within half its size). */
+		other.Traits.Model.Size = 30 * metre;
+		other.Size = 30 * metre;
+
+		delete other.Scaled;
+
+		frames(1);
+
+		/* A shot of plasma: 45 m/s of its own, and as its ship goes. */
+		expect(scene.Fire('a', {Way: ship.Ship.Ahead})).toBe(true);
+
+		shot = inner.Weapons.Shots.filter(function (one) {
+			return one.Source === 'a';
+		})[0];
+
+		expect(Math.hypot(shot.Velocity[0] - ship.Ship.Way[0], shot.Velocity[1] - ship.Ship.Way[1], shot.Velocity[2] - ship.Ship.Way[2]) / metre).toBeCloseTo(45, 0);
+		expect(shot.Around).toBe('world');
+		expect(Math.hypot.apply(Math, ship.WorldWay) / metre).toBeGreaterThan(1);
+
+		/* Its range is of how far it flew of its own: carried as its ship goes, it lives on. Regression: it was gone at once. */
+		frames(10);
+
+		expect(inner.Weapons.Shots.indexOf(shot)).not.toBe(-1);
+		expect(shot.Flown / metre).toBeLessThan(200);
+
+		/* A laser of 400 m reaches 400 m. */
+		ship.Values.Weapon = 'laser';
+
+		scene.Fire('a', {Way: [1, 0, 0]});
+
+		frames(1);
+
+		beam = inner.Weapons.Shots.filter(function (one) {
+			return one.Source === 'a' && one.Type.Kind === 'beam';
+		})[0];
+
+		expect(Math.hypot(beam.End[0] - beam.From[0], beam.End[1] - beam.From[1], beam.End[2] - beam.From[2]) / metre).toBeCloseTo(400, 0);
+
+		/*
+		 * A ship 300 m ahead (a box of 30 m) is hit by it. Regression: nearer than a ten-thousandth of a unit was taken for where
+		 * the ray begins, so in space of real sizes no ship was ever hit.
+		 */
+		var hits = [];
+
+		Elemenx.Service('SceneModels').Define('test-hull', {Parts: [{ID: 'hull', Shape: 'box', At: [0, 0.5, 0], Size: [1, 1, 1]}]});
+
+		await new Promise(function (resolve) {
+			Elemenx.Service('SceneModels').Load('test-hull', resolve);
+		});
+
+		other.Traits.Model = {Shape: 'test-hull'};
+		other.Size = 30 * metre;
+		delete other.Scaled;
+
+		scene.$On('hit', function (event) {
+			hits.push(event.Target);
+		});
+
+		other.Ship.At = [0, 1, 2].map(function (axis) {
+			return ship.Ship.At[axis] + ship.Ship.Ahead[axis] * 300 * metre;
+		});
+		other.Ship.Way = ship.Ship.Way.slice();
+
+		frames(2);
+
+		ship.Values.Weapon = 'railgun';
+		ship.Size = 30 * metre;
+		delete ship.Scaled;
+		frames(1);
+
+		expect(scene.Fire('a', {At: 'b'})).toBe(true);
+
+		frames(6);
+
+		expect(hits).toContain('b');
+	});
+
+	/*
+	 * Contract: SceneMissiles (Launch, Flares, Defence, Incoming, ArmsOf; the events missile, flares, lock) in space of real
+	 * sizes. A ship locks its target, its salvo steers itself to a ship that goes across and hits it; a ship that throws
+	 * flares takes the missiles off itself; one with point defence brings them down; an agent launches at its enemy locked
+	 * and against a missile at it throws flares and turns away.
+	 */
+	/*
+	 * Contract: the frame of a fight (the soft mass lock). Two ships of other teams near each other come to one frame and
+	 * go by it, neither carrying the other off; one at full throttle goes no faster than the speed of a fight by the other.
+	 * Regression: held only to how fast they went by the planet, two ships went by each other at 10 km/s.
+	 */
+	it('flies ships near ships of another team in one frame of their fight, not by the planet', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" Scale="real" Team="blue" MassLock="true" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var metre;
+		var ship;
+		var other;
+
+		function frames (count) {
+			for (var f = 0; f < count; f++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function speed (way) {
+			return Math.hypot(way[0], way[1], way[2]) / metre;
+		}
+
+		/* The other held going at 5 km/s by the planet (as by a leader that goes round it). */
+		function held (count) {
+			for (var f = 0; f < count; f++) {
+				other.Ship.Way = [0, 0, 5000 * metre];
+
+				frames(1);
+			}
+		}
+
+		function apart () {
+			return speed([0, 1, 2].map(function (axis) {
+				return ship.Ship.Way[axis] - other.Ship.Way[axis];
+			}));
+		}
+
+		frames(2);
+
+		metre = engine.Metre();
+
+		scene.Add('ship', {ID: 'a', Name: '', Size: 30 * metre, Parent: 'world', Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1]}});
+		scene.Add('ship', {ID: 'b', Name: '', Size: 30 * metre, Parent: 'world', Team: 'red', Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 6], Facing: [0, 0, 1]}});
+		scene.Control('a');
+		scene.Autopilot('b', 'hold');
+
+		frames(4);
+
+		ship = inner.Objects.a;
+		other = inner.Objects.b;
+
+		/* 2 km apart, both going at 5 km/s by the planet (as an autopilot brought it by the other), the other held so. */
+		ship.Ship.Way = [0, 0, 5000 * metre];
+		ship.Ship.Throttle = 0;
+		other.Ship.At = [ship.Ship.At[0] + 2000 * metre, ship.Ship.At[1], ship.Ship.At[2]];
+		other.Ship.Throttle = 0;
+
+		/* Its fight begins here (its frame, of the way it goes now). */
+		delete ship.FightWay;
+		delete other.FightWay;
+
+		/* At no throttle it keeps by it (it stops in the fight, not by the planet). */
+		held(600);
+
+		expect(scene.Readout('a').MassLock).toBeGreaterThan(0.9);
+		expect(apart()).toBeLessThan(400);
+		expect(speed(ship.Ship.Way)).toBeLessThan(5400);
+
+		/* Full throttle: by the other no faster than a fight goes (300 m/s, and a little more as the lock loosens). */
+		ship.Ship.Throttle = 1;
+
+		for (var i = 0; i < 300; i++) {
+			ship.Ship.Throttle = 1;
+
+			held(1);
+		}
+
+		expect(apart()).toBeLessThan(700);
+		expect(speed(ship.Ship.Way)).toBeLessThan(6000);
+
+		/*
+		 * Near the fight (300 m/s) its autopilot sees how fast what it flies to goes, even far faster (as a body that goes
+		 * round, of no way of its own: here the other moved by hand at 5 km/s). Regression: past 4 times the top of a fight it
+		 * was seen still, and what flew to it never came there.
+		 */
+		var seen = [];
+
+		scene.Autopilot('a', 'approach', {Target: 'b', Distance: 1000});
+
+		for (i = 0; i < 40; i++) {
+			other.Ship.Way = [0, 0, 0];
+			other.Ship.At = [other.Ship.At[0], other.Ship.At[1], other.Ship.At[2] + 5000 * metre * 0.033];
+
+			frames(1);
+
+			if (i > 10)
+				seen.push(speed(ship.Autopilot.Moving));
+		}
+
+		expect(Math.min.apply(Math, seen)).toBeGreaterThan(4000);
+		expect(Math.max.apply(Math, seen)).toBeLessThan(6000);
+
+		/*
+		 * A point by the other (Frame): it goes with it, and the ship comes to it there. Regression: a fighter turning out of
+		 * its run flew to a point of the planet the fight left behind.
+		 */
+		var by = [other.World[0] + 1500 * metre, other.World[1], other.World[2]];
+
+		expect(scene.Autopilot('a', 'approach', {Target: by, Distance: 50, Frame: 'b'})).toBe(true);
+		expect(ship.Autopilot.Frame).toBe('b');
+
+		for (i = 0; i < 1200 && !scene.AutopilotOf('a').Arrived; i++)
+			held(1);
+
+		expect(scene.AutopilotOf('a').Arrived).toBe(true);
+		expect(Math.hypot(ship.World[0] - other.World[0] - 1500 * metre, ship.World[1] - other.World[1], ship.World[2] - other.World[2]) / metre).toBeLessThan(400);
+	});
+
+	it('guides missiles to what a ship locked, and takes them off by flares and point defence, by hand and by minds of their own', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" Scale="real" Team="blue" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1"><SceneObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></SceneObject></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var told = [];
+		var locks = [];
+		var hits = [];
+		var released = [];
+		var metre;
+		var ship;
+		var other;
+		var arms;
+		var i;
+
+		function frames (count) {
+			for (var f = 0; f < count; f++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function until (test, most) {
+			for (var f = 0; f < most && !test(); f++)
+				frames(1);
+		}
+
+		function states (kind) {
+			return told.filter(function (one) {
+				return one.State === kind;
+			});
+		}
+
+		/* Two ships 3 km apart, the other ahead of the one flown, both still by the planet. */
+		function apart (far) {
+			ship.Ship.Way = [0, 0, 0];
+			ship.Ship.Throttle = 0;
+
+			other.Ship.At = [0, 1, 2].map(function (axis) {
+				return ship.Ship.At[axis] + ship.Ship.Ahead[axis] * far * metre;
+			});
+			other.Ship.Way = ship.Ship.Way.slice();
+			other.Ship.Throttle = 0;
+
+			delete ship.FightWay;
+			delete other.FightWay;
+		}
+
+		scene.$On('missile', function (event) {
+			told.push(event);
+		});
+		scene.$On('lock', function (event) {
+			locks.push(event);
+		});
+		scene.$On('hit', function (event) {
+			hits.push(event);
+		});
+		scene.$On('flares', function (event) {
+			released.push(event);
+		});
+
+		frames(2);
+
+		metre = engine.Metre();
+
+		/* Ships of 30 m. */
+		scene.Add('ship', {ID: 'a', Name: '', Size: 30 * metre, Parent: 'world', Missiles: 'ship-missile', Flares: 12, Defence: 'ship-pd', Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1]}});
+		scene.Add('ship', {ID: 'b', Name: '', Size: 30 * metre, Parent: 'world', Team: 'red', Health: 1000, Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 6], Facing: [0, 0, 1]}});
+		scene.Control('a');
+		scene.Autopilot('b', 'hold');
+
+		frames(4);
+
+		ship = inner.Objects.a;
+		other = inner.Objects.b;
+
+		/* The built-in missile is fast (300 km/s); its ways are seen on a slower one first (a type of the scene, Weapons). */
+		var fast = Object.assign({}, inner.WeaponTypes['ship-missile']);
+
+		scene.Weapons({'ship-missile': {Speed: 400, Accel: 3000, Top: 15000, Range: 80000}});
+
+		/* What it has: 8 missiles, 12 flares, its point defence on; nothing locked. */
+		arms = scene.ArmsOf('a');
+
+		expect(arms).toMatchObject({Missiles: 'ship-missile', Left: 8, Magazine: 8, Reloading: false, Locked: [], Flares: {Left: 12, Count: 12}, Defence: {Weapon: 'ship-pd', On: true}, Incoming: 0, Flying: 0});
+		expect(scene.ArmsOf('')).toMatchObject({Missiles: 'ship-missile'});
+		expect(scene.ArmsOf('b')).toBe(null);
+		expect(scene.Launch('a', {})).toBe(0);
+
+		/* No ground in space: a ray down through the plane of the system meets nothing. Regression: there a missile struck it. */
+		expect(scene.Trace([ship.World[0] + 1000 * metre, 50 * metre, ship.World[2]], [0, -1, 0], 100 * metre)).toBe(null);
+
+		/* Its target 3 km ahead: locked in a second and a half. */
+		apart(3000);
+
+		/* No mass lock where the scene does not ask for it (MassLock): near the other, as fast as anywhere. */
+		frames(2);
+
+		expect(scene.Readout('a').MassLock).toBe(0);
+		expect(engine.ShipTop(ship) / metre).toBeGreaterThan(1000);
+
+		/*
+		 * Near a ship of another team its way changes no faster than its FightAccel (m/s²) lets it: at full throttle, 300 m/s²
+		 * a second. None by default: as fast as it may.
+		 */
+		var before = ship.Ship.Way.slice();
+
+		ship.Values.Vehicle.FightAccel = 300;
+
+		for (i = 0; i < 30; i++) {
+			ship.Ship.Throttle = 1;
+
+			frames(1);
+		}
+
+		expect(Math.hypot(ship.Ship.Way[0] - before[0], ship.Ship.Way[1] - before[1], ship.Ship.Way[2] - before[2]) / metre).toBeLessThan(330);
+		expect(Math.hypot(ship.Ship.Way[0] - before[0], ship.Ship.Way[1] - before[1], ship.Ship.Way[2] - before[2]) / metre).toBeGreaterThan(200);
+
+		delete ship.Values.Vehicle.FightAccel;
+		before = ship.Ship.Way.slice();
+
+		for (i = 0; i < 3; i++) {
+			ship.Ship.Throttle = 1;
+
+			frames(1);
+		}
+
+		expect(Math.hypot(ship.Ship.Way[0] - before[0], ship.Ship.Way[1] - before[1], ship.Ship.Way[2] - before[2]) / metre).toBeGreaterThan(1000);
+
+		apart(3000);
+
+		frames(2);
+
+		/* Its autopilot closing on it no faster than asked (Closing, m/s): 200, not the 1 km/s of 3 km in 3 seconds. */
+		expect(scene.Autopilot('a', 'approach', {Target: 'b', Distance: 100, Closing: 200})).toBe(true);
+
+		frames(90);
+
+		expect(Math.hypot(ship.Ship.Way[0] - other.Ship.Way[0], ship.Ship.Way[1] - other.Ship.Way[1], ship.Ship.Way[2] - other.Ship.Way[2]) / metre).toBeLessThan(260);
+		expect(scene.Autopilot('a', 'off')).toBe(true);
+
+		apart(3000);
+
+		frames(2);
+
+		scene.SetTarget('a', 'b');
+
+		until(function () {
+			return scene.ArmsOf('a').Locked.length > 0;
+		}, 90);
+
+		expect(scene.ArmsOf('a').Locked).toEqual(['b']);
+		expect(locks[0]).toMatchObject({ID: 'b', Weapon: 'ship-missile', By: 'a'});
+
+		/* A salvo of two; the other goes across at 150 m/s: they meet it where it goes, and hit it. */
+		other.Ship.Way = [0, 1, 2].map(function (axis) {
+			return ship.Ship.Way[axis] + ship.Ship.Right[axis] * 150 * metre;
+		});
+
+		expect(scene.Launch('a', {})).toBe(2);
+
+		frames(9);
+
+		expect(states('launch').length).toBe(2);
+		expect(scene.Incoming('b').length).toBe(2);
+		expect(scene.Incoming('b')[0].Seconds).toBeGreaterThan(0);
+		expect(scene.Incoming('b')[0].Seconds).toBeLessThan(20);
+		expect(scene.ArmsOf('a')).toMatchObject({Left: 6, Flying: 2});
+		/* Seen by the other as missiles at it. */
+		expect(scene.Contacts('b').filter(function (one) {
+			return one.Kind === 'missile' && one.Incoming && one.Hostile;
+		}).length).toBe(2);
+
+		until(function () {
+			return states('hit').length === 2;
+		}, 300);
+
+		expect(states('hit').length).toBe(2);
+		expect(hits.filter(function (one) {
+			return one.Target === 'b' && one.Type === 'explosive' && one.Amount > 50;
+		}).length).toBeGreaterThanOrEqual(2);
+		expect(scene.Incoming('b')).toEqual([]);
+
+		/*
+		 * Its fuse by where its target goes in the frame: one going 6 km/s across (198 m a frame), a missile through where it
+		 * is as the frame ends bursts by it. Regression: looked for where it was as the frame began, it passed 198 m off.
+		 */
+		var centre = engine.WeaponsCenter(other);
+		var fused = {ID: 'fuse-test', Around: 'world', Type: inner.WeaponTypes['ship-missile'], Name: 'ship-missile', Source: 'a', Team: 'blue', Target: 'b', From: centre.slice(), Velocity: [0, 0, 0], Carried: [0, 0, 0]};
+
+		other.Ship.Way = [6000 * metre, 0, 0];
+		fused.At = [centre[0] + 198 * metre, centre[1], centre[2] + 300 * metre];
+
+		expect(engine.MissileFuse(fused, [centre[0] + 198 * metre, centre[1], centre[2] - 300 * metre], 0, 0.033)).toBe(true);
+
+		other.Ship.Way = [0, 0, 0];
+
+		/* Flares that each take a missile that sees them: a salvo taken off it, none hits. */
+		other.Values.Flares = {Count: 8, Salvo: 4, Lure: 1, Every: 0};
+		other.Ship.Way = ship.Ship.Way.slice();
+		hits.length = 0;
+
+		apart(3000);
+
+		expect(scene.Launch('a', {Target: 'b'})).toBe(2);
+
+		frames(2);
+
+		expect(scene.Flares('b')).toBe(4);
+		expect(released[0]).toMatchObject({ID: 'b', Count: 4, Left: 4});
+		expect(scene.Contacts('a').filter(function (one) {
+			return one.Kind === 'flare';
+		}).length).toBe(4);
+
+		until(function () {
+			return states('decoyed').length === 2;
+		}, 200);
+
+		expect(states('decoyed').length).toBe(2);
+
+		/*
+		 * Past its flare (none bursts by one) each looks again: its target in its seeker, it goes on to it, else it is lost.
+		 * Regression: once on a flare a missile was lost for good.
+		 */
+		until(function () {
+			return inner.Weapons.Shots.filter(function (one) {
+				return one.Type.Guidance;
+			}).length === 0;
+		}, 400);
+
+		states('decoyed').forEach(function (taken) {
+			expect(told.filter(function (one) {
+				return one.ID === taken.ID && (one.State === 'reacquired' || one.State === 'lost');
+			}).length).toBeGreaterThanOrEqual(1);
+			expect(told.filter(function (one) {
+				return one.ID === taken.ID && one.State === 'spent' && one.Flare;
+			}).length).toBe(0);
+		});
+
+		var struck = states('hit').length;
+
+		/* Point defence that does not miss: brought down before they reach it. */
+		other.Values.Flares = 0;
+		other.Values.Defence = 'sure-pd';
+
+		scene.Weapons({'sure-pd': {Kind: 'bullet', Damage: 60, Rate: 20, Range: 2500, Accuracy: 1}});
+
+		apart(3000);
+
+		expect(scene.Launch('a', {Target: 'b'})).toBe(2);
+
+		until(function () {
+			return states('intercepted').length === 2;
+		}, 300);
+
+		expect(states('intercepted').length).toBe(2);
+		expect(states('intercepted')[0].By).toBe('b');
+		expect(scene.ArmsOf('a').Left).toBe(2);
+
+		/* Its point defence off: they come through. */
+		expect(scene.Defence('b', false)).toBe(false);
+		expect(scene.Defence('b')).toBe(false);
+
+		hits.length = 0;
+
+		apart(3000);
+
+		scene.Launch('a', {Target: 'b', Count: 1});
+
+		struck = states('hit').length;
+
+		until(function () {
+			return states('hit').length === struck + 1;
+		}, 300);
+
+		expect(states('hit').length).toBe(struck + 1);
+
+		/*
+		 * An agent of the other team with missiles, the ship flown ahead of it: it locks it, launches; against a missile at it
+		 * (Incoming on its board) it defends (flares out).
+		 */
+		scene.Add('ship', {ID: 'e', Name: '', Size: 30 * metre, Parent: 'world', Team: 'red', Health: 1000, Weapon: 'ship-laser', Missiles: 'ship-missile', Flares: 12, Agent: {Range: 50000}, Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 2.9994], Facing: [0, 0, 1]}});
+
+		frames(4);
+
+		var agent = inner.Objects.e;
+
+		/* Still by the planet, as the ship flown. */
+		agent.Ship.Way = [0, 0, 0];
+		agent.Ship.Throttle = 0;
+
+		/* Their fight begins here (the frame of each, of the way it goes now). */
+		delete agent.FightWay;
+		delete ship.FightWay;
+
+		until(function () {
+			return told.some(function (one) {
+				return one.Source === 'e' && one.State === 'launch';
+			});
+		}, 400);
+
+		expect(told.filter(function (one) {
+			return one.Source === 'e' && one.State === 'launch';
+		})[0]).toMatchObject({Target: 'a'});
+
+		released.length = 0;
+
+		var sensed = 0;
+
+		expect(scene.Launch('a', {Target: 'e'})).toBe(1);
+
+		for (i = 0; i < 300 && !released.some(function (one) {
+			return one.ID === 'e';
+		}); i++) {
+			frames(1);
+
+			sensed = Math.max(sensed, scene.AgentOf('e').Board.Incoming);
+		}
+
+		expect(released.some(function (one) {
+			return one.ID === 'e';
+		})).toBe(true);
+		expect(sensed).toBeGreaterThan(0.3);
+		expect(scene.AgentOf('e').Task).toBe('defend');
+
+		/*
+		 * Time going on, the planet going round its star fast: a missile starts by its ship (where its step has it), not by
+		 * where it was drawn a frame ago. Regression: hundreds of km off, it never met anything.
+		 */
+		scene.Remove('e');
+
+		scene.Paused = false;
+		scene.Speed = 0.01;
+		delete inner.Weapons.Rounds['a:ship-missile'];
+
+		frames(4);
+
+		var planetFrom = inner.Objects.world.World.slice();
+
+		frames(1);
+
+		expect(Math.hypot(inner.Objects.world.World[0] - planetFrom[0], inner.Objects.world.World[1] - planetFrom[1], inner.Objects.world.World[2] - planetFrom[2]) / metre).toBeGreaterThan(100000);
+
+		/* Drawn a frame behind (the planet 600 km on since): a shot of it still starts by the ship. */
+		var drawn = other.World;
+
+		other.World = [drawn[0] + 600000 * metre, drawn[1], drawn[2]];
+
+		expect(scene.Fire('b', {Weapon: 'ship-missile', Target: 'a', Way: [0, 0, 1]})).toBe(true);
+
+		other.World = drawn;
+
+		var started = inner.Weapons.Shots[inner.Weapons.Shots.length - 1];
+		var home = [0, 1, 2].map(function (axis) {
+			return inner.Objects.world.World[axis] + other.Ship.At[axis];
+		});
+
+		expect(Math.hypot(started.At[0] - home[0], started.At[1] - home[1], started.At[2] - home[2]) / metre).toBeLessThan(20000);
+
+		scene.Paused = true;
+
+		frames(30);
+
+		/* The built-in one meets what flees at 50 km/s 20 km off. */
+		scene.Weapons({'ship-missile': fast});
+
+		other.Values.Defence = '';
+		/* A full magazine. */
+		delete inner.Weapons.Rounds['a:ship-missile'];
+		apart(20000);
+
+		struck = states('hit').length;
+
+		expect(scene.Launch('a', {Target: 'b', Count: 1})).toBe(1);
+
+		for (i = 0; i < 120 && states('hit').length === struck; i++) {
+			other.Ship.Way = [0, 1, 2].map(function (axis) {
+				return ship.Ship.Ahead[axis] * 50000 * metre;
+			});
+
+			frames(1);
+		}
+
+		expect(states('hit').length).toBe(struck + 1);
+
+		var vectors3 = Elemenx.Service('Math').Vectors;
+
+		/* Torpedoes and a mass driver: what it has of them. */
+		ship.Values.Torpedoes = 'ship-torpedo';
+		ship.Values.Driver = 'ship-massdriver';
+
+		expect(scene.ArmsOf('a')).toMatchObject({Torpedoes: {Name: 'ship-torpedo', Left: 4, Magazine: 4, Reloading: false}, Driver: {Name: 'ship-massdriver', Left: 10, Magazine: 10, Ready: true}});
+
+		/* The mass driver at one going across at 3 km/s 5 km off (its nose and throttle so): where its slug meets it, it hits it. */
+		apart(5000);
+
+		hits.length = 0;
+
+		var across = [0, 1, 2].map(function (axis) {
+			return ship.Ship.Right[axis] * 3000 * metre;
+		});
+
+		other.Ship.Ahead = ship.Ship.Right.slice();
+		other.Ship.Up = ship.Ship.Up.slice();
+		other.Ship.Right = vectors3.Cross(other.Ship.Up, other.Ship.Ahead);
+		other.Ship.Throttle = 3000 * metre / engine.ShipTop(other);
+		other.Ship.Way = across.slice();
+
+		frames(3);
+
+		scene.SetTarget('a', 'b');
+
+		expect(scene.Driver('a', '')).toBe(true);
+		expect(scene.Driver('a', '')).toBe(false);
+
+		for (i = 0; i < 60 && !hits.some(function (one) {
+			return one.Weapon === 'ship-massdriver' && one.Target === 'b';
+		}); i++)
+			frames(1);
+
+		expect(hits.filter(function (one) {
+			return one.Weapon === 'ship-massdriver' && one.Target === 'b';
+		})[0]).toMatchObject({Type: 'kinetic'});
+
+		other.Ship.Throttle = 0;
+
+		/*
+		 * A body meets a ship where its step has it, its drawn place a frame behind (its planet 600 km on since). Regression:
+		 * so drawn, no slug of a ship in space met a hull.
+		 */
+		var drawnAt = other.World;
+		var centre = engine.WeaponsCenter(other);
+		var origin = inner.Objects.world.World;
+		var spot = [0, 1, 2].map(function (axis) {
+			return origin[axis] + other.Ship.At[axis] + centre[axis] - drawnAt[axis];
+		});
+		var slug = {ID: 'slug', Source: 'a', Around: 'world', Rel: [spot[0] - origin[0], spot[1] - origin[1], spot[2] - origin[2] + 50 * metre], At: [spot[0], spot[1], spot[2] + 50 * metre], Way: [0, 0, -1]};
+
+		other.World = [drawnAt[0] + 600000 * metre, drawnAt[1], drawnAt[2]];
+
+		expect(engine.WeaponsContact(slug, [spot[0], spot[1], spot[2] - 50 * metre], 0, 0)).toMatchObject({ID: 'b'});
+
+		/* One of its own side it passes through. */
+		other.Values.Team = 'blue';
+
+		expect(engine.WeaponsContact(slug, [spot[0], spot[1], spot[2] - 50 * metre], 0, 0)).toBe(null);
+
+		other.Values.Team = 'red';
+
+		/* And the lead of a shot at it is where its step has it (the drawn place a frame behind). */
+		expect(Math.hypot.apply(Math, [0, 1, 2].map(function (axis) {
+			return engine.AgentLead(ship, other, {Kind: 'rail'}).At[axis] - spot[axis];
+		})) / metre).toBeLessThan(10);
+
+		other.World = drawnAt;
+
+		/* A torpedo at what goes slowly: it meets it, its blast heavy; point defence that does not miss brings one down. */
+		apart(6000);
+
+		hits.length = 0;
+
+		var slow = [0, 1, 2].map(function (axis) {
+			return ship.Ship.Right[axis] * 100 * metre;
+		});
+
+		expect(scene.Launch('a', {Target: 'b', Kind: 'torpedo'})).toBe(1);
+
+		for (i = 0; i < 300 && !hits.some(function (one) {
+			return one.Weapon === 'ship-torpedo' && one.Target === 'b';
+		}); i++) {
+			other.Ship.Way = slow.slice();
+
+			frames(1);
+		}
+
+		expect(hits.filter(function (one) {
+			return one.Weapon === 'ship-torpedo' && one.Target === 'b';
+		})[0].Amount).toBeGreaterThan(500);
+		expect(scene.ArmsOf('a').Torpedoes.Left).toBe(3);
+
+		other.Values.Defence = 'sure-pd';
+
+		scene.Defence('b', true);
+
+		apart(6000);
+
+		struck = states('intercepted').length;
+
+		expect(scene.Launch('a', {Target: 'b', Kind: 'torpedo'})).toBe(1);
+
+		for (i = 0; i < 300 && states('intercepted').length === struck; i++)
+			frames(1);
+
+		expect(states('intercepted').length).toBe(struck + 1);
+
+		/*
+		 * The lance 100 km off: it charges 3 seconds (the event charge, no more while it charges), then burns on its target
+		 * as it goes, then cools.
+		 */
+		var charges = [];
+
+		scene.$On('charge', function (event) {
+			charges.push(event);
+		});
+
+		ship.Values.Lance = 'ship-lance';
+		other.Values.Defence = '';
+
+		apart(100000);
+
+		hits.length = 0;
+
+		expect(scene.ArmsOf('a').Lance).toMatchObject({Name: 'ship-lance', Charge: -1, Burning: false, Ready: true});
+		expect(scene.Lance('a', 'b')).toBe(true);
+		expect(scene.Lance('a', 'b')).toBe(false);
+		expect(charges[0]).toMatchObject({ID: 'a', Weapon: 'ship-lance', Seconds: 3});
+
+		frames(45);
+
+		expect(scene.ArmsOf('a').Lance.Charge).toBeGreaterThan(0.3);
+		expect(hits.filter(function (one) {
+			return one.Weapon === 'ship-lance';
+		}).length).toBe(0);
+
+		for (i = 0; i < 60 && !scene.ArmsOf('a').Lance.Burning; i++)
+			frames(1);
+
+		/*
+		 * Burning, its target drawn 3000 km off where its step has it (in a step of quick time a ship may be drawn by where
+		 * its planet was): it burns on it still. Regression: by the drawn places the lance burnt past a raider 10 km off.
+		 */
+		var shown = other.World;
+		var lanced = hits.length;
+
+		other.World = [shown[0] + 3000000 * metre, shown[1], shown[2]];
+
+		engine.WeaponsStep(0.2);
+
+		other.World = shown;
+
+		expect(hits.slice(lanced).filter(function (one) {
+			return one.Weapon === 'ship-lance' && one.Target === 'b';
+		}).length).toBe(1);
+
+		var sideways = [0, 1, 2].map(function (axis) {
+			return ship.Ship.Right[axis] * 2000 * metre;
+		});
+
+		for (i = 0; i < 80; i++) {
+			other.Ship.Way = sideways.slice();
+
+			frames(1);
+		}
+
+		expect(hits.filter(function (one) {
+			return one.Weapon === 'ship-lance' && one.Target === 'b' && one.Type === 'energy';
+		}).length).toBeGreaterThan(5);
+
+		frames(30);
+
+		expect(scene.ArmsOf('a').Lance).toMatchObject({Charge: -1, Burning: false, Ready: false});
+		expect(scene.ArmsOf('a').Lance.Cooldown).toBeGreaterThan(10);
+		expect(scene.Lance('a', 'b')).toBe(false);
+
+		/*
+		 * The railgun faster than light (quicker to charge and to fire again here): a tunnel of warp for its slug only, no
+		 * warning to its target. Predict: out short of where it will be, it meets one that goes on so, and misses one that
+		 * turned; direct: into it, as it turns; a blocker of warp by it lets none open; a platform (no ship) has one too.
+		 */
+		var tunnels = [];
+		var fired = function (weapon) {
+			return hits.filter(function (one) {
+				return one.Weapon === weapon && one.Target === 'b';
+			}).length;
+		};
+		/* It flies so by its own nose and throttle. */
+		var flyFor = function (count, way) {
+			for (var n = 0; n < count; n++) {
+				var going = way();
+
+				other.Ship.Ahead = vectors3.Normalize(going);
+				other.Ship.Up = ship.Ship.Up.slice();
+				other.Ship.Right = vectors3.Cross(other.Ship.Up, other.Ship.Ahead);
+				other.Ship.Throttle = vectors3.Length(going) / engine.ShipTop(other);
+
+				if (n === 0)
+					other.Ship.Way = going.slice();
+
+				frames(1);
+			}
+		};
+		var across3 = function () {
+			return [0, 1, 2].map(function (axis) {
+				return ship.Ship.Right[axis] * 1000 * metre;
+			});
+		};
+		var turned = function () {
+			return [0, 1, 2].map(function (axis) {
+				return -ship.Ship.Right[axis] * 1000 * metre;
+			});
+		};
+
+		scene.$On('tunnel', function (event) {
+			tunnels.push(event);
+		});
+		scene.Weapons({'ship-ftl': {Charge: 0.5, Rate: 5}});
+
+		ship.Values.Railgun = 'ship-ftl';
+
+		apart(50000);
+
+		hits.length = 0;
+
+		expect(scene.ArmsOf('a').Railgun).toMatchObject({Name: 'ship-ftl', Left: 6, Magazine: 6, Charge: -1, Mode: 'predict'});
+		expect(scene.Railgun('a', 'b', {})).toBe(true);
+
+		flyFor(20, across3);
+
+		expect(tunnels[0]).toMatchObject({Source: 'a', Target: 'b', Mode: 'predict', Blocked: false});
+		expect(scene.Incoming('b')).toEqual([]);
+
+		flyFor(30, across3);
+
+		expect(fired('ship-ftl')).toBe(1);
+
+		/* It turns as the tunnel opens: missed. */
+		apart(50000);
+
+		flyFor(3, across3);
+
+		expect(scene.Railgun('a', 'b', {})).toBe(true);
+
+		for (i = 0; i < 60 && tunnels.length < 2; i++)
+			flyFor(1, across3);
+
+		flyFor(60, turned);
+
+		expect(fired('ship-ftl')).toBe(1);
+
+		/* Direct: into it as it turns. */
+		apart(50000);
+
+		flyFor(3, across3);
+
+		expect(scene.Railgun('a', 'b', {Mode: 'direct'})).toBe(true);
+
+		for (i = 0; i < 60 && tunnels.length < 3; i++)
+			flyFor(1, across3);
+
+		flyFor(40, turned);
+
+		expect(tunnels[2].Mode).toBe('direct');
+		expect(fired('ship-ftl')).toBe(2);
+
+		/* A blocker of warp by it: no tunnel opens. */
+		other.Traits.WarpBlocker = {Radius: 1000};
+
+		flyFor(10, across3);
+
+		expect(scene.Railgun('a', 'b', {Mode: 'direct'})).toBe(true);
+
+		flyFor(60, across3);
+
+		expect(tunnels[3]).toMatchObject({Blocked: true});
+		expect(fired('ship-ftl')).toBe(2);
+
+		delete other.Traits.WarpBlocker;
+
+		/* A platform: no ship, its railgun the same. */
+		scene.Add('station', {ID: 'plat', Parent: 'world', Team: 'blue', Railgun: 'platform-ftl'});
+		scene.Weapons({'platform-ftl': {Charge: 0.5}});
+
+		frames(2);
+
+		expect(scene.ArmsOf('plat').Railgun).toMatchObject({Name: 'platform-ftl'});
+		expect(scene.Railgun('plat', 'b', {Mode: 'direct'})).toBe(true);
+
+		flyFor(60, across3);
+
+		expect(hits.filter(function (one) {
+			return one.Weapon === 'platform-ftl' && one.Target === 'b';
+		})[0].Amount).toBeGreaterThan(1000);
+
+		/*
+		 * Two classes of missiles: point defence brings the heavy ones down (25 km/s), the fast ones (300 km/s) go through
+		 * it before it fires.
+		 */
+		scene.Remove('plat');
+
+		ship.Values.Hunters = 'ship-hunter';
+		other.Values.Defence = 'ship-pd';
+
+		scene.Defence('b', true);
+		delete inner.Weapons.Rounds['a:ship-missile'];
+		apart(20000);
+
+		struck = states('intercepted').length;
+
+		expect(scene.ArmsOf('a').Hunters).toMatchObject({Name: 'ship-hunter', Left: 6, Magazine: 6});
+		expect(scene.Launch('a', {Target: 'b', Kind: 'hunter', Count: 1})).toBe(1);
+
+		for (i = 0; i < 200 && states('intercepted').length === struck; i++)
+			frames(1);
+
+		expect(states('intercepted').length).toBe(struck + 1);
+
+		apart(20000);
+
+		struck = states('hit').length;
+
+		expect(scene.Launch('a', {Target: 'b', Count: 1})).toBe(1);
+
+		for (i = 0; i < 100 && states('hit').length === struck; i++)
+			frames(1);
+
+		expect(states('hit').length).toBe(struck + 1);
+
+		/*
+		 * A laser of a ship in space meets a ship where its step has it, though drawn 3000 km off (a step of quick time).
+		 * Regression: by the drawn places the lasers of ships in space met nothing.
+		 */
+		apart(5000);
+
+		hits.length = 0;
+
+		var showing = other.World;
+		var toward = vectors3.Normalize(vectors3.Subtract(other.Ship.At, ship.Ship.At));
+
+		other.World = [showing[0] + 3000000 * metre, showing[1], showing[2]];
+
+		expect(scene.Fire('a', {Weapon: 'ship-laser', Way: toward})).toBe(true);
+
+		engine.WeaponsStep(0.1);
+
+		other.World = showing;
+
+		expect(hits.filter(function (one) {
+			return one.Weapon === 'ship-laser' && one.Target === 'b';
+		}).length).toBeGreaterThan(0);
+
+		/* A streak of light is drawn at least so many pixels wide: 3 m 100 km off is more than 3 m. */
+		frames(1);
+
+		var eyeAt = inner.Eye || [0, 0, 0];
+
+		expect(engine.WeaponsSeen([eyeAt[0] + 100000 * metre, eyeAt[1], eyeAt[2]], [eyeAt[0] + 100000 * metre, eyeAt[1], eyeAt[2] + 1000 * metre], 3 * metre, 2) / metre).toBeGreaterThan(10);
+
+		/* A ship a mind flies changes its way in a fight no faster than its Accel (500 m/s²). */
+		scene.Add('ship', {ID: 'g', Name: '', Size: 30 * metre, Parent: 'world', Team: 'red', Health: 1000, Agent: {Range: 50000}, Vehicle: {Kind: 'ship', Around: 'world', From: [0, 0, 2.9996], Facing: [0, 0, 1]}});
+
+		frames(6);
+
+		var flier = inner.Objects.g;
+
+		flier.Ship.Way = ship.Ship.Way.slice();
+
+		var wayFrom = flier.Ship.Way.slice();
+
+		frames(30);
+
+		expect(Math.hypot(flier.Ship.Way[0] - wayFrom[0], flier.Ship.Way[1] - wayFrom[1], flier.Ship.Way[2] - wayFrom[2]) / metre).toBeLessThan(560);
 	});
 
 	it('sends a ship far at once: a warp to a body and a jump ahead, each going in, inside and out, and never into a body', async function () {
@@ -8163,14 +9890,14 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		}
 
 		var palette = renderer.Texture({Width: 3, Height: 3, Data: new Float32Array(line(math.Identity()).concat(line(math.Rotation([0, 0, 1], Math.PI / 2)), [pivot[0], pivot[1], pivot[2], 0, 0, 0, 0, 0, 0, 0, 0, 0]))}, {Float: true, Nearest: true});
-		var fragment = '#version 300 es\nprecision highp float;\nuniform sampler2D uPalette;\nuniform float uJointOffset;\nuniform vec4 aFrames;\nout vec4 outColor;\n' + skinned.slice(from, to) + 'void main() {\n	mat4 m = posed(0.0);\n	outColor = vec4(length(m[0].xyz), length(m[1].xyz), distance((m * vec4(2.0, 0.0, 0.0, 1.0)).xyz, vec3(1.0, 0.0, 0.0)), 1.0);\n}';
+		var fragment = '#version 300 es\nprecision highp float;\nuniform sampler2D uPalette;\nuniform float uJointOffset;\nuniform vec4 aFrames;\nuniform vec4 aLayer;\nout vec4 outColor;\n' + skinned.slice(from, to) + 'void main() {\n	mat4 m = posed(0.0);\n	outColor = vec4(length(m[0].xyz), length(m[1].xyz), distance((m * vec4(2.0, 0.0, 0.0, 1.0)).xyz, vec3(1.0, 0.0, 0.0)), 1.0);\n}';
 		var target = renderer.Target(1, 1, {Float: true});
 		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 		var pixel = new Float32Array(4);
 
 		target.Begin();
 
-		renderer.Draw(quad, renderer.Program(graphics.Shaders.Quad, fragment), {uPalette: palette, uJointOffset: 0, aFrames: [0, 1, 0.5, 0]}, {Depth: false, DepthWrite: false, Cull: 'none'});
+		renderer.Draw(quad, renderer.Program(graphics.Shaders.Quad, fragment), {uPalette: palette, uJointOffset: 0, aFrames: [0, 1, 0.5, 0], aLayer: [0, 0, 0, 0]}, {Depth: false, DepthWrite: false, Cull: 'none'});
 
 		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, pixel);
 
@@ -8182,6 +9909,79 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 
 		/* And the joint stays where it is. */
 		expect(pixel[2]).toBeLessThan(0.002);
+	});
+
+	/*
+	 * Contract: a foot set on the ground in the shader (aLayer.z, w: how far each ankle goes, in its model; the line of the
+	 * upper body tells each joint its leg, its part and the thigh, knee and ankle of it): the leg bent as two bones, its
+	 * bones as long as they were, the knee ahead in its plane, the foot moved there as it was turned.
+	 */
+	it('bends a leg in the shader to a foot set higher on the ground, its bones as long as they were', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="low" (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var renderer = scene.Engine().Renderer;
+		var gl = renderer.GL;
+		var graphics = Elemenx.Service('Renderer');
+		var skinned = scene.Shaders(graphics).Skinned;
+		var from = skinned.indexOf('mat4 joint(');
+		var to = skinned.indexOf('void main()');
+		var bind = [[0, 1, 0], [0, 0.5, 0], [0, 0.06, 0]];
+		var data = [];
+
+		/* A frame of rest (each joint as bound), the line of the legs, the line of rest. */
+		bind.forEach(function () {
+			data.push(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
+		});
+		bind.forEach(function (place, index) {
+			data.push(0, -1, 0, 0, 1, index + 1, 0, 0, 0, 1, 2, 0);
+		});
+		bind.forEach(function (place) {
+			data.push(place[0], place[1], place[2], 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		});
+
+		var palette = renderer.Texture({Width: 9, Height: 3, Data: new Float32Array(data)}, {Float: true, Nearest: true});
+		var fragment = '#version 300 es\nprecision highp float;\nuniform sampler2D uPalette;\nuniform float uJointOffset;\nuniform vec4 aFrames;\nuniform vec4 aLayer;\nuniform float uJoint;\nuniform vec3 uAhead;\nout vec4 outColor;\n' + skinned.slice(from, to) + 'void main() {\n	outColor = vec4((posed(uJoint) * vec4(boundOf(uJoint) + uAhead, 1.0)).xyz, 1.0);\n}';
+		var target = renderer.Target(1, 1, {Float: true});
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		var program = renderer.Program(graphics.Shaders.Quad, fragment);
+
+		function place (joint, lift, tilt, ahead) {
+			var pixel = new Float32Array(4);
+
+			target.Begin();
+
+			renderer.Draw(quad, program, {uPalette: palette, uJointOffset: 0, uJoint: joint, uAhead: ahead || [0, 0, 0], aFrames: [0, 0, 0, 0], aLayer: [tilt ? 0.225 + tilt * 0.45 : 0, 0, lift, 0]}, {Depth: false, DepthWrite: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, pixel);
+
+			target.End();
+
+			return [pixel[0], pixel[1], pixel[2]];
+		}
+
+		var ankle = place(2, 0.2);
+		var knee = place(1, 0.2);
+		var hip = place(0, 0.2);
+
+		/* The ankle up by as much, the hip where it was, the knee forward (+z), each bone as long. */
+		expect(ankle[1]).toBeCloseTo(0.26, 3);
+		expect(ankle[2]).toBeCloseTo(0, 3);
+		expect(hip[1]).toBeCloseTo(1, 4);
+		expect(knee[2]).toBeGreaterThan(0.1);
+		expect(Math.hypot(knee[0] - hip[0], knee[1] - hip[1], knee[2] - hip[2])).toBeCloseTo(0.5, 3);
+		expect(Math.hypot(ankle[0] - knee[0], ankle[1] - knee[1], ankle[2] - knee[2])).toBeCloseTo(0.44, 3);
+
+		/* Nothing asked: as it was. */
+		expect(place(2, 0)[1]).toBeCloseTo(0.06, 5);
+
+		/* A foot on a slope up ahead: its toes (ahead of its ankle) up, its ankle where it was. */
+		var toe = place(2, 0, 0.3, [0, 0, 0.1]);
+
+		expect(toe[1]).toBeCloseTo(0.06 + Math.sin(0.3) * 0.1, 3);
+		expect(toe[2]).toBeCloseTo(Math.cos(0.3) * 0.1, 3);
+		expect(place(2, 0, 0.3)[1]).toBeCloseTo(0.06, 3);
+		/* The tilt of the left foot is not of the right one (the right's in aFrames.y). */
+		expect(place(2, 0, 0, [0, 0, 0.1])[1]).toBeCloseTo(0.06, 5);
 	});
 
 	it('blinds with a sun in space as with a sun over a ground, the more the nearer, and what hides it takes it away', async function () {
@@ -9426,6 +11226,517 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		expect(hero.Clip.FromRate).toBe(last);
 	});
 
+	/*
+	 * Contract: the graph of transitions (TransitionGraph, Transition of a recipe, blueprints/animation/transition): how
+	 * long a clip fades into the next, eased, and the steps of a gait go on in time into the next gait. Regression: every
+	 * change faded evenly in 0.2 s, and a walk that became a jog began its cycle again: its feet jumped.
+	 */
+	it('fades a clip into the next as the graph of transitions says, a gait into a gait in time with its steps', async function () {
+		var models = Elemenx.Service('SceneModels');
+		var mounted = await mount('<Scene (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var library = Elemenx.Resources('Blueprints', 'ElemenxGraphics/animation/transition');
+		var made;
+		var i;
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				now += 30;
+				inner.Rest = 0;
+
+				engine.Frame(now);
+			}
+		}
+
+		function part (state) {
+			var length = made.Clips[state.Name].Length;
+			var moment = state.At + state.Phase;
+
+			return (moment % length + length) % length / length;
+		}
+
+		/* The graph of the library with one of its numbers changed. */
+		function changed (key, value) {
+			var graph = JSON.parse(JSON.stringify(library));
+
+			graph.parameters.forEach(function (one) {
+				if (one.key === key)
+					one.value = value;
+			});
+
+			return graph;
+		}
+
+		await new Promise(function (done) {
+			models.Load('mannequin', done);
+		});
+
+		made = models.Make('mannequin');
+
+		models.Bake(made);
+
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
+		scene.Add('unit', {ID: 'hero', X: 0, Y: 0, Model: 'mannequin'});
+
+		frames(1);
+
+		var hero = inner.Objects.hero;
+
+		/* Its gaits as told (Blend false): no blend of the speed. */
+		hero.Values.Blend = false;
+		hero.Seed = 0.3;
+		hero.Pace = 'walk';
+		hero.Walking = 1.4;
+
+		frames(23);
+
+		expect(hero.Clip.Name).toBe('walk');
+
+		var was = part(hero.Clip);
+
+		/* Into a jog: from the same part of the step, faded in a quarter of a second, eased. */
+		hero.Pace = 'jog';
+		hero.Walking = 3;
+
+		frames(1);
+
+		expect(hero.Clip.Name).toBe('jog');
+		expect(hero.Clip.From).toBe('walk');
+		expect(hero.Clip.Fade).toBeCloseTo(0.25, 5);
+		expect(hero.Clip.Ease).toBe(1);
+		expect(Math.abs(part(hero.Clip) - was)).toBeLessThan(0.08);
+
+		/* The share of the last clip: all of it at first, then less (eased: slower at the ends), none past the fade. */
+		var shares = [];
+
+		shares.push(hero.Frames[2]);
+
+		frames(4);
+
+		shares.push(hero.Frames[2]);
+
+		frames(6);
+
+		shares.push(hero.Frames[2]);
+
+		expect(shares[0]).toBeGreaterThan(0.9);
+		expect(shares[1]).toBeGreaterThan(0.05);
+		expect(shares[1]).toBeLessThan(0.9);
+		expect(shares[2]).toBe(0);
+
+		/* A blow taken, played once, standing (going, it is a layer over its legs): in fast. */
+		hero.Walking = 0;
+
+		frames(15);
+
+		scene.Play('hero', 'hit');
+
+		frames(1);
+
+		expect(hero.Clip.Name).toBe('hit');
+		expect(hero.Clip.Fade).toBeCloseTo(0.12, 5);
+
+		/* A graph of the scene; else one of the recipe of the model. */
+		scene.TransitionGraph = changed('GaitFade', 0.6);
+		hero.Clip = null;
+		hero.Pace = 'walk';
+		hero.Walking = 1.4;
+
+		await tick(20);
+
+		frames(20);
+
+		hero.Pace = 'jog';
+
+		frames(1);
+
+		expect(hero.Clip.Fade).toBeCloseTo(0.6, 5);
+
+		scene.TransitionGraph = null;
+		models.Recipes.mannequin.Transition = changed('GaitFade', 0.9);
+
+		await tick(20);
+
+		hero.Pace = 'walk';
+
+		frames(20);
+
+		expect(hero.Clip.Fade).toBeCloseTo(0.9, 5);
+
+		delete models.Recipes.mannequin.Transition;
+	});
+
+	/*
+	 * Contract: the graph of blends (BlendGraph, blueprints/animation/blend): one going at a speed between two gaits plays
+	 * the two as one cycle (the second frame and its share), at the speed of a jog it jogs; Blend false keeps its walk.
+	 * Regression: one that went at the speed of a run walked, its legs swinging fast.
+	 */
+	it('blends the gaits of a speed: walk into jog into sprint as one cycle', async function () {
+		var models = Elemenx.Service('SceneModels');
+		var mounted = await mount('<Scene (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var made;
+		var i;
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				now += 30;
+				inner.Rest = 0;
+
+				engine.Frame(now);
+			}
+		}
+
+		await new Promise(function (done) {
+			models.Load('mannequin', done);
+		});
+
+		made = models.Make('mannequin');
+
+		models.Bake(made);
+
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
+		scene.Add('unit', {ID: 'hero', X: 0, Y: 0, Model: 'mannequin'});
+
+		frames(1);
+
+		var hero = inner.Objects.hero;
+		var natural = ['walk', 'jog', 'sprint'].map(function (name) {
+			return hero.Size * made.Clips[name].Stride / made.Clips[name].Length;
+		});
+
+		expect(natural[1]).toBeGreaterThan(natural[0]);
+		expect(natural[2]).toBeGreaterThan(natural[1]);
+
+		/* At its own pace: a walk alone. */
+		hero.Walking = natural[0];
+
+		frames(20);
+
+		expect(hero.Clip.Name).toBe('walk');
+		expect(hero.Clip.Partner).toBe('');
+
+		/* Halfway to a jog: both, the jog's share near a half, the second frame of it once the fade is done. */
+		hero.Walking = (natural[0] + natural[1]) / 2;
+
+		frames(20);
+
+		expect(['walk', 'jog']).toContain(hero.Clip.Name);
+		expect(['walk', 'jog']).toContain(hero.Clip.Partner);
+		expect(hero.Clip.Partner).not.toBe(hero.Clip.Name);
+		expect(hero.Clip.Share).toBeGreaterThan(0.4);
+		expect(hero.Frames[2]).toBeCloseTo(hero.Clip.Share, 5);
+		expect(Math.abs(hero.Frames[1] - models.Frame(made, hero.Clip.Partner, 0))).toBeLessThan(made.Clips[hero.Clip.Partner].Length * 31);
+
+		/* Its feet go as fast as it goes: the cycle of the two, their strides by the share. */
+		var stride = made.Clips.walk.Stride * 0.5 + made.Clips.jog.Stride * 0.5;
+
+		expect(Math.abs(hero.Clip.Rate) * hero.Size * stride / made.Clips[hero.Clip.Name].Length).toBeCloseTo(hero.Walking, 1);
+
+		/* At the speed of a jog: a jog; between a jog and a sprint: both. */
+		hero.Walking = natural[1];
+
+		frames(20);
+
+		expect(hero.Clip.Name).toBe('jog');
+		expect(hero.Clip.Partner).toBe('');
+
+		hero.Walking = (natural[1] + natural[2]) / 2;
+
+		frames(20);
+
+		expect(['jog', 'sprint']).toContain(hero.Clip.Name);
+		expect(['jog', 'sprint']).toContain(hero.Clip.Partner);
+
+		/* Blend false: the walk it is given, at any speed. */
+		hero.Values.Blend = false;
+		hero.Walking = natural[1];
+
+		frames(20);
+
+		expect(hero.Clip.Name).toBe('walk');
+		expect(hero.Clip.Partner).toBe('');
+
+		/* On the spot, at the speed of its value Walking. */
+		hero.Values.Blend = true;
+		hero.Walking = 0;
+
+		scene.Change('hero', {Walking: natural[1]});
+
+		frames(20);
+
+		/* Changed, it is made again. */
+		expect(inner.Objects.hero.Clip.Name).toBe('jog');
+	});
+
+	/*
+	 * Contract: a clip of the arms (Upper of its graph: a reload, a blow, a hit) played by one that goes is a layer over its
+	 * legs (Layer, LayerFrame: its frame and share, the joints above the waist of the line of the upper body); standing, it
+	 * is played whole. Regression: a reload or a blow on the way stopped the legs.
+	 */
+	/*
+	 * Contract: the feet of one of legs on the ground under them (FeetGraph, blueprints/animation/feet; SceneModels.Feet,
+	 * the legs of the line of the upper body): on a slope across it, its hips go down for the lower foot to reach, the
+	 * higher foot goes up by what the ground rises between them. Regression: one foot hung in the air, the other in the
+	 * ground.
+	 */
+	it('sets the feet of one of legs on the ground under them, its hips down for the lower one', async function () {
+		var models = Elemenx.Service('SceneModels');
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var mounted = await mount('<Scene (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var made;
+		var i;
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				now += 30;
+				inner.Rest = 0;
+
+				engine.Frame(now);
+			}
+		}
+
+		await new Promise(function (done) {
+			models.Load('mannequin', done);
+		});
+
+		made = models.Make('mannequin');
+
+		models.Bake(made);
+
+		/* Its legs, by where they stand across it; its ankles in its first line, apart and low. */
+		expect(made.Legs.length).toBe(2);
+
+		var feet = models.Feet(made, 0);
+
+		expect(feet.length).toBe(2);
+		expect(feet[1][0] - feet[0][0]).toBeGreaterThan(0.08);
+		expect(Math.max(feet[0][1], feet[1][1])).toBeLessThan(0.2);
+
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
+
+		frames(1);
+
+		/* A slope across it: half a metre up for each metre along x, from 2 m above the sea. */
+		inner.Ground.Field = terrain.FromModel([{Positions: [-10, -3, -10, 10, 7, -10, 10, 7, 10, -10, -3, 10], Indices: [0, 2, 1, 0, 3, 2]}], {});
+
+		scene.Add('unit', {ID: 'man', X: 0, Y: 0, Model: 'mannequin', Size: 1.78, Facing: 0});
+		scene.SetViewpoint({Target: [0, 3, 0], Yaw: 0, Pitch: 0.2, Distance: 6});
+
+		frames(40);
+
+		var man = inner.Objects.man;
+		var across = Math.abs(models.Feet(made, man.Frames[0])[1][0] - models.Feet(made, man.Frames[0])[0][0]) * man.Size;
+
+		expect(man.FootDrop).toBeLessThan(-across * 0.5 * 0.5 * 0.5);
+		/* The ground of the field is of cells: what rises between them, near half the way across. */
+		expect(Math.abs(man.Footing.Left - man.Footing.Right)).toBeGreaterThan(across * 0.5 * 0.5);
+		expect(Math.abs(man.Footing.Left - man.Footing.Right)).toBeLessThan(across * 0.5 * 2 + 0.05);
+		expect(Math.abs(man.LayerFrame[2] - man.LayerFrame[3])).toBeGreaterThan(0.01);
+
+		/* On flat ground: nothing (one put on it). */
+		inner.Ground.Field = terrain.FromModel([{Positions: [-10, 2, -10, 10, 2, -10, 10, 2, 10, -10, 2, 10], Indices: [0, 2, 1, 0, 3, 2]}], {});
+
+		scene.Add('unit', {ID: 'flat', X: 1, Y: 1, Model: 'mannequin', Size: 1.78, Facing: 0});
+
+		frames(40);
+
+		expect(Math.abs(inner.Objects.flat.FootDrop || 0)).toBeLessThan(0.005);
+	});
+
+	/*
+	 * Contract: up or down stairs ahead (the floor along its way in steps, not an even slope), one that goes takes its gait
+	 * of stairs (stairs-up, stairs-down of the graphs: the walk, its feet lifted higher), its feet set on the steps.
+	 * Regression: it walked up stairs as on flat ground, its feet in the steps.
+	 */
+	it('takes the gait of stairs up or down stairs ahead, and not on an even slope', async function () {
+		var models = Elemenx.Service('SceneModels');
+		var mounted = await mount('<Scene (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var vectors = Elemenx.Service('Math').Vectors;
+		var now = performance.now() + 1000;
+		var floor = null;
+		var i;
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				now += 30;
+				inner.Rest = 0;
+
+				engine.Frame(now);
+			}
+		}
+
+		await new Promise(function (done) {
+			models.Load('mannequin', done);
+		});
+
+		models.Bake(models.Make('mannequin'));
+
+		expect(models.Make('mannequin').Clips['stairs-up']).toBeTruthy();
+		expect(models.Make('mannequin').Clips['stairs-down']).toBeTruthy();
+
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
+		scene.Add('unit', {ID: 'man', X: 0, Y: 0, Model: 'mannequin', Size: 1.78, Walking: 1.2});
+		scene.SetViewpoint({Target: [0, 1, 0], Yaw: 0, Pitch: 0.2, Distance: 6});
+
+		frames(5);
+
+		var man = inner.Objects.man;
+		var ahead = Elemenx.Service('Math').Apply(man.Turn, [0, 0, 1]);
+		var along = function (x, z) {
+			return ((x - man.World[0]) * ahead[0] + (z - man.World[2]) * ahead[2]) / Math.hypot(ahead[0], ahead[2]);
+		};
+		var interior = engine.InteriorFloor;
+
+		/* A floor of its own over the ground (as a floor of an interior is): 20 m up, then as each case says. */
+		engine.InteriorFloor = function (x, z) {
+			return floor ? 20 + floor(along(x, z)) : -Infinity;
+		};
+
+		try {
+			/* Steps of 17 cm, 28 cm deep, from 10 cm ahead: up. */
+			floor = function (d) {
+				return d < 0.1 ? 0 : (Math.floor((d - 0.1) / 0.28) + 1) * 0.17;
+			};
+
+			frames(10);
+
+			expect(man.Stairs).toBe(1);
+			expect(man.Clip.Name).toBe('stairs-up');
+
+			/* Down. */
+			floor = function (d) {
+				return d < 0.1 ? 0 : -(Math.floor((d - 0.1) / 0.28) + 1) * 0.17;
+			};
+
+			frames(10);
+
+			expect(man.Stairs).toBe(-1);
+			expect(man.Clip.Name).toBe('stairs-down');
+
+			/* An even slope as steep: no stairs, its walk. */
+			floor = function (d) {
+				return d * 0.6;
+			};
+
+			frames(10);
+
+			expect(man.Stairs).toBe(0);
+			expect(man.Clip.Name).not.toMatch(/^stairs/);
+		}
+		finally {
+			engine.InteriorFloor = interior;
+		}
+
+		expect(vectors.Length(ahead)).toBeGreaterThan(0.5);
+	});
+
+	it('plays a clip of the arms over the legs that go, and whole on one that stands', async function () {
+		var models = Elemenx.Service('SceneModels');
+		var mounted = await mount('<Scene (ready)="Ready"></Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var ended = [];
+		var made;
+		var i;
+
+		function frames (count) {
+			for (i = 0; i < count; i++) {
+				now += 30;
+				inner.Rest = 0;
+
+				engine.Frame(now);
+			}
+		}
+
+		await new Promise(function (done) {
+			models.Load('mannequin', done);
+		});
+
+		made = models.Make('mannequin');
+
+		models.Bake(made);
+
+		/* The line of the upper body, before the line of rest: the arms and the head above the waist, the legs not. */
+		var asset = made.Asset;
+		var skin = asset.Skins[0];
+		var line = (made.Baked.Height - 2) * made.Joints * 12;
+		var named = function (word) {
+			return skin.Joints.findIndex(function (joint) {
+				return new RegExp(word + '$').test(asset.Nodes[joint].Name);
+			});
+		};
+
+		expect(made.Baked.Data[line + named('LeftForeArm') * 12]).toBe(1);
+		expect(made.Baked.Data[line + named('Head') * 12]).toBe(1);
+		expect(made.Baked.Data[line + named('LeftLeg') * 12]).toBe(0);
+		expect(made.Baked.Data[line + named('LeftForeArm') * 12 + 1]).toBe(named('Spine'));
+		expect(made.Clips.reload.Upper).toBe(true);
+		expect(made.Clips.crouch.Upper).toBe(false);
+
+		scene.Add('ground', {ID: 'land', World: Elemenx.Service('SceneWorld').Library({Size: 200, Height: 1, Water: 0, Seed: 'test'})});
+		scene.Add('unit', {ID: 'hero', X: 0, Y: 0, Model: 'mannequin'});
+
+		frames(1);
+
+		var hero = inner.Objects.hero;
+
+		hero.Walking = 1.4;
+
+		frames(10);
+
+		expect(hero.Clip.Name).toBe('walk');
+
+		/* Going: the reload is a layer, the legs walk on. */
+		expect(scene.Play('hero', 'reload', function (error, told) {
+			ended.push(told.Clip);
+		})).toBe(true);
+
+		frames(10);
+
+		expect(hero.Clip.Name).toBe('walk');
+		expect(hero.Layer.Name).toBe('reload');
+		expect(hero.LayerFrame[1]).toBeGreaterThan(0.9);
+		expect(hero.LayerFrame[0]).toBeCloseTo(models.Frame(made, 'reload', 0.3), 0);
+
+		/* Its end: no layer, told. */
+		frames(70);
+
+		await tick(20);
+
+		expect(hero.Layer).toBe(null);
+		/* No layer in it (its feet on the ground may still be). */
+		expect(hero.LayerFrame ? hero.LayerFrame[1] : 0).toBe(0);
+		expect(ended).toEqual(['reload']);
+
+		/* Standing: the whole body reloads. */
+		hero.Walking = 0;
+
+		frames(10);
+
+		scene.Play('hero', 'reload');
+
+		frames(2);
+
+		expect(hero.Clip.Name).toBe('reload');
+		expect(hero.Layer).toBeFalsy();
+	});
+
 	it('walks the sun by the azimuth of its noon, and tints the light of the sky', async function () {
 		var mounted = await mount('<Scene Paused="true" (ready)="Ready"><SceneObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /><SceneObject ID="day" Kind="sun" Time="12" /></Scene>');
 		var scene = mounted.Space;
@@ -9641,7 +11952,26 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			return settled >= 5;
 		}, 30000);
 
+		/*
+		 * Then frames of the loop until none waits: the first of them asks for all the programs (warm), those of what was sown
+		 * since too, and only frames of the loop look whether one is still made (loading). Regression: under load the sowing
+		 * ended after the frames above, its programs were asked for by the first frame of the loop and were not made by the
+		 * third: it was a frame that waits, the rest was not set anew.
+		 */
 		inner.Seen = true;
+		settled = 0;
+
+		await waitFor(function () {
+			inner.Rest = 0;
+			loop.Now = null;
+
+			loop.Advance(16);
+
+			settled = engine.Renderer.Progress().Needed === 0 ? settled + 1 : 0;
+
+			return settled >= 5;
+		}, 30000);
+
 		loop.Now = 123456;
 
 		loop.Advance(16);
@@ -9662,6 +11992,77 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		loop.Advance(16);
 
 		expect(inner.Rest).not.toBe(far);
+	});
+
+	/*
+	 * Regression: the shader graphs of a scene were read once, as it was made: a demo made the whole scene again for a change
+	 * of one, its view and all that went on in it lost. A shader graph given anew is made again in place, the view and the time
+	 * kept; one of numbers (read as the scene goes) asks for none of it.
+	 */
+	it('makes its shaders again in place when a shader graph is given anew, its view and its time kept', async function () {
+		var mounted = await mount('<Scene Paused="true" [graphs]="Graphs" (ready)="Ready"><SceneObject ID="star" Kind="star" Mass="1" /></Scene>', {Graphs: null});
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var loop = inner.Loop;
+		var engine = scene.Engine();
+		var regraph = engine.Regraph;
+		var made = 0;
+		var planet = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/shader/planet')));
+		var before;
+
+		loop.Stop();
+
+		engine.Regraph = function () {
+			made++;
+
+			return regraph.apply(this, arguments);
+		};
+
+		inner.Seen = true;
+		loop.Now = null;
+
+		loop.Advance(16);
+		loop.Advance(16);
+
+		before = scene.PlanetMade;
+		inner.Yaw = 1.23;
+		inner.Pitch = 0.4;
+
+		var time = inner.Time;
+
+		/* A number of the graph of planets another: its shader another. */
+		planet.blocks.some(function (block) {
+			return (block.properties || []).some(function (property) {
+				if (typeof property.value !== 'number') return false;
+
+				property.value += 0.5;
+
+				return true;
+			});
+		});
+
+		mounted.Host.Graphs = {'shader/planet': planet};
+
+		await tick(20);
+
+		loop.Advance(16);
+
+		expect(made).toBe(1);
+		expect(scene.PlanetMade).toBeTruthy();
+		expect(scene.PlanetMade).not.toBe(before);
+		expect(inner.Yaw).toBe(1.23);
+		expect(inner.Pitch).toBe(0.4);
+		expect(inner.Time).toBe(time);
+
+		/* A graph of numbers given: nothing made again. */
+		mounted.Host.Graphs = {'shader/planet': planet, 'aboard/forces': Elemenx.Resources('Blueprints', 'ElemenxGraphics/aboard/forces')};
+
+		await tick(20);
+
+		loop.Advance(16);
+		loop.Advance(16);
+
+		expect(made).toBe(1);
 	});
 
 	it('compiles no pillars for a sky without them, and bakes only what is done', async function () {
@@ -11114,6 +13515,124 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(models.Pose(model, 'Spin', 0.8)).not.toBe(pose);
 	});
 
+	/*
+	 * Regression: a skeleton of hundreds of bones (Nyx: 291) stood in its first pose for half a minute while all its clips
+	 * were made. Those of standing and going are made first and seen at once (Partial, Partly), the rest after them.
+	 */
+	/*
+	 * Regression: the legs were looked for among the children of the hips; a Biped (3ds Max) hangs its thighs on its spine,
+	 * so its feet were never set on the ground, and its legs were taken for the upper body (a layer of the arms moved them).
+	 * The thighs are found by their names now, and a leg is never of the upper body.
+	 */
+	it('finds the legs of a skeleton by the names of its thighs, a Biped too, and keeps them out of its upper body', function () {
+		function node (name, parent, at, children) {
+			return {Name: name, Parent: parent, Translation: at, Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: -1, Skin: -1, Children: children};
+		}
+
+		var nodes = [
+			node('Bip001 Pelvis', -1, [0, 1, 0], [1]),
+			node('Bip001 Spine', 0, [0, 0.1, 0], [2, 3, 6]),
+			node('Bip001 Head', 1, [0, 0.6, 0], []),
+			node('Bip001 L Thigh', 1, [0.1, -0.15, 0], [4]),
+			node('Bip001 L Calf', 3, [0, -0.45, 0], [5]),
+			node('Bip001 L Foot', 4, [0, -0.42, 0], []),
+			node('Bip001 R Thigh', 1, [-0.1, -0.15, 0], [7]),
+			node('Bip001 R Calf', 6, [0, -0.45, 0], [8]),
+			node('Bip001 R Foot', 7, [0, -0.42, 0], [])
+		];
+		var model = {Asset: {Nodes: nodes, Scene: [0], Skins: [{Joints: [0, 1, 2, 3, 4, 5, 6, 7, 8]}], Animations: []}, Clips: {}, Joints: 9, Fit: Elemenx.Service('Math').Identity()};
+		var baked;
+		var line;
+
+		models.BakeStep(model, Infinity);
+
+		baked = model.Baked;
+		line = (baked.Height - 2) * 9 * 12;
+
+		expect(model.Legs.map(function (leg) {
+			return [nodes[leg.Thigh].Name, nodes[leg.Knee].Name, nodes[leg.Ankle].Name];
+		})).toEqual([['Bip001 R Thigh', 'Bip001 R Calf', 'Bip001 R Foot'], ['Bip001 L Thigh', 'Bip001 L Calf', 'Bip001 L Foot']]);
+
+		/* The head of the upper body, a thigh, a calf and a foot not; each of its leg and part. */
+		expect(baked.Data[line + 2 * 12]).toBe(1);
+		expect([3, 4, 5].map(function (joint) {
+			return [baked.Data[line + joint * 12], baked.Data[line + joint * 12 + 4], baked.Data[line + joint * 12 + 5]];
+		})).toEqual([[0, 2, 1], [0, 2, 2], [0, 2, 3]]);
+		expect(models.Feet(model, 0)[1]).toEqual([expect.closeTo(0.1, 5), expect.closeTo(0.08, 5), expect.closeTo(0, 5)]);
+	});
+
+	it('makes the frames of the clips of standing and going first, then the one played, and lets each be seen before the rest', function () {
+		var model;
+		var middle;
+		var steps = 0;
+
+		models.Define('test-partial', {URL: 'test.glb', Type: 'unit', Clips: {walk: 'Bend'}});
+
+		models.Recipes['test-partial'].Asset = parsed();
+
+		/* One more clip after Spin, an animation of its own. */
+		models.Recipes['test-partial'].Asset.Animations.push(Object.assign({}, models.Recipes['test-partial'].Asset.Animations.filter(function (one) {
+			return one.Name === 'Spin';
+		})[0], {Name: 'Turn'}));
+
+		model = models.Make('test-partial');
+
+		/* A frame a step: walk (and Bend, its own animation) first, Spin after it. */
+		while (!model.Partial && !model.Baked && steps < 1000) {
+			models.BakeStep(model, -1);
+
+			steps++;
+		}
+
+		expect(model.Baked).toBeFalsy();
+		expect(model.Partial).toBeTruthy();
+		expect(models.Partly(model, 'walk')).toBe(true);
+		expect(models.Partly(model, 'Bend')).toBe(true);
+		expect(models.Partly(model, 'Spin')).toBe(false);
+
+		middle = models.Frame(model, 'walk', 0.5);
+
+		expect(middle).toBeGreaterThan(0);
+		expect(middle).toBeLessThan(model.Partial.Height - 1);
+		expect(model.Partial.Data.length).toBe(model.Partial.Height * model.Joints * 12);
+
+		/*
+		 * Any other clip is seen as soon as it is made, not when all are. Regression: a clip played while the rest were made
+		 * (die, a pose of the graphs) stood in the first pose until all of them were.
+		 */
+		var others = Object.keys(model.Clips).filter(function (name) {
+			return ['idle', 'walk', 'run', 'sprint', 'Bend'].indexOf(name) === -1;
+		});
+		var early = '';
+		var wanted = others[others.length - 1];
+
+		expect(others.length).toBeGreaterThan(1);
+
+		/* The one played now is made next, before the others (Want). */
+		models.Want(model, wanted);
+
+		while (!early && !model.Baked && steps < 2000) {
+			model.PartialAt = -1e9;
+
+			models.BakeStep(model, -1);
+
+			early = others.filter(function (name) {
+				return !model.Baked && models.Partly(model, name);
+			})[0] || '';
+
+			steps++;
+		}
+
+		expect(early).toBe(wanted);
+
+		while (!models.BakeStep(model, -1) && steps < 4000)
+			steps++;
+
+		expect(model.Partial).toBe(null);
+		expect(models.Partly(model, 'Spin')).toBe(true);
+		expect(models.Frame(model, 'walk', 0.5)).toBe(middle);
+	});
+
 	it('measures a skinned model by where its skeleton holds it, not by the numbers of its vertices', function () {
 		var asset = parsed();
 		var half = Math.SQRT1_2;
@@ -11170,8 +13689,8 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(Object.keys(model.Clips).sort()).toEqual(['Motion', 'idle']);
 		expect(model.Clips.idle.Loop).toBe(true);
 		expect(baked.Clips.idle).toBe(baked.Clips.Motion);
-		/* Past the frames, a line of where the joints stand at rest. */
-		expect(baked.Height).toBe(baked.Clips.Motion.Count + 3);
+		/* Past the frames, a line of the upper body (a layer of the arms) and a line of where the joints stand at rest. */
+		expect(baked.Height).toBe(baked.Clips.Motion.Count + 4);
 
 		/* A clip that says what it is stays that: nothing is made to stand for idle. */
 		var attack = parsed();
@@ -11243,6 +13762,74 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(gait.Stride).toBeGreaterThan(0.5);
 		expect(gait.Stride).toBeLessThan(1.4);
 		expect(models.Gait({Nodes: [node('Column', -1, [0, 0, 0])], Scene: [0], Skins: [{Joints: [0]}], Animations: []})).toBe(null);
+
+		/*
+		 * Every clip of the graphs (gaits and poses), not only the walk and the idle: Graphed, and the clips of a model of no
+		 * clips of its own. Regression: one that came with no clips could only walk and stand.
+		 */
+		var names = mannequin.Gaits.concat(mannequin.Poses);
+		var started = performance.now();
+		var all = models.Graphed(asset, names);
+		var spent = performance.now() - started;
+
+		expect(Object.keys(all.Clips).sort()).toEqual(names.slice().sort());
+		expect(all.Strides.walk).toBeCloseTo(gait.Stride, 6);
+		expect(all.Strides.jog).toBeGreaterThan(all.Strides.walk);
+		expect(all.Strides['lie-front']).toBeUndefined();
+
+		console.log('GRAPHED ms', Math.round(spent));
+
+		/* A model loads at once: all but the walk and the idle laid on it as they are first sampled (Lazy). */
+		started = performance.now();
+
+		var clips = models.ClipsOf(asset, {});
+
+		expect(performance.now() - started).toBeLessThan(spent / 3);
+		expect(clips.crouch.Animation.Lazy).toBe('crouch');
+		expect(clips.crouch.Animation.Channels.length).toBe(0);
+
+		models.Sample(asset, clips.crouch.Animation, 0.2);
+
+		expect(clips.crouch.Animation.Channels.length).toBe(all.Clips.crouch.Channels.length);
+
+		expect(clips.crouch.Loop).toBe(true);
+		expect(clips.jump.Loop).toBe(false);
+		expect(clips['lie-front']).toBeTruthy();
+		expect(clips.run.Animation).toBe(clips.jog.Animation);
+		expect(Object.keys(models.ClipsOf(asset, {Graphed: ['walk', 'idle']})).sort()).toEqual(['idle', 'walk']);
+		expect(Object.keys(models.ClipsOf(asset, {Graphed: false}))).toEqual([]);
+
+		/*
+		 * The actions (boarding, floating, falling, hits, death, blows...): of graphs too, played once or round and held as
+		 * their graphs say, not by their names. Regression: a ship's EVA asked for float and got the walk; no model of no clips
+		 * of its own could die, be hit, enter a car or climb a ladder.
+		 */
+		expect(mannequin.Actions.length).toBeGreaterThanOrEqual(20);
+
+		mannequin.Actions.forEach(function (name) {
+			expect(clips[name], name).toBeTruthy();
+		});
+
+		expect(clips.float.Loop).toBe(true);
+		expect(clips['climb-ladder'].Loop).toBe(true);
+		expect(clips['enter-car'].Loop).toBe(false);
+		expect(clips.reload.Loop).toBe(false);
+		expect(clips.die.Loop).toBe(false);
+		expect(clips.die.Hold).toBe(true);
+		expect(clips.hit.Hold).toBe(false);
+
+		/* Death ends lying on its back: its hips lowered as those of lie-back. */
+		models.Sample(asset, clips.die.Animation, 0);
+
+		var hips = clips.die.Animation.Channels.filter(function (channel) {
+			return channel.Node === 0 && channel.Path === 'translation';
+		})[0];
+		var lying = all.Clips['lie-back'].Channels.filter(function (channel) {
+			return channel.Node === 0 && channel.Path === 'translation';
+		})[0];
+
+		expect(hips.Values[hips.Values.length - 2]).toBeCloseTo(lying.Values[1], 1);
+		expect(hips.Values[1] - hips.Values[hips.Values.length - 2]).toBeGreaterThan(0.5);
 	});
 
 	it('bakes a long clip in steps, and joins the pieces of a location by material', function () {
@@ -11347,6 +13934,27 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(Math.abs(thigh.Values[thigh.Values.length - 1])).toBeCloseTo(Math.cos(20 * Math.PI / 180), 3);
 
 		expect(models.Retarget({Nodes: [node('Column', -1, [0, 0, 0])], Scene: [0], Skins: [{Joints: [0]}], Animations: []}, source, 'walk')).toBe(null);
+
+		/*
+		 * A skeleton whose names tell nothing of its hips (a rig of a game: centre, leg1l, foot1l): the bones of its roles as its
+		 * recipe names them (Bones). Regression: Nyx stood in its first pose, no clip of another file came to it.
+		 */
+		var own = [node('centre_09', -1, [0, 1, 0]), node('leg1l_0173', 0, [0.1, 0, 0]), node('leg2l_0174', 1, [0, -0.5, 0]), node('foot1l_0175', 2, [0, -0.5, 0]), node('leg1r_0190', 0, [-0.1, 0, 0])];
+
+		own[0].Children = [1, 4];
+		own[1].Children = [2];
+		own[2].Children = [3];
+
+		expect(models.Retarget({Nodes: own, Scene: [0], Skins: [{Joints: [0, 1, 2, 3, 4]}], Animations: []}, source, 'walk')).toBe(null);
+
+		var mapped = {Nodes: own, Scene: [0], Skins: [{Joints: [0, 1, 2, 3, 4]}], Animations: [], Bones: {Hips: 'centre_09', ThighL: 'leg1l_0173', CalfL: 'leg2l_0174', FootL: 'foot1l_0175', ThighR: 'leg1r_0190'}};
+		var walked = models.Retarget(mapped, source, 'walk');
+		var leg = walked.Channels.filter(function (channel) {
+			return channel.Node === 1 && channel.Path === 'rotation';
+		})[0];
+
+		expect(models.HipsOf(mapped)).toBe(0);
+		expect(Math.abs(leg.Values[leg.Values.length - 1])).toBeCloseTo(Math.cos(20 * Math.PI / 180), 3);
 	});
 
 	it('reads a material of specular and glossiness as one of metal and roughness', function () {

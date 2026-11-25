@@ -41,7 +41,7 @@ SceneFlora: реалистичные растения из кода. Вид — 
 
 ## Тесты
 
-- [draws its plants in its style: realistic plants of SceneFlora once they came, or the simple models of code](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4414) — `tests/regression/library-scene.test.js`
+- [draws its plants in its style: realistic plants of SceneFlora once they came, or the simple models of code](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4697) — `tests/regression/library-scene.test.js`
 - [grows each species as tall as it is, its bark and its leaves within a budget of triangles, the same of the same seed](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L16) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 - [turns the triangles of its bark out, as the normals of their corners look, at every level](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L52) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 - [takes more cards of the darker half of its atlas at its simpler levels, as its crown is in its own shade near](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L92) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`

@@ -2,6 +2,7 @@
 	<div class="scene-demo-row">
 		<Select Label="Clip" Size="small" [options]="GaitsClips()" [value]="GaitsClip" (change)="GaitsChosen" />
 		<Select Label="Camera" Size="small" [options]="GaitsViews" [value]="GaitsView" (change)="GaitsViewChosen" />
+		<Field Label="Speed" Horizontal="true" Size="small"><Slider Label="Speed" Size="small" ShowValue="end" Min="0" Max="7" Step="0.1" Unit=" m/s" [value]="GaitsSpeed" (input)="GaitsSpeeded" /></Field>
 		<Button Label="Open graph" Icon="code" Variant="ghost" (click)="GaitsGraphOpened" />
 		<Button Label="Close graph" Icon="close" Variant="ghost" *if="GaitsGraph" (click)="GaitsGraphClosed" />
 		<span class="elemenx-caption" role="status">{{GaitsNote}}</span>

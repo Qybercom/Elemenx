@@ -17,7 +17,7 @@ div.elemenx-game-targets {
 	height: 26px;
 	padding: 0;
 	border: 2px solid var(--elemenx-game-target);
-	border-radius: 3px;
+	border-radius: var(--elemenx-radius-small);
 	background: none;
 	transform: translate(-50%, -50%);
 	cursor: pointer;
@@ -53,7 +53,7 @@ div.elemenx-game-targets {
 	color: var(--elemenx-game-target);
 	font-size: var(--elemenx-font-size-small);
 	white-space: nowrap;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
+	text-shadow: var(--elemenx-game-bar-text-shadow);
 	transform: translateX(-50%);
 }
 
@@ -65,4 +65,72 @@ div.elemenx-game-targets {
 	border: 2px solid var(--elemenx-game-bad);
 	border-radius: 50%;
 	transform: translate(-50%, -50%);
+}
+
+/* A missile: a small diamond; one at the vehicle red, larger, pulsing, how soon it meets it under it. */
+.elemenx-game-target.missile,
+.elemenx-game-target.incoming {
+	--elemenx-game-target: var(--elemenx-game-legendary);
+
+	width: 12px;
+	height: 12px;
+	border-radius: 1px;
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.elemenx-game-target.incoming {
+	--elemenx-game-target: var(--elemenx-game-bad);
+
+	width: 18px;
+	height: 18px;
+	border-width: 3px;
+	animation: elemenx-game-target-pulse 0.5s ease-in-out infinite alternate;
+}
+
+.elemenx-game-target.missile .elemenx-game-target-name,
+.elemenx-game-target.incoming .elemenx-game-target-name {
+	transform: rotate(-45deg) translate(-30%, 40%);
+}
+
+@keyframes elemenx-game-target-pulse {
+	from {
+		opacity: 1;
+	}
+
+	to {
+		opacity: 0.5;
+	}
+}
+
+/* A lock of the missiles: four corners closing on the target (wide as it begins), red and still when locked. */
+.elemenx-game-target-lock {
+	--elemenx-game-lock: var(--elemenx-game-legendary);
+	--elemenx-game-lock-line: 2px;
+	--elemenx-game-lock-size: calc(30px + (1 - var(--elemenx-game-lock-close, 0)) * 60px);
+
+	position: absolute;
+	width: var(--elemenx-game-lock-size);
+	height: var(--elemenx-game-lock-size);
+	background:
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) top left / 30% var(--elemenx-game-lock-line) no-repeat,
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) top left / var(--elemenx-game-lock-line) 30% no-repeat,
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) top right / 30% var(--elemenx-game-lock-line) no-repeat,
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) top right / var(--elemenx-game-lock-line) 30% no-repeat,
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) bottom left / 30% var(--elemenx-game-lock-line) no-repeat,
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) bottom left / var(--elemenx-game-lock-line) 30% no-repeat,
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) bottom right / 30% var(--elemenx-game-lock-line) no-repeat,
+		linear-gradient(var(--elemenx-game-lock), var(--elemenx-game-lock)) bottom right / var(--elemenx-game-lock-line) 30% no-repeat;
+	transform: translate(-50%, -50%) rotate(calc((1 - var(--elemenx-game-lock-close, 0)) * 45deg));
+	pointer-events: none;
+}
+
+.elemenx-game-target-lock.locked {
+	--elemenx-game-lock: var(--elemenx-game-bad);
+	--elemenx-game-lock-line: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-game-target.incoming {
+		animation: none;
+	}
 }

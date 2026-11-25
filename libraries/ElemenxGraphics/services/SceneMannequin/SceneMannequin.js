@@ -16,9 +16,14 @@
  *   corner skinned to the 4 bones nearest by the shapes it is of; Clips(bones) its clips.
  * - Clips(bones, options): the clips of a person ([{Name, Length, Channels}]): its gaits (Gaits: idle, walk, jog, sprint,
  *   walk-back, run-back, strafe-left, strafe-right, strafe-left-run, strafe-right-run, crouch, crouch-walk, jump,
- *   jump-forward) and its poses (Poses: t-pose, attention, lie-front, lie-back, lie-left, lie-right, crawl, aim-hip,
+ *   jump-forward, stairs-up, stairs-down: the walk with the feet lifted higher, its steps fitted to the stairs by the feet
+ *   of a Scene) and its poses (Poses: t-pose, attention, lie-front, lie-back, lie-left, lie-right, crawl, aim-hip,
  *   aim-shoulder, aim-bow, sit, drive, hang, pull-up, swim-breaststroke, swim-crawl, swim-back), each of its graph (a pose:
- *   Pose 1, every bone of its keys). Pose(bones, pose) the turns of the bones of a pose.
+ *   Pose 1, every bone of its keys). Pose(bones, pose) the turns of the bones of a pose. Actions: clips of graphs of actions
+ *   (float, fall, land, hit, stagger, die, reload, punch, attack, sword-slash, sword-thrust, block, interact, pick-up,
+ *   vault, cast, enter-car, climb-step, climb-ladder, canopy-in), not of Clips: SceneModels lays them on a skeleton when
+ *   first played; a graph's Loop 0 plays once, Hold 1 keeps its last pose, Upper 1 is of the arms (played on the legs
+ *   that go, a layer of a Scene).
  * - Gait(bones, graph, options): a clip of a graph of a gait (blueprints/animation/<name> of the library by its name, an
  *   Application's of that name in its place, or a graph given): its legs of the path of the feet (GaitPose: a foot on the
  *   ground is a point of it, so it never slides; two bones reach the ankle), the rest of the body of the keys of the graph,
@@ -914,7 +919,7 @@ Elemenx.Service('SceneMannequin', {
 	},
 
 	/* A clip of poses at moments of it (a function of the part of it, 0 to 1): channels of rotation for each bone and the hips moved. */
-	Clip: function (bones, name, length, count, poseAt, loop, stride) {
+	Clip: function (bones, name, length, count, poseAt, loop, stride, hold, upper) {
 		var self = this;
 		var rest = bones[0].At;
 		var times = [];
@@ -953,13 +958,13 @@ Elemenx.Service('SceneMannequin', {
 
 		channels.push({Node: 0, Path: 'translation', Times: new Float32Array(times), Values: new Float32Array(places), Size: 3, Step: false});
 
-		return {Name: name, Length: length, Channels: channels, Stride: stride || 0, Loop: loop !== false, Made: self.Prefix};
+		return {Name: name, Length: length, Channels: channels, Stride: stride || 0, Loop: loop !== false, Hold: !!hold, Upper: !!upper, Made: self.Prefix};
 	},
 
 	/* SceneMannequin: gaits of graphs */
 
 	/* The clips of graphs of the library (blueprints/animation/<name>): each its own graph, an Application's in its place. */
-	Gaits: ['idle', 'walk', 'jog', 'sprint', 'walk-back', 'run-back', 'strafe-left', 'strafe-right', 'strafe-left-run', 'strafe-right-run', 'crouch', 'crouch-walk', 'jump', 'jump-forward'],
+	Gaits: ['idle', 'walk', 'jog', 'sprint', 'walk-back', 'run-back', 'strafe-left', 'strafe-right', 'strafe-left-run', 'strafe-right-run', 'crouch', 'crouch-walk', 'jump', 'jump-forward', 'stairs-up', 'stairs-down'],
 
 	/* The length of a leg of the mannequin of no options (hip to ankle, metres): the graphs are of its size. */
 	LegOf: function (bones) {
@@ -1329,17 +1334,23 @@ Elemenx.Service('SceneMannequin', {
 
 		return this.Clip(bones, name, length, Math.max(24, Math.round(length * 30)), function (t) {
 			return self.GaitPose(bones, values, t, scale, o.Height);
-		}, loop, v0.Still ? 0 : (v0.Stride || 0) * scale / o.Height);
+		}, loop, v0.Still ? 0 : (v0.Stride || 0) * scale / o.Height, !!v0.Hold, !!v0.Upper);
 	},
 
 	/*
 	 * A clip of a graph as the skeleton and the clip of a file of FBX are read (Fbx.Parse): {Bones: [{Name (with no prefix),
 	 * Parent, Translation (metres, of its parent), Pre, Rotation (degrees, its rest: none)}], Length, Curves: {bone: {R: [x,
-	 * y, z], T (the hips): [x, y, z]}}, Stride (metres a cycle), Leg (hip to ankle, metres)}, the curves of degrees in the
-	 * order of FBX (x turns first), unwrapped frame to frame. So SceneModels.Retarget lays it on any skeleton by the roles of
-	 * its bones, as it lays a clip of Mixamo. Options: those of Gait.
+	 * y, z], T (the hips): [x, y, z]}}, Stride (metres a cycle), Leg (hip to ankle, metres), Loop, Hold, Upper}, the curves of
+	 * degrees in the order of FBX (x turns first), unwrapped frame to frame. So SceneModels.Retarget lays it on any skeleton
+	 * by the roles of its bones, as it lays a clip of Mixamo. Options: those of Gait.
 	 */
 	Source: function (graph, options) {
+		var read = typeof graph === 'string' && !options ? Elemenx.Resources('Blueprints', 'ElemenxGraphics/animation/' + graph) : null;
+		var text = read ? JSON.stringify(read) : '';
+		/* Of a graph of the library as it is now, made once (a graph changed is made again: its text is another). */
+		var kept = read && this.Sources ? this.Sources[graph] : null;
+		if (kept && kept.Text === text) return kept.Clip;
+
 		var bones = this.Skeleton(options || {});
 		var clip = this.Gait(bones, graph, options);
 		var curves = {};
@@ -1392,7 +1403,7 @@ Elemenx.Service('SceneMannequin', {
 			});
 		});
 
-		return {
+		var source = {
 			Bones: bones.map(function (bone) {
 				var parent = bone.Parent === -1 ? [0, 0, 0] : bones[bone.Parent].At;
 
@@ -1401,12 +1412,25 @@ Elemenx.Service('SceneMannequin', {
 			Length: clip.Length,
 			Curves: curves,
 			Stride: clip.Stride * this.Options(options).Height,
-			Leg: this.LegOf(bones)
+			Leg: this.LegOf(bones),
+			Loop: clip.Loop,
+			Hold: clip.Hold,
+			Upper: clip.Upper
 		};
+
+		if (read) {
+			this.Sources = this.Sources || {};
+			this.Sources[graph] = {Text: text, Clip: source};
+		}
+
+		return source;
 	},
 
 	/* The poses, of graphs of the library too (blueprints/animation/<name>): standing, lying, crawling, aiming, seated, hanging, swimming. */
 	Poses: ['t-pose', 'attention', 'lie-front', 'lie-back', 'lie-left', 'lie-right', 'crawl', 'aim-hip', 'aim-shoulder', 'aim-bow', 'sit', 'drive', 'hang', 'pull-up', 'swim-breaststroke', 'swim-crawl', 'swim-back'],
+
+	/* The actions, of graphs of the library too, laid on a skeleton when first played (SceneModels): boarding, floating, falling, hits, death, blows, reloading, using, vaulting. */
+	Actions: ['float', 'fall', 'land', 'hit', 'stagger', 'die', 'reload', 'punch', 'attack', 'sword-slash', 'sword-thrust', 'block', 'interact', 'pick-up', 'vault', 'cast', 'enter-car', 'climb-step', 'climb-ladder', 'canopy-in'],
 
 	/* Every clip of the person, each of its graph: the gaits (Gaits), then the poses (Poses). */
 	Clips: function (bones, options) {

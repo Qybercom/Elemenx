@@ -418,6 +418,17 @@ Elemenx.Trait('SceneCosmos', {
 		}
 
 		/* The backdrop of a system, baked as far as it is, and what the shade of bodies takes of it. */
+		/* Its graphs given anew (Scene: engine.Regraph): its shaders made again of them, its sky baked again. */
+		engine.Regraphs = engine.Regraphs || [];
+
+		engine.Regraphs.push(function () {
+			spiral = self.$Service('SceneBlueprints').Galaxy(self.GalaxySpiral ? self.GalaxySpiral() : null).GLSL;
+			shaders = self.Install(self.CosmosShaders(graphics, spiral), 'void blueprintCosmos(vec3 d, vec3 s, inout vec3 color) {}', self.Made(self.GraphOf('CosmosGraph', 'shader/cosmos'), 'cosmos', 'CosmosGraph', library) || self.Made(null, 'cosmos', 'CosmosGraph', library));
+			programs = {};
+			space.Key = '';
+			night.Key = '';
+		});
+
 		engine.CosmosDraw = function (matrix, view) {
 			var eye = scene.Eye || [0, 0, 0];
 

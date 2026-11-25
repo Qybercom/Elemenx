@@ -1,0 +1,7 @@
+<div class="elemenx-game-panel elemenx-game-commands" [class]="[Size]" role="toolbar" [attribute.aria-label]="Label || $T('gaming.commands.label')" [hidden]="!Commands.length">
+	<Select *if="Sites.length > 1" Size="small" [Label]="$T('gaming.commands.site')" [options]="Sites" [value]="Site" (change)="SiteChosen" />
+	<Button *if="Commands.indexOf('land') >= 0" [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="arrow-down" [Label]="$T('gaming.commands.land')" (click)="Command('land')" />
+	<Button *if="Commands.indexOf('takeoff') >= 0" [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="arrow-up" [Label]="$T('gaming.commands.takeoff')" (click)="Command('takeoff')" />
+	<Button *if="Commands.indexOf('orbit') >= 0" [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="refresh" [Label]="$T('gaming.commands.orbit')" (click)="Command('orbit')" />
+	<span class="elemenx-caption" *if="Hint">{{$T('gaming.commands.hint')}}</span>
+</div>

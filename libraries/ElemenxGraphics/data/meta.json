@@ -708,7 +708,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph), shader/ground (GroundGraph), planet/envelope (EnvelopeGraph), star (the stars with no Blueprint of their own: their surface, crown, beams and numbers); its props of them come first."
+					"Description": "The shader graphs of a world of its own by their names, the scene made again in place when one is given anew (its objects, its view and its time kept; behind a soft veil while its programs are made): shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph), shader/ground (GroundGraph), planet/envelope (EnvelopeGraph), star (the stars with no Blueprint of their own: their surface, crown, beams and numbers); its props of them come first."
 				},
 				{
 					"Name": "BoltGraph",
@@ -819,6 +819,42 @@
 					"Description": "A step of a layer of a shield (SceneShipSystems): Value of Value, Capacity, Regen, Power, Since, Delay, Elapsed; empty, the one of the library (blueprints/vehicles/shield)."
 				},
 				{
+					"Name": "ShipButtons",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its own buttons of the commands of a ship (Landing, Take off, To orbit) over the view; false: none, the commands given by a game (ShipCommands, ShipCommand: on its consoles, its panels)."
+				},
+				{
+					"Name": "MassLock",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Ships near ships of another team go no faster than a fight goes, by the frame of their fight (the soft mass lock: MassLockGraph); off by default."
+				},
+				{
+					"Name": "MassLockGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How fast a ship may go near ships of another team (Distance, Top -> Top, Lock): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/masslock)."
+				},
+				{
+					"Name": "BoardGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How one gets into a vehicle and out of it step by step (Kind, Height, Door -> Open, Enter, Sit, Close: seconds; Clip, Duck): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/board)."
+				},
+				{
 					"Name": "ReadoutGraph",
 					"Type": "json",
 					"Default": null,
@@ -864,13 +900,58 @@
 					"Description": "How a landing looks as it goes (Heat, Fov, Thrust, Raise, TransferThrust, OrbitThrust, HoverThrust of Thick, Speed, Over, Going, Throttle, Manual, T, Landed, Pull, Flat, Top): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/landing/look)."
 				},
 				{
+					"Name": "FeetGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How the feet of one of legs keep to the ground (DownLeft, DownRight: metres the ground under each foot is above its own, Size, Speed, Grounded -> Drop: its hips down, Left, Right: each foot up or down, Rate): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/animation/feet)."
+				},
+				{
+					"Name": "BlendGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Which gaits a model goes in at a speed (Speed, Walk, Jog, Sprint: the speeds of its walk, jog and sprint at their own pace -> Low, High: 0 walk, 1 jog, 2 sprint; Weight of the high one, blended as one cycle): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/animation/blend). An object of Blend false keeps the gait it is given."
+				},
+				{
+					"Name": "BodyGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How the body of a car leans on its springs (Accel, Lateral: m/s², Stiff, Grounded -> Pitch, Roll radians, Spring, Damp): a generator graph of the Blueprints Service (or its JSON); empty, BodyGraph of the vehicle, else the one of the library (blueprints/vehicles/body)."
+				},
+				{
+					"Name": "BankGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How a ship banks into a turn (Turn: rad/s, Speed, Top, Air, Landed -> Roll radians, View: the share of it every view banks with, Spring, Damp): a generator graph of the Blueprints Service (or its JSON); empty, BankGraph of the vehicle, else the one of the library (blueprints/vehicles/bank)."
+				},
+				{
+					"Name": "TransitionGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How a clip of a model gives way to the next (FromKnown, FromGait, ToGait, FromOnce, ToOnce, ToHold -> Fade: seconds, Ease: 1 eased, Sync: 1 the next goes on from the phase of the last, its steps in time): a generator graph of the Blueprints Service (or its JSON); empty, Transition of the recipe of the model, else the one of the library (blueprints/animation/transition)."
+				},
+				{
 					"Name": "ShakeGraph",
 					"Type": "json",
 					"Default": null,
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "How a view shakes (X, Y, Z, Pitch, Yaw, Roll of a rig; HeatRight, HeatUp; KickTaken; TraumaPitch, TraumaYaw, TraumaRoll, BlastLeft of Time, Seed, Shake, Hover, Walked, Stride, Heat, Size, Kick, Elapsed, Blast, Rpm, Jolt): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/camera/shake)."
+					"Description": "How a view shakes (X, Y, Z, Pitch, Yaw, Roll of a rig; HeatRight, HeatUp; KickTaken; TraumaPitch, TraumaYaw, TraumaRoll, BlastLeft; WarpRight, WarpUp of Time, Seed, Shake, Hover, Walked, Stride, Heat, Size, Kick, Elapsed, Blast, Rpm, Jolt, Warp): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/camera/shake)."
 				},
 				{
 					"Name": "TravelLookGraph",
@@ -1232,6 +1313,10 @@
 				"shield",
 				"discover",
 				"context",
+				"agent",
+				"autopilot",
+				"eva",
+				"boarding",
 				"ground",
 				"shoulder",
 				"arrive",
@@ -1246,6 +1331,10 @@
 				"hit",
 				"lock",
 				"unlock",
+				"missile",
+				"flares",
+				"charge",
+				"tunnel",
 				"break",
 				"teleport",
 				"through",
@@ -1271,6 +1360,10 @@
 				"shield": "A layer of the shield of an object took a hit (SceneShipSystems): {ID, Layer, Value, Capacity, Taken, Broken, Hit}.",
 				"discover": "A place came within the sensors of a vehicle and is known now (SceneShipSystems, NavPoint): {ID, By, Kind, Name}.",
 				"context": "An actor (the character of the player) sat in a seat of a vehicle or left it (SceneVehicles Board, Leave, BoardKey: G): {Actor, Kind (walk or seat), Vehicle, Seat, Role, Controls}.",
+				"agent": "An agent (SceneAgents: Values.Agent, a tree of behaviour) began a task: {ID, Task, Enemy}.",
+				"autopilot": "The autopilot of a ship took it, brought it there, or let it go (SceneVehicles Autopilot): {ID, Mode (hold, approach, follow), Phase (on, arrived, off), Reason (hand, asked, target)}.",
+				"eva": "A step of going out of a ship in space and in again (SceneAboard: G by its airlock): {Actor, Vehicle, Step (cycle, out, in), Out}.",
+				"boarding": "A step of getting in or out of a vehicle step by step (Board and Leave with Animate, G by a car): {Actor, Vehicle, Seat, Step (approach, open, enter, sit, exit, close, done), Out}.",
 				"ground": "A ground came, its field made (a ground of the scene, of a location, of a planet landed on): {Key (its shape: location:<id>:<model> for a location), ID (the object it is of), Location (true for a location)}.",
 				"shoulder": "B took the view over another shoulder: right or left.",
 				"arrive": "An object reached where it was sent: {ID, At}.",
@@ -1283,8 +1376,12 @@
 				"dig": "A hole was dug in the ground (Dig): {At, Radius}.",
 				"fire": "An object shot its weapon (SceneWeapons): {ID, Weapon, From, Way}.",
 				"hit": "A shot hit something or the ground (SceneWeapons): {ID, Weapon, Type, Source, Team, Target, Part, Point, Normal, Material, Amount, Distance}.",
-				"lock": "The hero locked a target under its aim (Lock of its weapon): {ID, Weapon}.",
+				"lock": "The hero locked a target under its aim (Lock of its weapon), or its ship with its missiles (SceneMissiles): {ID, Weapon, By}.",
 				"unlock": "A lock was lost: {ID}.",
+				"missile": "A missile (SceneMissiles) was launched, taken by a flare, lost its target, was brought down, hit or flew its range: {ID, Weapon, Source, Target, State (launch, decoyed, reacquired, lost, intercepted, hit, spent), By}.",
+				"flares": "A ship released flares: {ID, Count, Left}.",
+				"charge": "A weapon that charges (Charge: the lance) began to: {ID, Weapon, Seconds}.",
+				"tunnel": "A railgun faster than light opened a tunnel of warp for its slug (no warning to the target): {ID, Weapon, Source, Target, Mode (predict, direct), Blocked}.",
 				"break": "A thing broke into pieces (Break, SceneDebris): {ID, Pieces, Point}.",
 				"teleport": "A thing is beamed away or comes (Teleport): {ID, Phase (out or in), From, To}.",
 				"through": "A ship flew into the mouth of a wormhole (SceneDeepSpace): {ID, Wormhole, Leads, To (the mouth it comes out of, empty: none)}.",
@@ -1431,7 +1528,21 @@
 				"Surface()",
 				"Supported()",
 				"Preload(list, callback)",
-				"ToOrbit(id)"
+				"ToOrbit(id)",
+				"ShipCommands(id)",
+				"ShipCommand(id, command, options)",
+				"Autopilot(id, mode, options)",
+				"AutopilotOf(id)",
+				"AgentOrder(ids, order, target)",
+				"AgentOf(id)",
+				"Launch(id, options)",
+				"Driver(id, target)",
+				"Lance(id, target)",
+				"Railgun(id, target, options)",
+				"Flares(id)",
+				"Defence(id, on)",
+				"Incoming(id)",
+				"ArmsOf(id)"
 			],
 			"Sample": {
 				"Seed": "kepler"
@@ -3006,6 +3117,9 @@
 				"Load(name, callback)",
 				"Ready(name)",
 				"Bake(model)",
+				"Want(model, clip)",
+				"Feet(model, line)",
+				"Graphed(asset, names, options)",
 				"Make(name, options)",
 				"Surfaces(model)",
 				"Whole(model)",
@@ -3569,6 +3683,51 @@
 				"Ceiling(plan, tools)",
 				"Ramp(plan, tools)",
 				"Define(models, ship, hull)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneCharacters",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The walkers of a game as data: a character a file of its own (its model, its bones, its clips or a set of them, what it holds), made a unit of a Scene.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Sets(name, clips)",
+				"Define(name, character, base)",
+				"Load(url, callback)",
+				"Get(name)",
+				"Names()",
+				"Unit(name, more)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "SceneCars",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The cars of a game as data: a car a file of its own (its model, its parts by their roles, how it goes, its pipes, mirrors and screens), made a unit of a Scene.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Define(name, car, base)",
+				"Load(url, callback)",
+				"Get(name)",
+				"Names()",
+				"Unit(name, more, tune)"
 			],
 			"Sample": {}
 		},

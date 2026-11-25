@@ -1,0 +1,13 @@
+{
+	"Sets": {
+		"steps": {
+			"idle": "../clips/idle.fbx",
+			"walk": {"URL": "../clips/walk.fbx", "Stride": 0.85}
+		}
+	},
+	"Characters": {
+		"runner": {"Name": "Runner", "Model": "../models/runner.glb", "Clips": "steps", "Bones": {"Hips": "centre_09"}},
+		"guard": {"Name": "Guard", "Model": "/assets/guard.glb", "Size": 1.9, "Clips": {"idle": {"URL": "aim.fbx", "Held": true}}, "Hold": {"Model": "rifle.glb", "Bone": "HandR", "Aim": "HandL", "Size": 0.15}},
+		"dummy": {"Name": "Dummy", "Model": "mannequin"}
+	}
+}

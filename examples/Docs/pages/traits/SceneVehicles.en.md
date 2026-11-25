@@ -35,8 +35,8 @@ Readout(id) is what the instruments of an object read (of the hero by none), of 
 - `AimAlign(on)`
 - `MountsOf(id, kind)`
 - `Vehicles(kinds)`
-- `Board(id, vehicle, seat)`
-- `Leave(id)`
+- `Board(id, vehicle, seat, options)`
+- `Leave(id, options)`
 - `Readout(id)`
 - `Context(id)`
 - `BoardKey()`

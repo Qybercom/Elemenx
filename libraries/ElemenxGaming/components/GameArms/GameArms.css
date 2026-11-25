@@ -1,0 +1,64 @@
+/* The arms of a ship: its warning over its rows of numbers and buttons. */
+.elemenx-game-arms {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px;
+	contain: layout style;
+}
+
+.elemenx-game-arms-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.elemenx-game-arms-stat,
+.elemenx-game-arms-lock {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.elemenx-game-arms-lock {
+	opacity: 0.7;
+}
+
+/* The lance charging or burning. */
+.elemenx-game-arms-stat.charging {
+	color: var(--elemenx-game-rare);
+	font-weight: 600;
+}
+
+.elemenx-game-arms-lock.locked {
+	color: var(--elemenx-game-bad, #e5484d);
+	opacity: 1;
+}
+
+/* A missile at it: red, pulsing; locked by another: the same, steady. */
+.elemenx-game-arms-warning {
+	padding: 2px 8px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-game-bad, #e5484d);
+	color: var(--elemenx-accent-text);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	animation: elemenx-game-arms-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes elemenx-game-arms-pulse {
+	from {
+		opacity: 1;
+	}
+
+	to {
+		opacity: 0.55;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-game-arms-warning {
+		animation: none;
+	}
+}

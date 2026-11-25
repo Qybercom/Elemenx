@@ -214,17 +214,14 @@ Elemenx.Trait('SceneCamera', {
 		};
 
 		engine.CameraShake = function (given) {
-			var graph = self.GraphOf('ShakeGraph', 'camera/shake') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/camera/shake');
-			var inputs = {Time: 0, Seed: 0, Shake: 0, Hover: 0, Walked: 0, Stride: 0, Heat: 0, Size: 1, Kick: 0, Elapsed: 0, Blast: 0, Rpm: 0, Jolt: 0};
-			var made = scene.CameraShakeCode;
-			if (!made || made.Graph !== graph)
-				made = scene.CameraShakeCode = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
+			var code = engine.GraphCode('ShakeGraph', 'camera/shake');
+			var inputs = {Time: 0, Seed: 0, Shake: 0, Hover: 0, Walked: 0, Stride: 0, Heat: 0, Size: 1, Kick: 0, Elapsed: 0, Blast: 0, Rpm: 0, Jolt: 0, Warp: 0};
 
 			Object.keys(given || {}).forEach(function (key) {
 				inputs[key] = given[key];
 			});
 
-			return made.Code.Run({}, inputs);
+			return code.Run({}, inputs);
 		};
 
 		function angle (from, to) {

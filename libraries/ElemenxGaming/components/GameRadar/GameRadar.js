@@ -3,7 +3,8 @@
  * scene: SceneTactics) within Range metres, its nose up. Shape plan is a map seen from over it (GameMinimap: a mark for
  * each, rings of a third of its range); bubble is the space round it seen from behind and over it, a disc of its rings at
  * its height, each contact over or under it on a stalk. What is of another team is marked as a foe, of its own as a
- * friend, a place (NavPoint) and a blocker of warp as points; its target ringed. A press on a mark makes it the target of
+ * friend, a place (NavPoint) and a blocker of warp as points; its target ringed; missiles (SceneMissiles) small, one at
+ * the vehicle red (incoming), flares as sparks. A press on a mark makes it the target of
  * the vehicle (SetTarget): the event target ({Vehicle, Target}). For is the vehicle (empty: the one the hero sits in, or
  * is in); it reads each Every seconds (0.2). Size is its width in pixels; Zoomable adds + and - (the range halved or
  * doubled); Label names it for screen readers.
@@ -80,8 +81,13 @@ Elemenx.Component('GameRadar', {
 			this.Draw();
 	},
 
-	/* The kind of a mark: a foe, a friend, a point. */
+	/* The kind of a mark: a missile at the vehicle, another missile, a flare; a foe, a friend, a point. */
 	KindOf: function (one) {
+		if (one.Kind === 'missile')
+			return one.Incoming ? 'incoming' : 'missile';
+
+		if (one.Kind === 'flare') return 'flare';
+
 		if (one.Hostile) return 'enemy';
 
 		return one.Team ? 'ally' : 'point';
@@ -108,6 +114,9 @@ Elemenx.Component('GameRadar', {
 		height = canvas.height = Math.round(width * 0.72);
 		style = getComputedStyle(canvas);
 		colors = {enemy: style.getPropertyValue('--elemenx-game-bad').trim() || '#e5484d', ally: style.getPropertyValue('--elemenx-game-good').trim() || '#46a758', point: style.getPropertyValue('--elemenx-game-accent').trim() || '#3e9bff', line: style.getPropertyValue('--elemenx-game-text').trim() || '#ccd'};
+		colors.incoming = colors.enemy;
+		colors.missile = style.getPropertyValue('--elemenx-game-legendary').trim() || '#d98a1e';
+		colors.flare = '#ffb15a';
 
 		/* A point round the vehicle (right, ahead, up; of its range) on the canvas. */
 		function spot (right, ahead, up) {
@@ -153,7 +162,23 @@ Elemenx.Component('GameRadar', {
 
 			context.globalAlpha = 1;
 
-			context.fillRect(at[0] - 2.5, at[1] - 2.5, 5, 5);
+			/* A missile: a small triangle (one at it larger); a flare: a spark; else a square. */
+			if (one.Kind === 'missile') {
+				var size = one.Incoming ? 5 : 3.5;
+
+				context.beginPath();
+				context.moveTo(at[0], at[1] - size);
+				context.lineTo(at[0] + size, at[1] + size * 0.8);
+				context.lineTo(at[0] - size, at[1] + size * 0.8);
+				context.closePath();
+				context.fill();
+			}
+			else if (one.Kind === 'flare') {
+				context.fillRect(at[0] - 1, at[1] - 1, 2, 2);
+			}
+			else {
+				context.fillRect(at[0] - 2.5, at[1] - 2.5, 5, 5);
+			}
 
 			if (one.Target) {
 				context.beginPath();

@@ -90,6 +90,41 @@ describe('Contract: Blueprint, the editor of a graph of the Blueprints Service',
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	/*
+	 * Regression (under load): a page drawing no frames told no sizes of its blocks (ResizeObserver), and a link ended 190
+	 * pixels from its pin for ten seconds. The links are drawn again by the clock too, a little after the blocks.
+	 */
+	it('draws its links to their pins again a little after its blocks, with no sizes told', async function () {
+		var observer = window.ResizeObserver;
+		var host;
+		var element;
+		var block;
+		var first;
+
+		window.ResizeObserver = function () {
+			return {observe: function () {}, disconnect: function () {}};
+		};
+
+		try {
+			host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" /></div>', {Graph: graph()});
+
+			await tick(30);
+
+			element = editor(host);
+			block = element.querySelector('[data-id="n"]');
+			block.style.width = (block.getBoundingClientRect().width + 200) + 'px';
+
+			await tick(1400);
+
+			first = element.querySelector('path[data-link]');
+
+			expect(Math.abs(Number(first.getAttribute('d').split(' ')[1]) - (middle(pin(host, 'n-out-Value')).X - element.querySelector('.elemenx-blueprint-canvas').getBoundingClientRect().left))).toBeLessThan(1.5);
+		}
+		finally {
+			window.ResizeObserver = observer;
+		}
+	});
+
 	it('shows the blocks where they stand with their pins, the links between the pins, and the file it keeps', async function () {
 		var host = mount('<div style="height: 100%"><Blueprint #Editor [Value]="Graph" /></div>', {Graph: graph()});
 		var element;

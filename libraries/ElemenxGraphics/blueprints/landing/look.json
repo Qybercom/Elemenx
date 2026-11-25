@@ -2,7 +2,14 @@
 	"version": 1,
 	"type": "generator",
 	"name": "landing-look",
-	"parameters": [],
+	"parameters": [
+		{
+			"key": "Contrail",
+			"type": "float",
+			"value": 0,
+			"comment": "How strong the white trail a ship leaves high up coming down is (0: none; it hung over the place it landed at as a wall of smoke)"
+		}
+	],
 	"blocks": [
 		{
 			"id": "landing-look-input-thick",
@@ -396,7 +403,7 @@
 			"properties": [
 				{
 					"key": "Expression",
-					"value": "Thick > 0.05 ? smoothstep(0.2, 0.35, Speed) * smoothstep(5, 8, Over) * (1 - smoothstep(13, 17, Over)) : 0"
+					"value": "Contrail * (Thick > 0.05 ? smoothstep(0.2, 0.35, Speed) * smoothstep(5, 8, Over) * (1 - smoothstep(13, 17, Over)) : 0)"
 				}
 			]
 		},
@@ -457,6 +464,22 @@
 				{
 					"key": "Key",
 					"value": "Mach"
+				}
+			]
+		},
+		{
+			"id": "landing-look-parameter-contrail",
+			"type": "Parameter",
+			"x": 0,
+			"y": 1400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Contrail"
+				},
+				{
+					"key": "Type",
+					"value": "float"
 				}
 			]
 		}
@@ -730,6 +753,12 @@
 			"id": "landing-look-link-44",
 			"p1": "landing-look-formula-mach-out-Value",
 			"p2": "landing-look-result-mach-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "landing-look-link-contrail-strength",
+			"p1": "landing-look-parameter-contrail-out-Value",
+			"p2": "landing-look-formula-contrail-in-Contrail",
 			"kind": "value"
 		}
 	]

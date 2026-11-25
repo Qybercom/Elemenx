@@ -1,0 +1,176 @@
+{
+	"Sets": {
+		"elf": {
+			"idle": "../models/elf_anim/idle.fbx",
+			"walk": {
+				"URL": "../models/elf_anim/walking.fbx",
+				"Stride": 0.85
+			},
+			"run": {
+				"URL": "../models/elf_anim/running.fbx",
+				"Stride": 1.5
+			},
+			"sprint": {
+				"URL": "../models/Fast Run.fbx",
+				"Stride": 2
+			},
+			"jump": "../models/elf_anim/jump.fbx",
+			"strafe-left": {
+				"URL": "../models/elf_anim/left strafe walk.fbx",
+				"Stride": 0.8
+			},
+			"strafe-right": {
+				"URL": "../models/elf_anim/right strafe walk.fbx",
+				"Stride": 0.8
+			},
+			"strafe-left-run": {
+				"URL": "../models/elf_anim/left strafe.fbx",
+				"Stride": 1.4
+			},
+			"strafe-right-run": {
+				"URL": "../models/elf_anim/right strafe.fbx",
+				"Stride": 1.4
+			},
+			"turn-left": "../models/elf_anim/left turn.fbx",
+			"turn-right": "../models/elf_anim/right turn.fbx"
+		},
+		"rifle": {
+			"idle": {
+				"URL": "../models/riffle_anim/idle.fbx",
+				"Stride": 1,
+				"Held": true
+			},
+			"walk": {
+				"URL": "../models/riffle_anim/walk forward.fbx",
+				"Stride": 0.85,
+				"Held": true
+			},
+			"run": {
+				"URL": "../models/riffle_anim/run forward.fbx",
+				"Stride": 1.5,
+				"Held": true
+			},
+			"sprint": {
+				"URL": "../models/riffle_anim/sprint forward.fbx",
+				"Stride": 2,
+				"Held": true
+			},
+			"jump": {
+				"URL": "../models/riffle_anim/jump loop.fbx",
+				"Stride": 1,
+				"Held": true
+			},
+			"strafe-left": {
+				"URL": "../models/riffle_anim/walk left.fbx",
+				"Stride": 0.8,
+				"Held": true
+			},
+			"strafe-right": {
+				"URL": "../models/riffle_anim/walk right.fbx",
+				"Stride": 0.8,
+				"Held": true
+			},
+			"strafe-left-run": {
+				"URL": "../models/riffle_anim/run left.fbx",
+				"Stride": 1.4,
+				"Held": true
+			},
+			"strafe-right-run": {
+				"URL": "../models/riffle_anim/run right.fbx",
+				"Stride": 1.4,
+				"Held": true
+			},
+			"turn-left": {
+				"URL": "../models/riffle_anim/turn 90 left.fbx",
+				"Stride": 1,
+				"Held": true
+			},
+			"turn-right": {
+				"URL": "../models/riffle_anim/turn 90 right.fbx",
+				"Stride": 1,
+				"Held": true
+			}
+		}
+	},
+	"Characters": {
+		"elf": {
+			"Name": "Elf",
+			"Model": "../models/rigged_elf_woman.glb",
+			"Clips": "elf"
+		},
+		"nyx": {
+			"Name": "Nyx",
+			"Model": "../models/nyx_common.glb",
+			"Clips": "elf",
+			"Bones": {
+				"Hips": "centre_09",
+				"Spine": "backdown_010",
+				"Spine1": "backmiddle_011",
+				"Spine2": "backup_012",
+				"Neck": "neck_015",
+				"Head": "head_016",
+				"ShoulderL": "claviclel_052",
+				"ArmL": "arm1l_053",
+				"ForeL": "arm2l_054",
+				"HandL": "handl_057",
+				"ShoulderR": "clavicler_0103",
+				"ArmR": "arm1r_0104",
+				"ForeR": "arm2r_0105",
+				"HandR": "handr_0108",
+				"ThighL": "leg1l_0173",
+				"CalfL": "leg2l_0174",
+				"FootL": "foot1l_0175",
+				"ToeL": "foot2l_0176",
+				"ThighR": "leg1r_0186",
+				"CalfR": "leg2r_0206",
+				"FootR": "foot1r_0207",
+				"ToeR": "foot2r_0208"
+			}
+		},
+		"swordsman": {
+			"Name": "Swordswoman",
+			"Model": "../models/hit2_female_swordsman.glb",
+			"Clips": "elf"
+		},
+		"killjoy": {
+			"Name": "Killjoy",
+			"Model": "../models/killjoy__valorant.glb",
+			"Clips": "elf"
+		},
+		"warrior": {
+			"Name": "Warrior",
+			"Model": "../models/low_poly_female_warrior_charctor.glb",
+			"Clips": "elf"
+		},
+		"chief": {
+			"Name": "Master Chief",
+			"Model": "../models/master_chief_high_poly.glb",
+			"Clips": "rifle",
+			"Hold": {
+				"Model": "../models/halo_ma4b_assault_rifle.glb",
+				"Bone": "HandR",
+				"Aim": "HandL",
+				"At": [
+					0.0914,
+					-0.0369,
+					0
+				],
+				"Turn": [
+					0,
+					180,
+					-4.9
+				],
+				"Size": 0.145
+			}
+		},
+		"xbot": {
+			"Name": "X Bot (FBX)",
+			"Model": "../models/elf_anim/X Bot.fbx",
+			"Clips": "elf"
+		},
+		"mannequin": {
+			"Name": "Mannequin (gaits of graphs)",
+			"Model": "mannequin"
+		}
+	}
+}

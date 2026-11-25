@@ -1081,4 +1081,208 @@ describe('Contract: the graphs of the Libraries as resources, made for their opt
 
 		expect(blueprints.Compile(graph).Run().Value).toBe(16);
 	});
+
+	/*
+	 * Contract: a behaviour graph (Agent): a tree of an agent from its Root, its Utility choosing the child of the greatest
+	 * Score (a Response of what it knows), keeping it Commit seconds, leaving it for one worth Switch times as much; its tasks
+	 * are what the application gives (Tasks), a task left told (Abort). Nothing of a game: a board of numbers and names.
+	 */
+	it('runs a tree of behaviour: a utility of scores choosing what to do, kept a while, the tasks of the application, the one left told', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var graph = blueprints.Create('behaviour');
+		var root = blueprints.Add(graph, 'Root', {x: 0, y: 0});
+		var utility = blueprints.Add(graph, 'Utility', {x: 200, y: 0, properties: {Commit: 0.5, Switch: 1.2}});
+		var attack = blueprints.Add(graph, 'Steps', {x: 400, y: 0});
+		var aim = blueprints.Add(graph, 'Task', {x: 600, y: 0, properties: {Name: 'aim'}});
+		var fire = blueprints.Add(graph, 'Task', {x: 600, y: 100, properties: {Name: 'fire'}});
+		var flee = blueprints.Add(graph, 'Task', {x: 400, y: 200, properties: {Name: 'flee'}});
+		var patrol = blueprints.Add(graph, 'Task', {x: 400, y: 300, properties: {Name: 'patrol'}});
+		var threat = blueprints.Add(graph, 'Input', {x: 0, y: 400, properties: {Name: 'Threat'}});
+		var damage = blueprints.Add(graph, 'Input', {x: 0, y: 500, properties: {Name: 'Damage'}});
+		var low = blueprints.Add(graph, 'Number', {x: 0, y: 600, properties: {Value: 0.1}});
+		var steep = blueprints.Add(graph, 'Response', {x: 200, y: 500, properties: {Shape: 'step', Shift: 0.5}});
+		var calls = [];
+		var left = [];
+		var agent;
+		var tick;
+
+		blueprints.Link(graph, [root.id, 'Children'], [utility.id, 'In']);
+		[attack, flee, patrol].forEach(function (child) {
+			blueprints.Link(graph, [utility.id, 'Children'], [child.id, 'In']);
+		});
+		[fire, aim].forEach(function (child) {
+			blueprints.Link(graph, [attack.id, 'Children'], [child.id, 'In']);
+		});
+		blueprints.Link(graph, [threat.id, 'Value'], [attack.id, 'Score']);
+		blueprints.Link(graph, [damage.id, 'Value'], [steep.id, 'X']);
+		blueprints.Link(graph, [steep.id, 'Out'], [flee.id, 'Score']);
+		blueprints.Link(graph, [low.id, 'Value'], [patrol.id, 'Score']);
+
+		function stored (one) {
+			return JSON.parse(blueprints.Write(one));
+		}
+
+		expect(blueprints.Check(stored(graph))).toEqual([]);
+		expect(blueprints.Nodes('behaviour')).toEqual(expect.arrayContaining(['Root', 'Selector', 'Steps', 'Parallel', 'Utility', 'Condition', 'Invert', 'Cooldown', 'Limit', 'Loop', 'Wait', 'Remember', 'Task', 'Response', 'Formula', 'Input']));
+
+		agent = blueprints.Agent(stored(graph), {Agent: 'ship-1', Tasks: {
+			aim: function (request) {
+				calls.push('aim:' + request.Agent + (request.First ? ':first' : ''));
+
+				return request.Board.Aimed ? 'success' : 'running';
+			},
+			fire: function () {
+				calls.push('fire');
+
+				return true;
+			},
+			flee: function () {
+				calls.push('flee');
+
+				return 'running';
+			},
+			patrol: function () {
+				calls.push('patrol');
+
+				return 'running';
+			}
+		}, Abort: function (request) {
+			left.push(request.Name);
+		}});
+
+		/* Nothing near: the patrol, the least worth but above none. */
+		tick = agent.Tick({Threat: 0, Damage: 0}, 0.1);
+
+		expect(tick.Status).toBe('running');
+		expect(calls).toEqual(['patrol']);
+		expect(tick.Running).toEqual([root.id, utility.id, patrol.id]);
+		expect(agent.Scores(utility.id)).toEqual([{ID: patrol.id, Score: 0.1}]);
+
+		/* A threat within the Commit of the patrol: kept; past it, the attack (aim: its children in the order they stand, aim above fire), the patrol left and told. */
+		calls = [];
+
+		agent.Tick({Threat: 0.6, Damage: 0}, 0.1);
+
+		expect(calls).toEqual(['patrol']);
+
+		calls = [];
+		tick = agent.Tick({Threat: 0.6, Damage: 0}, 0.5);
+
+		expect(calls).toEqual(['aim:ship-1:first']);
+		expect(left).toEqual(['patrol']);
+		expect(tick.Running).toEqual([root.id, utility.id, attack.id, aim.id]);
+
+		/* Hurt at once: the attack is kept (Commit 0.5 s); then the flight from it, worth more than 1.2 times as much. */
+		calls = [];
+
+		agent.Tick({Threat: 0.6, Damage: 0.9}, 0.1);
+
+		expect(calls).toEqual(['aim:ship-1']);
+
+		calls = [];
+
+		agent.Tick({Threat: 0.6, Damage: 0.9}, 0.5);
+
+		expect(calls).toEqual(['flee']);
+		expect(left).toEqual(['patrol', 'aim']);
+
+		/* Not hurt, aimed: the attack again, its steps one after another in one tick. */
+		calls = [];
+		tick = agent.Tick({Threat: 0.6, Damage: 0, Aimed: true}, 0.1);
+
+		expect(calls).toEqual(['aim:ship-1:first', 'fire']);
+		expect(tick.Status).toBe('success');
+
+		agent.Stop();
+
+		expect(function () {
+			blueprints.Agent(blueprints.Create('flow'));
+		}).toThrow('Elemenx Blueprints: Agent runs a behaviour graph, not a flow graph');
+	});
+
+	/* Contract: the other blocks of a tree: Selector, Condition, Invert, Cooldown, Limit, Loop, Wait, Remember, Parallel. */
+	it('runs the blocks of a tree: a selector, a condition, a cooldown, a limit, a loop, a wait, what it remembers', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var graph = blueprints.Create('behaviour');
+		var root = blueprints.Add(graph, 'Root');
+		var selector = blueprints.Add(graph, 'Selector', {x: 200});
+		var condition = blueprints.Add(graph, 'Condition', {x: 400, y: 0});
+		var cooldown = blueprints.Add(graph, 'Cooldown', {x: 600, y: 0, properties: {Seconds: 1}});
+		var shout = blueprints.Add(graph, 'Task', {x: 800, y: 0, properties: {Name: 'shout'}});
+		var parallel = blueprints.Add(graph, 'Parallel', {x: 400, y: 100, properties: {Need: 'one'}});
+		var limit = blueprints.Add(graph, 'Limit', {x: 600, y: 100, properties: {Seconds: 0.25}});
+		var wait = blueprints.Add(graph, 'Wait', {x: 800, y: 100});
+		var loop = blueprints.Add(graph, 'Loop', {x: 600, y: 200, properties: {Count: 2}});
+		var remember = blueprints.Add(graph, 'Remember', {x: 800, y: 200, properties: {Name: 'Seen'}});
+		var invert = blueprints.Add(graph, 'Invert', {x: 400, y: 300});
+		var near = blueprints.Add(graph, 'Input', {x: 0, y: 400, properties: {Name: 'Near'}});
+		var seconds = blueprints.Add(graph, 'Number', {x: 0, y: 500, properties: {Value: 0.2}});
+		var told = [];
+		var board = {Near: true};
+		var agent;
+
+		blueprints.Link(graph, [root.id, 'Children'], [selector.id, 'In']);
+		[condition, parallel, invert].forEach(function (child) {
+			blueprints.Link(graph, [selector.id, 'Children'], [child.id, 'In']);
+		});
+		blueprints.Link(graph, [condition.id, 'Children'], [cooldown.id, 'In']);
+		blueprints.Link(graph, [cooldown.id, 'Children'], [shout.id, 'In']);
+		blueprints.Link(graph, [parallel.id, 'Children'], [limit.id, 'In']);
+		blueprints.Link(graph, [parallel.id, 'Children'], [loop.id, 'In']);
+		blueprints.Link(graph, [limit.id, 'Children'], [wait.id, 'In']);
+		blueprints.Link(graph, [loop.id, 'Children'], [remember.id, 'In']);
+		blueprints.Link(graph, [near.id, 'Value'], [condition.id, 'Test']);
+		blueprints.Link(graph, [near.id, 'Value'], [remember.id, 'Value']);
+		blueprints.Link(graph, [seconds.id, 'Value'], [wait.id, 'Seconds']);
+
+		expect(blueprints.Check(graph)).toEqual([]);
+
+		agent = blueprints.Agent(graph, {Tasks: {shout: function () {
+			told.push('shout');
+
+			return true;
+		}}});
+
+		/* Near: the shout, then its cooldown (a second) lets the selector go on. */
+		expect(agent.Tick(board, 0.1).Status).toBe('success');
+		expect(told).toEqual(['shout']);
+
+		/* Cooling: the parallel (one of its two will do): the loop remembers twice, the wait of 0.2 s within its limit. */
+		expect(agent.Tick(board, 0.1).Status).toBe('running');
+		expect(board.Seen).toBe(true);
+		expect(agent.Tick(board, 0.1).Status).toBe('success');
+
+		/* Far: no shout (its condition fails), the wait past its limit; the loop begun again (done twice), what it remembers now. */
+		board.Near = false;
+		told = [];
+
+		expect(agent.Tick(board, 2).Status).toBe('running');
+		expect(told).toEqual([]);
+		expect(board.Seen).toBe(false);
+	});
+
+	/* Contract: Response, the curves of a score of 0 to 1. */
+	it('gives the responses of a score: linear, power, logistic and step, inverted, kept to 0 to 1', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+
+		function response (properties, x) {
+			var graph = blueprints.Create('generator');
+			var input = blueprints.Add(graph, 'Input', {properties: {Name: 'X'}});
+			var curve = blueprints.Add(graph, 'Response', {properties: properties});
+			var result = blueprints.Add(graph, 'Result', {properties: {Key: 'Value'}});
+
+			blueprints.Link(graph, [input.id, 'Value'], [curve.id, 'X']);
+			blueprints.Link(graph, [curve.id, 'Out'], [result.id, 'Value']);
+
+			return blueprints.Compile(graph).Run({}, {X: x}).Value;
+		}
+
+		expect(response({Shape: 'linear', Slope: 2, Shift: -0.5}, 0.5)).toBeCloseTo(0.5, 6);
+		expect(response({Shape: 'linear', Slope: 2}, 0.9)).toBe(1);
+		expect(response({Shape: 'power', Exponent: 2}, 0.5)).toBeCloseTo(0.25, 6);
+		expect(response({Shape: 'logistic', Shift: 0.5, Steep: 10}, 0.5)).toBeCloseTo(0.5, 6);
+		expect(response({Shape: 'step', Shift: 0.3}, 0.2)).toBe(0);
+		expect(response({Shape: 'step', Shift: 0.3, Invert: true}, 0.2)).toBe(1);
+		expect(response({Shape: 'linear'}, 3)).toBe(1);
+	});
 });

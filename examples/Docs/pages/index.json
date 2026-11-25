@@ -1381,6 +1381,14 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "GameArms",
+					"Title": {
+						"en": "GameArms"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
 					"ID": "GameBar",
 					"Title": {
 						"en": "GameBar"
@@ -1392,6 +1400,14 @@
 					"ID": "GameCombat",
 					"Title": {
 						"en": "GameCombat"
+					},
+					"Group": "game",
+					"Library": "ElemenxGaming"
+				},
+				{
+					"ID": "GameCommands",
+					"Title": {
+						"en": "GameCommands"
 					},
 					"Group": "game",
 					"Library": "ElemenxGaming"
@@ -3143,6 +3159,20 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneCars",
+					"Title": {
+						"en": "SceneCars"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneCharacters",
+					"Title": {
+						"en": "SceneCharacters"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneClusters",
 					"Title": {
 						"en": "SceneClusters"
@@ -3560,6 +3590,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneAgents",
+					"Title": {
+						"en": "SceneAgents"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneBehaviour",
 					"Title": {
 						"en": "SceneBehaviour"
@@ -3647,6 +3684,13 @@
 					"ID": "SceneLighting",
 					"Title": {
 						"en": "SceneLighting"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneMissiles",
+					"Title": {
+						"en": "SceneMissiles"
 					},
 					"Library": "ElemenxGraphics"
 				},

@@ -27,17 +27,15 @@ Elemenx.Component('UniverseDemo', {
 		{Value: 'luna', Label: 'Luna (no air)', Step: '2', Note: 'no air: black sky down to its ground'}
 	],
 	UniverseGoal: '',
-	/* The graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), its scene made again as one changes. */
+	/* The graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), given to the scene as one changes (it makes its shaders again itself, its view kept). */
 	UniverseGraphOpen: '',
 	UniverseGraphs: null,
-	UniverseFresh: true,
 
 	UniverseGraphOpened: function (name) {
 		this.UniverseGraphOpen = this.UniverseGraphOpen === name ? '' : name;
 	},
 
 	UniverseGraphChanged: function (event) {
-		var self = this;
 		var given = event && event.detail ? event.detail : event;
 		var graphs = Object.assign({}, this.UniverseGraphs || {});
 
@@ -45,11 +43,6 @@ Elemenx.Component('UniverseDemo', {
 		else delete graphs[given.Name];
 
 		this.UniverseGraphs = Object.keys(graphs).length ? graphs : null;
-		this.UniverseFresh = false;
-
-		setTimeout(function () {
-			self.UniverseFresh = true;
-		}, 0);
 	},
 	UniverseTravel: '',
 	UniverseAim: '',

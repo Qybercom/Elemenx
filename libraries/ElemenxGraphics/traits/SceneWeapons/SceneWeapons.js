@@ -10,7 +10,14 @@
  * Crater (metres: the hole its blast digs where it strikes the ground, Scene.Dig; rocket, artillery and mortar dig),
  * Color and Width (of its light), Muzzle (the effect at the muzzle), Recoil (how much the view of the hero kicks), Magazine
  * and Reload (seconds), Lock {Time (seconds on the aim to lock), Cone (degrees), Count (targets at once)}, Crosshair (dot,
- * cross, circle, chevron). Built in: pistol, rifle, shotgun, sniper, laser, railgun, plasma, rocket, artillery, mortar, bow.
+ * cross, circle, chevron). Built in: pistol, rifle, shotgun, sniper, laser, railgun, plasma, rocket, artillery, mortar, bow;
+ * of ships in space ship-laser (30 km), ship-cannon (1200 m/s, 3 km), ship-missile (it steers itself, SceneMissiles),
+ * ship-pd (point defence), ship-massdriver (a slug of 20 km/s), ship-torpedo, ship-ftl and platform-ftl (Kind tunnel: a
+ * railgun faster than light, see tunnel) and ship-lance (Charge: it charges first,
+ * a glow, the event charge; Track: a beam on its target as it burns). In space there is no ground: a ray
+ * meets only what is there; a body a ship fires flies by the body its ship goes round, from where the step of its ship
+ * has it, and meets the ships there where their steps have them (half the size of their model; drawn, they are a frame
+ * behind, their planet far on in a frame of quick time).
  *
  * Fire(id, options) shoots the weapon of an object (Values.Weapon, or options.Weapon) from its muzzle toward options.At (a
  * point [x, y, z] or the ID of an object; an artillery shell takes the arc to reach it) or along options.Way; false while the
@@ -43,7 +50,7 @@ Elemenx.Trait('SceneWeapons', {
 		var math = this.$Service('Math');
 		var vectors = math.Vectors;
 		var library = this.$Service('SceneModels');
-		var state = scene.Weapons = {Clock: 0, Shots: [], Streaks: [], Marks: [], MarksMesh: null, MarksVersion: 0, MarksBuilt: -1, Ready: {}, Rounds: {}, Holding: false, Spread: 0, Locks: {}, Hits: 0, Counter: 0, Kick: 0};
+		var state = scene.Weapons = {Clock: 0, Shots: [], Streaks: [], Marks: [], MarksMesh: null, MarksVersion: 0, MarksBuilt: -1, Ready: {}, Rounds: {}, Charging: {}, Tunnels: [], Holding: false, Spread: 0, Locks: {}, Hits: 0, Counter: 0, Kick: 0};
 		var programs = null;
 		var head = '#version 300 es\nprecision highp float;\n';
 		var shaders = this.WeaponShaders(head);
@@ -88,16 +95,19 @@ Elemenx.Trait('SceneWeapons', {
 		function heightOf (object) {
 			var body = engine.BodyOf ? engine.BodyOf(object) : null;
 
-			return body ? Math.max(0.2, body.Max[1] - body.Min[1]) : Math.max(0.5, object.Size || 1);
+			return body ? Math.max(0.2 * metre(), body.Max[1] - body.Min[1]) : Math.max(0.5 * metre(), object.Size || metre());
 		}
 
 		/* Where a shot leaves an object: its muzzle (the far end of what it holds), else at its chest, ahead of it. */
 		function muzzleOf (object, toward) {
+			/* A ship in space: from the middle of its hull (the way out of it is no one's to hit: a shot passes its source). */
+			if (object.Ship && !scene.Ground) return centerOf(object);
+
 			var height = heightOf(object);
 			var way = toward ? vectors.Subtract(toward, object.World) : object.Heading || [0, 0, 1];
 			var flat = Math.hypot(way[0], way[2]) || 1;
 
-			return [object.World[0] + way[0] / flat * 0.45, object.World[1] + height * 0.72, object.World[2] + way[2] / flat * 0.45];
+			return [object.World[0] + way[0] / flat * 0.45 * metre(), object.World[1] + height * 0.72, object.World[2] + way[2] / flat * 0.45 * metre()];
 		}
 
 		/* Where one aims at an object: the middle of its body. */
@@ -195,7 +205,11 @@ Elemenx.Trait('SceneWeapons', {
 			var cast = engine.RigidRay ? engine.RigidRay(from, way, range) : null;
 			var field = scene.Ground ? scene.Ground.Field : null;
 
-			if (cast && cast.ID !== skip)
+			/*
+			 * Its ground only where there is one: in space the rigid world has none (its plane of heights 0 there is nothing).
+			 * Regression: a missile that crossed the plane of a system went into that ground.
+			 */
+			if (cast && cast.ID !== skip && (cast.ID || scene.Ground))
 				best = {ID: cast.ID, Point: cast.At, Normal: cast.Normal, Distance: cast.Distance};
 
 			/* The ground by steps, where no rigid world was asked for. */
@@ -275,13 +289,24 @@ Elemenx.Trait('SceneWeapons', {
 		}
 
 		/* A mark where a shot hit: on the ground or on a thing, then with it as it moves. */
+		/*
+		 * A metre in units of the scene: the distances of a weapon (Range, Speed, Gravity, Radius, Width, Size) are metres. On
+		 * a ground (a location) a unit is a metre; in space of real sizes a metre is tiny. Regression: in space a laser of
+		 * 400 m reached 400 units, far past the planets, and a shot left its ship behind.
+		 */
+		function metre () {
+			return !scene.Ground && engine.Metre && engine.Metre() || 1;
+		}
+
+		engine.WeaponsMetre = metre;
+
 		function mark (kind, point, normal, size, object) {
 			var count = number(self.MarkCount, 200);
 			var turn = object && object.Turn ? object.Turn : null;
 
 			if (!kind || !renderer) return;
 
-			state.Marks.push({Kind: kind, Point: point.slice(), Normal: normal.slice(), Size: size, Seed: Math.random(), Born: state.Clock, Object: object ? object.ID : '', Local: object ? local(object, point, turn) : null, LocalNormal: object && turn ? applyNormal(math.Invert(turn), normal) : normal.slice()});
+			state.Marks.push({Kind: kind, Point: point.slice(), Normal: normal.slice(), Size: size * metre(), Seed: Math.random(), Born: state.Clock, Object: object ? object.ID : '', Local: object ? local(object, point, turn) : null, LocalNormal: object && turn ? applyNormal(math.Invert(turn), normal) : normal.slice()});
 
 			while (state.Marks.length > count)
 				state.Marks.shift();
@@ -336,10 +361,10 @@ Elemenx.Trait('SceneWeapons', {
 		/* A blast where a shot ends: each thing near takes less the farther it stands, rigid things are pushed away. */
 		function blast (shot, point, normal) {
 			var type = shot.Type;
-			var radius = number(type.Radius, 0);
+			var radius = number(type.Radius, 0) * metre();
 
 			if (type.Then && self.Burst)
-				self.Burst(type.Then, vectors.Add(point, vectors.Scale(normal, 0.1)), {Size: Math.max(0.4, radius / 6), Aim: normal});
+				self.Burst(type.Then, vectors.Add(point, vectors.Scale(normal, 0.1 * metre())), {Size: Math.max(0.4, number(type.Radius, 0) / 6), Aim: normal});
 
 			/* Struck in the ground (rock a little behind the point): a hole dug there. */
 			if (number(type.Crater, 0) > 0 && scene.Ground && scene.Ground.Field && !scene.Ground.Field.Whole && scene.Ground.Field.Density(point[0] - normal[0] * 0.3, point[1] - normal[1] * 0.3, point[2] - normal[2] * 0.3) > 0)
@@ -353,14 +378,15 @@ Elemenx.Trait('SceneWeapons', {
 				var far;
 				var way;
 
-				if (!object.World || object.Hidden || object.Owner) return;
+				/* What a missile burst by was hit by it already (SceneMissiles: its fuse). */
+				if (!object.World || object.Hidden || object.Owner || shot.Spare === id) return;
 
 				middle = centerOf(object);
 				far = vectors.Distance(middle, point);
 
 				if (far > radius) return;
 
-				way = far > 0.01 ? vectors.Normalize(vectors.Subtract(middle, point)) : [0, 1, 0];
+				way = far > 0.01 * metre() ? vectors.Normalize(vectors.Subtract(middle, point)) : [0, 1, 0];
 
 				if (engine.RigidPush && type.Push)
 					engine.RigidPush(id, vectors.Scale(way, number(type.Push, 0) * (1 - far / radius)), point);
@@ -404,7 +430,7 @@ Elemenx.Trait('SceneWeapons', {
 
 		/* A streak of light to draw: a tracer, a beam, a rail and its spiral, a trail. */
 		function streak (from, to, color, width, lasts, kind) {
-			state.Streaks.push({From: from.slice(), To: to.slice(), Color: color, Width: width, Born: state.Clock, Lasts: lasts, Kind: kind || 'tracer'});
+			state.Streaks.push({From: from.slice(), To: to.slice(), Color: color, Width: width * metre(), Born: state.Clock, Lasts: lasts, Kind: kind || 'tracer'});
 		}
 
 		/*
@@ -427,7 +453,23 @@ Elemenx.Trait('SceneWeapons', {
 
 			if (!object || !object.World || !type) return false;
 
-			if ((state.Ready[key] || 0) > state.Clock && type.Kind !== 'beam') return false;
+			if ((state.Ready[key] || 0) > state.Clock && (type.Kind !== 'beam' || type.Charge)) return false;
+
+			/*
+			 * A weapon that charges (Charge seconds: the lance) charges first, a glow at its muzzle, then fires as asked (the event
+			 * charge {ID, Weapon, Seconds}); asked again while it charges or burns, it does not.
+			 */
+			if (type.Charge && !settings.Charged) {
+				if (state.Charging[key] || state.Shots.some(function (shot) {
+					return shot.Source === id && shot.Type === type;
+				})) return false;
+
+				state.Charging[key] = {ID: id, Name: name, Type: type, Settings: Object.assign({}, settings, {Charged: true}), Born: state.Clock, Until: state.Clock + number(type.Charge, 2)};
+
+				self.$Emit('charge', {ID: id, Weapon: typeof name === 'string' ? name : 'own', Seconds: number(type.Charge, 2)});
+
+				return true;
+			}
 
 			/* The magazine: empty, it reloads; then it is full. */
 			if (type.Magazine) {
@@ -444,8 +486,8 @@ Elemenx.Trait('SceneWeapons', {
 			from = settings.From || muzzleOf(object, at);
 			way = settings.Way ? vectors.Normalize(settings.Way) : at ? vectors.Normalize(vectors.Subtract(at, from)) : vectors.Normalize(object.Heading || [0, 0, 1]);
 
-			/* A beam already held goes on, turned to where it is aimed now. */
-			if (type.Kind === 'beam') {
+			/* A beam already held goes on, turned to where it is aimed now (not one that charges: it burns its Hold). */
+			if (type.Kind === 'beam' && !type.Charge) {
 				var held = state.Shots.filter(function (shot) {
 					return shot.Source === id && shot.Type === type;
 				})[0];
@@ -476,7 +518,7 @@ Elemenx.Trait('SceneWeapons', {
 				self.Burst(type.Muzzle, from, {Aim: way, Size: type.Kind === 'projectile' && type.Arc ? 1.5 : 1});
 
 			if (type.Arc && at && type.Gravity) {
-				var arced = arc(from, at, number(type.Speed, 100), number(type.Gravity, 9.81), type.Arc === 'high');
+				var arced = arc(from, at, number(type.Speed, 100) * metre(), number(type.Gravity, 9.81) * metre(), type.Arc === 'high');
 				if (arced)
 					way = arced;
 			}
@@ -484,7 +526,7 @@ Elemenx.Trait('SceneWeapons', {
 			count = Math.max(1, number(type.Pellets, 1));
 
 			for (i = 0; i < count; i++) {
-				var shot = {ID: id + '-' + (++state.Counter), Name: typeof name === 'string' ? name : 'own', Type: type, Source: id, Team: object.Team || object.Values.Team || '', From: from.slice(), Way: spread(way, number(settings.Spread, number(type.Spread, 0)) + (id === gunnerID() ? state.Spread : 0)), Target: target ? target.ID : settings.Target || (id === gunnerID() ? lockedFirst() : ''), Born: state.Clock, Hold: Number(settings.Hold) || 0};
+				var shot = {ID: id + '-' + (++state.Counter), Name: typeof name === 'string' ? name : 'own', Type: type, Source: id, Team: object.Team || object.Values.Team || '', From: from.slice(), Way: spread(way, number(settings.Spread, number(type.Spread, 0)) + (id === gunnerID() ? state.Spread : 0)), Target: target ? target.ID : settings.Target || (id === gunnerID() ? lockedFirst() : ''), Born: state.Clock, Hold: Number(settings.Hold) || 0, Mode: settings.Mode || ''};
 
 				launch(shot);
 			}
@@ -502,17 +544,160 @@ Elemenx.Trait('SceneWeapons', {
 			return true;
 		};
 
+		/* How a thing goes by the body a ship there goes round (a ship: its way by it), else as it is seen going. */
+		function wayIn (object) {
+			return object.Ship ? object.Ship.Way.slice() : (object.WorldWay || [0, 0, 0]).slice();
+		}
+
+		/*
+		 * A tunnel of warp for one slug only (Kind tunnel: the railgun faster than light), opened from the muzzle as it fires
+		 * (no warning to its target: it is no missile). Its Mode (of the shot: settings.Mode, else of its type): predict, the
+		 * slug comes out Exit metres (3000) short of where its target will be as it goes now, Delay seconds (0.4) in the
+		 * tunnel and its way out at Speed, and flies there (a target that turns is missed); direct, it comes out in its target
+		 * (only its shields take it). A blocker of warp (the trait WarpBlocker) by the target lets no tunnel open there. The
+		 * event tunnel {ID, Weapon, Source, Target, Mode, Blocked}.
+		 */
+		function tunnel (shot, source) {
+			var type = shot.Type;
+			var target = shot.Target ? scene.Objects[shot.Target] : null;
+			var mode = shot.Mode || type.Mode || 'predict';
+			var unit = metre();
+			var delay = number(type.Delay, 0.4);
+			var from;
+			var to;
+			var blocked;
+			var round;
+			var told;
+
+			if (!target || !target.World || !source) return;
+
+			from = placeOf(source);
+			to = placeOf(target);
+			blocked = scene.Order.filter(function (object) {
+				var blocker = (object.Traits || {}).WarpBlocker;
+
+				return blocker && blocker.Active !== false && blocker.Active !== 'false' && object.World && vectors.Distance(object.World, target.World) < number(blocker.Radius, 20) * (object.Size || 1);
+			})[0] || null;
+			told = {ID: shot.ID, Weapon: shot.Name, Source: shot.Source, Target: target.ID, Mode: mode, Blocked: !!blocked};
+
+			if (vectors.Distance(from, to) > number(type.Range, 1e9) * unit || blocked) {
+				self.$Emit('tunnel', told);
+
+				return;
+			}
+
+			round = target.Ship && target.Values.Vehicle && target.Values.Vehicle.Around && !scene.Ground ? scene.Objects[target.Values.Vehicle.Around] : null;
+
+			if (mode === 'direct') {
+				state.Tunnels.push({Shot: shot, Mode: mode, At: state.Clock + delay, Target: target.ID, Born: state.Clock});
+			}
+			else {
+				var speed = number(type.Speed, 30000) * unit;
+				var exit = number(type.Exit, 3000) * unit;
+				var going = wayIn(target);
+				var meets = vectors.Add(to, vectors.Scale(going, delay + exit / Math.max(1e-12, speed)));
+				var way = vectors.Normalize(vectors.Subtract(meets, from));
+				var out = vectors.Subtract(meets, vectors.Scale(way, exit));
+
+				state.Tunnels.push({Shot: shot, Mode: mode, At: state.Clock + delay, Target: target.ID, Born: state.Clock, Around: round ? round.ID : '', Rel: round && round.World ? vectors.Subtract(out, round.World) : null, Out: out, Way: way, Speed: speed});
+			}
+
+			/* The tunnel drawn: a coil of light from the muzzle to where the slug comes out, as long as it is in it. */
+			var drawnOut = vectors.Add(centerOf(target), mode === 'direct' ? [0, 0, 0] : vectors.Subtract(state.Tunnels[state.Tunnels.length - 1].Out, to));
+			var glow = colorOf(type.Color, [0.85, 0.7, 1]);
+
+			streak(muzzleOf(source, drawnOut), drawnOut, glow, number(type.Width, 4), delay + 0.6, 'spiral');
+			streak(muzzleOf(source, drawnOut), drawnOut, glow, number(type.Width, 4) * 0.3, delay + 0.3, 'rail');
+
+			self.$Emit('tunnel', told);
+		}
+
+		/* The tunnels open: as each one's Delay is gone, its slug comes out (predict) or strikes (direct). */
+		function tunnelsStep () {
+			state.Tunnels = state.Tunnels.filter(function (one) {
+				var shot = one.Shot;
+				var type = shot.Type;
+				var target = scene.Objects[one.Target];
+				var round;
+
+				if (state.Clock < one.At) return true;
+
+				if (one.Mode === 'direct') {
+					if (target && target.World && !target.Hidden) {
+						var middle = centerOf(target);
+
+						hit(shot, {ID: target.ID, Object: target, Point: middle, Normal: vectors.Scale(shot.Way, -1), Material: materialOf(target, null), Part: '', Distance: 0}, number(type.Damage, 100), shot.Way);
+
+						blast(Object.assign({}, shot, {Spare: target.ID}), middle, vectors.Scale(shot.Way, -1));
+					}
+
+					return false;
+				}
+
+				round = one.Around ? scene.Objects[one.Around] : null;
+
+				/* Out as late as the frame let it be (it went on in the tunnel so long): on its way by that time. Regression: out a frame late, it passed a target going across 30 m behind it. */
+				var late = vectors.Scale(one.Way, one.Speed * Math.max(0, state.Clock - one.At));
+
+				one.Rel = one.Rel ? vectors.Add(one.Rel, late) : null;
+				one.Out = vectors.Add(one.Out, late);
+				shot.At = round && round.World && one.Rel ? vectors.Add(round.World, one.Rel) : one.Out.slice();
+				shot.From = shot.At.slice();
+				shot.Way = one.Way;
+				shot.Around = round ? round.ID : '';
+				shot.Rel = round ? one.Rel.slice() : null;
+				shot.Carried = [0, 0, 0];
+				shot.Velocity = vectors.Scale(one.Way, one.Speed);
+				shot.Flown = 0;
+				shot.Trail = [shot.At.slice()];
+				shot.Out = true;
+
+				state.Shots.push(shot);
+
+				return false;
+			});
+		}
+
 		/* The flight of a shot begins: a ray hits now, a beam is held, a body flies. */
 		function launch (shot) {
 			var type = shot.Type;
-			var range = number(type.Range, 200);
+			var range = number(type.Range, 200) * metre();
 			var color = colorOf(type.Color, [1, 0.85, 0.55]);
+			var source = scene.Objects[shot.Source];
 			var found;
 			var end;
 
+			if (type.Kind === 'tunnel') {
+				tunnel(shot, source);
+
+				return;
+			}
+
 			if (type.Kind === 'projectile') {
 				shot.At = shot.From.slice();
-				shot.Velocity = vectors.Scale(shot.Way, number(type.Speed, 40));
+
+				/*
+				 * As fast as it is fired, and as its ship goes (a shot of a ship in space would be left behind): by the body its
+				 * ship goes round, in its frame, as the ships there are (a body carries them round its star; a shot going on in a
+				 * straight line of the world left that curve by kilometres in seconds: it missed what it was fired at).
+				 */
+				var round = source && source.Ship && source.Values.Vehicle && source.Values.Vehicle.Around && !scene.Ground ? scene.Objects[source.Values.Vehicle.Around] : null;
+
+				shot.Around = round && round.World ? round.ID : '';
+				/*
+				 * By its ship where its step has it (its place by the body), not where it is drawn: drawn, it is by where the body
+				 * was a frame ago. Regression: a planet going round its star hundreds of km a frame (time quickened), a shot began
+				 * hundreds of km off its ship and never met anything.
+				 */
+				shot.Rel = shot.Around ? source.Ship && source.Ship.At ? vectors.Add(source.Ship.At, vectors.Subtract(shot.From, source.World)) : vectors.Subtract(shot.From, round.World) : null;
+
+				if (shot.Rel) {
+					shot.From = vectors.Add(round.World, shot.Rel);
+					shot.At = shot.From.slice();
+				}
+
+				shot.Carried = shot.Around ? source.Ship.Way.slice() : source && source.WorldWay && !scene.Ground ? source.WorldWay.slice() : [0, 0, 0];
+				shot.Velocity = vectors.Add(vectors.Scale(shot.Way, number(type.Speed, 40) * metre()), shot.Carried);
 				shot.Flown = 0;
 				shot.Trail = [shot.From.slice()];
 
@@ -546,6 +731,114 @@ Elemenx.Trait('SceneWeapons', {
 				hit(shot, found, number(type.Damage, 10), shot.Way);
 		}
 
+		/*
+		 * What a body that flies by a body (a shot of a ship in space, in the frame of what its ship goes round) meets in a
+		 * step: the ships of that frame where their steps have them (by the body where the shot has it, as they go on in
+		 * the step), each as far as half the size of its model, none of its own side. Regression: ships drawn a frame behind (their planet
+		 * hundreds of km on since, time quickened), no shot of a ship in space met the hull it was fired at.
+		 */
+		function contactOf (shot, before, from, to) {
+			var origin = vectors.Subtract(shot.At, shot.Rel);
+			var best = null;
+			var own = sideOf(scene.Objects[shot.Source]);
+
+			scene.Order.forEach(function (object) {
+				var body;
+				var middle;
+				var start;
+				var end;
+				var segment;
+				var length;
+				var t;
+				var near;
+				var reach;
+
+				if (object.ID === shot.Source || !object.Ship || object.Hidden || !object.World || !object.Values.Vehicle || object.Values.Vehicle.Around !== shot.Around || object.Values.Aboard) return;
+
+				/* Not one of its own side (a slug passes through its own wing). */
+				if (own && sideOf(object) === own) return;
+
+				body = engine.BodyOf ? engine.BodyOf(object) : null;
+				middle = vectors.Add(vectors.Add(origin, object.Ship.At), vectors.Subtract(centerOf(object), object.World));
+				reach = Math.max(body ? vectors.Distance(body.Max, body.Min) / 2 : 0, (object.Traits && object.Traits.Model && Number(object.Traits.Model.Size) || 0) * 0.5, metre());
+				start = vectors.Subtract(before, vectors.Add(middle, vectors.Scale(object.Ship.Way, from)));
+				end = vectors.Subtract(shot.At, vectors.Add(middle, vectors.Scale(object.Ship.Way, to)));
+				segment = vectors.Subtract(end, start);
+				length = vectors.Dot(segment, segment);
+				t = length > 0 ? Math.max(0, Math.min(1, -vectors.Dot(start, segment) / length)) : 1;
+				near = vectors.Length(vectors.Add(start, vectors.Scale(segment, t)));
+
+				if (near <= reach && (!best || t < best.T))
+					best = {T: t, Object: object, Offset: vectors.Add(start, vectors.Scale(segment, t))};
+			});
+
+			if (!best)
+				return null;
+
+			var normal = vectors.Length(best.Offset) > 0 ? vectors.Normalize(best.Offset) : vectors.Scale(shot.Way, -1);
+			var drawn = vectors.Add(centerOf(best.Object), best.Offset);
+
+			shot.At = vectors.Add(before, vectors.Scale(vectors.Subtract(shot.At, before), best.T));
+
+			return {ID: best.Object.ID, Object: best.Object, Point: drawn, Normal: normal, Material: materialOf(best.Object, null), Part: '', Distance: 0};
+		}
+
+		/* The side of a thing: its Team, else the scene's for the hero, its ship and who sits in it. */
+		function sideOf (object) {
+			var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
+			var seated = scene.Seated && scene.Seated[scene.Hero];
+
+			if (!object) return '';
+
+			if (object.Values.Team || object.Team)
+				return String(object.Values.Team || object.Team);
+
+			return hero && (object === hero || seated && seated.Vehicle === object.ID) ? String(self.Team || '') : '';
+		}
+
+		/* Where a ship in space is by where its step has it (the body it goes round, now), else the middle of a thing. */
+		function placeOf (object) {
+			var round = object.Ship && object.Values.Vehicle && object.Values.Vehicle.Around && !scene.Ground ? scene.Objects[object.Values.Vehicle.Around] : null;
+
+			return round && round.World ? vectors.Add(round.World, object.Ship.At) : centerOf(object);
+		}
+
+		/*
+		 * What a ray of a ship in space meets: the nearest ship of its frame (where their steps have them) within half the size
+		 * of its model of the ray, none of its own side. Regression: by the drawn places (thousands of km apart in a step of
+		 * quick time) the lasers of ships in space met nothing.
+		 */
+		function rayContact (holder, from, way, range) {
+			var own = sideOf(holder);
+			var best = null;
+
+			scene.Order.forEach(function (object) {
+				var middle;
+				var along;
+				var off;
+				var body;
+				var reach;
+
+				if (object === holder || !object.Ship || object.Hidden || !object.World || !object.Values.Vehicle || object.Values.Vehicle.Around !== holder.Values.Vehicle.Around || object.Values.Aboard) return;
+
+				if (own && sideOf(object) === own) return;
+
+				middle = placeOf(object);
+				along = vectors.Dot(vectors.Subtract(middle, from), way);
+
+				if (along < 0 || along > range || best && along > best.Distance) return;
+
+				body = engine.BodyOf ? engine.BodyOf(object) : null;
+				reach = Math.max(body ? vectors.Distance(body.Max, body.Min) / 2 : 0, (object.Traits && object.Traits.Model && Number(object.Traits.Model.Size) || 0) * 0.5, metre());
+				off = vectors.Distance(middle, vectors.Add(from, vectors.Scale(way, along)));
+
+				if (off <= reach)
+					best = {ID: object.ID, Object: object, Point: centerOf(object), Normal: vectors.Scale(way, -1), Distance: along, Material: materialOf(object, null), Part: ''};
+			});
+
+			return best;
+		}
+
 		/* The shots that fly and the beams held, a step of time. */
 		function step (elapsed) {
 			var field = scene.Ground ? scene.Ground.Field : null;
@@ -556,7 +849,7 @@ Elemenx.Trait('SceneWeapons', {
 
 				if (type.Kind === 'beam') {
 					var holder = scene.Objects[shot.Source];
-					var range = number(type.Range, 400);
+					var range = number(type.Range, 400) * metre();
 					var end;
 
 					if (!holder || state.Clock > shot.Until) return false;
@@ -565,7 +858,28 @@ Elemenx.Trait('SceneWeapons', {
 					if (shot.Source === gunnerID() && state.Holding)
 						aimFromView(shot);
 
-					found = trace(shot.From, shot.Way, range, shot.Source);
+					/* One that tracks (Track: the lance) stays on its target as it burns, from the muzzle of its ship as it goes. */
+					/*
+					 * One that tracks holds its target while it is in its reach (by where their steps have them: drawn, in this step
+					 * a ship may be by where its planet was, another by where it is, thousands of km apart in quick time). It is
+					 * drawn from its ship to its target as they are drawn. Regression: the lance burnt past a raider 10 km off.
+					 */
+					var tracked = type.Track && shot.Target ? scene.Objects[shot.Target] : null;
+					var spot = tracked && tracked.World && !tracked.Hidden ? placeOf(tracked) : null;
+
+					if (spot) {
+						shot.From = placeOf(holder);
+						shot.Way = vectors.Normalize(vectors.Subtract(spot, shot.From));
+					}
+
+					/* A beam of a ship in space: from where its step has it, to the ships of its frame where theirs have them. */
+					var spaced = !spot && holder.Ship && holder.Values.Vehicle && holder.Values.Vehicle.Around && !scene.Ground;
+					if (spaced)
+						shot.From = placeOf(holder);
+
+					found = spot && vectors.Distance(spot, shot.From) <= range ? {ID: tracked.ID, Object: tracked, Point: centerOf(tracked), Normal: vectors.Scale(shot.Way, -1), Distance: vectors.Distance(spot, shot.From), Material: materialOf(tracked, null), Part: ''} : spot ? null : spaced ? rayContact(holder, shot.From, shot.Way, range) : trace(shot.From, shot.Way, range, shot.Source);
+					shot.Struck = found ? found.ID : '';
+					shot.Spaced = !!spaced;
 					end = found ? found.Point : vectors.Add(shot.From, vectors.Scale(shot.Way, range));
 					shot.End = end;
 
@@ -581,7 +895,15 @@ Elemenx.Trait('SceneWeapons', {
 					return true;
 				}
 
-				var substeps = Math.max(1, Math.ceil(vectors.Length(shot.Velocity) * elapsed / 2));
+				/* A missile steers itself (SceneMissiles): its seeker, its motor, its turn; brought down, it is gone. */
+				if (type.Guidance && engine.MissileGuide && engine.MissileGuide(shot, elapsed) === false) return false;
+
+				/* In the frame of its body: where that body is now. */
+				var round = shot.Around ? scene.Objects[shot.Around] : null;
+				if (round && round.World && shot.Rel)
+					shot.At = vectors.Add(round.World, shot.Rel);
+
+				var substeps = Math.max(1, Math.min(64, Math.ceil(vectors.Length(shot.Velocity) * elapsed / (2 * metre()))));
 				var dt = elapsed / substeps;
 				var k;
 
@@ -601,13 +923,18 @@ Elemenx.Trait('SceneWeapons', {
 						shot.Velocity = vectors.Scale(vectors.Normalize(vectors.Add(vectors.Scale(now, 1 - turn), vectors.Scale(wanted, turn))), speed);
 					}
 
-					shot.Velocity[1] -= number(type.Gravity, 0) * dt;
+					shot.Velocity[1] -= number(type.Gravity, 0) * metre() * dt;
 					moved = vectors.Scale(shot.Velocity, dt);
 					shot.At = vectors.Add(shot.At, moved);
-					shot.Flown += vectors.Length(moved);
+
+					if (shot.Rel)
+						shot.Rel = vectors.Add(shot.Rel, moved);
+
+					/* How far it flew of its own (not as its ship went): what its Range counts. Regression: carried at the speed of its ship round its planet, a shot of 200 m was gone in its first step. */
+					shot.Flown += vectors.Length(vectors.Subtract(moved, vectors.Scale(shot.Carried || [0, 0, 0], dt)));
 					way = vectors.Normalize(moved);
 
-					found = trace(before, way, vectors.Length(moved) + 0.01, shot.Source);
+					found = trace(before, way, vectors.Length(moved) + 0.01 * metre(), shot.Source);
 
 					if (found) {
 						shot.At = found.Point;
@@ -621,10 +948,37 @@ Elemenx.Trait('SceneWeapons', {
 
 						blast(shot, found.Point, found.Normal);
 
+						if (type.Guidance && engine.MissileEnded)
+							engine.MissileEnded(shot, 'hit', found.ID);
+
 						return false;
 					}
 
-					if (shot.Flown > number(type.Range, 200) * (type.Arc ? 3 : 1) || field && shot.At[1] < -500) return false;
+					/* A body of a ship in space meets the ships of its frame where their steps have them (see contactOf). */
+					if (!type.Guidance && shot.Rel) {
+						var met = contactOf(shot, before, k * dt, (k + 1) * dt);
+
+						if (met) {
+							shot.Trail.push(shot.At.slice());
+
+							hit(shot, met, number(type.Damage, 10), way);
+
+							blast(shot, met.Point, met.Normal);
+
+							return false;
+						}
+					}
+
+					/* A missile bursts by what it goes to as it passes (its fuse). */
+					if (type.Guidance && engine.MissileFuse && engine.MissileFuse(shot, before, k * dt, (k + 1) * dt)) return false;
+
+					/* (A slug out of a tunnel flies four times its Exit at most.) */
+					if (shot.Flown > (shot.Out ? number(type.Exit, 3000) * 4 : number(type.Range, 200) * (type.Arc ? 3 : 1)) * metre() || field && shot.At[1] < -500) {
+						if (type.Guidance && engine.MissileEnded)
+							engine.MissileEnded(shot, 'spent', '');
+
+						return false;
+					}
 				}
 
 				if (shot.Trail.length > 24)
@@ -678,8 +1032,8 @@ Elemenx.Trait('SceneWeapons', {
 		function aimFromView (shot) {
 			var shooter = gunner();
 			var ray = engine.Ray(scene.Width / 2, scene.Height / 2);
-			var range = number(shot.Type.Range, 300);
-			var found = shooter ? trace(ray.Origin, ray.Direction, range + 50, shooter.ID) : null;
+			var range = number(shot.Type.Range, 300) * metre();
+			var found = shooter ? trace(ray.Origin, ray.Direction, range + 50 * metre(), shooter.ID) : null;
 			var point = found ? found.Point : vectors.Add(ray.Origin, vectors.Scale(ray.Direction, range));
 
 			if (!shooter) return;
@@ -711,8 +1065,8 @@ Elemenx.Trait('SceneWeapons', {
 			if (!type || !scene.Width) return false;
 
 			ray = engine.Ray(scene.Width / 2, scene.Height / 2);
-			range = number(type.Range, 300);
-			found = trace(ray.Origin, ray.Direction, range + 50, shooter.ID);
+			range = number(type.Range, 300) * metre();
+			found = trace(ray.Origin, ray.Direction, range + 50 * metre(), shooter.ID);
 			point = found ? found.Point : vectors.Add(ray.Origin, vectors.Scale(ray.Direction, range));
 
 			/* A beam held is one shot made longer. */
@@ -762,7 +1116,7 @@ Elemenx.Trait('SceneWeapons', {
 			}
 
 			cone = number(lock.Cone, 6) * Math.PI / 180;
-			range = number(type.Range, 300);
+			range = number(type.Range, 300) * metre();
 			ray = engine.Ray(scene.Width / 2, scene.Height / 2);
 
 			candidates = Object.keys(scene.Objects).map(function (id) {
@@ -840,6 +1194,24 @@ Elemenx.Trait('SceneWeapons', {
 			if ((state.Holding || padTrigger()) && scene.Hero)
 				heroFire();
 
+			/* What charged fires. */
+			Object.keys(state.Charging).forEach(function (key) {
+				var one = state.Charging[key];
+
+				if (!scene.Objects[one.ID]) {
+					delete state.Charging[key];
+
+					return;
+				}
+
+				if (state.Clock < one.Until) return;
+
+				delete state.Charging[key];
+				engine.Fire(one.ID, one.Settings);
+			});
+
+			tunnelsStep();
+
 			step(elapsed);
 
 			locking(elapsed);
@@ -863,6 +1235,26 @@ Elemenx.Trait('SceneWeapons', {
 		};
 
 		engine.WeaponTrace = trace;
+
+		/* For SceneMissiles: a hit, a blast, a streak of light, the middle and the material of a thing. */
+		engine.WeaponsHit = hit;
+
+		engine.WeaponsBlast = blast;
+
+		engine.WeaponsStreak = streak;
+
+		engine.WeaponsCenter = centerOf;
+
+		engine.WeaponsMaterial = materialOf;
+
+		engine.WeaponsContact = contactOf;
+
+		/* How far a weapon of an object has charged (0 to 1), -1 when it does not charge now. */
+		engine.WeaponsCharge = function (id, name) {
+			var one = state.Charging[id + ':' + name];
+
+			return one ? Math.min(1, (state.Clock - one.Born) / Math.max(0.01, one.Until - one.Born)) : -1;
+		};
 
 		/* The crosshair and the locks over the view. */
 		function aimLayer () {
@@ -951,6 +1343,22 @@ Elemenx.Trait('SceneWeapons', {
 			if (!programs)
 				programs = {Streak: renderer.Program(shaders.StreakVertex, shaders.Streak), Mark: renderer.Program(shaders.MarkVertex, shaders.Mark)};
 
+			/*
+			 * The width of a streak of light seen at least so many pixels wide (at its point nearest the eye): a beam of 3 m
+			 * kilometres off is thinner than a pixel. Regression: the lance burnt on a raider 10 km off, unseen.
+			 */
+			function seen (a, b, width, pixels) {
+				var line = vectors.Subtract(b, a);
+				var length = vectors.Dot(line, line);
+				var t = length > 0 ? Math.max(0, Math.min(1, vectors.Dot(vectors.Subtract(eye, a), line) / length)) : 0;
+				var far = vectors.Distance(eye, vectors.Add(a, vectors.Scale(line, t)));
+				var pixel = 2 * Math.tan((scene.Camera && scene.Camera.Fov || 60) * Math.PI / 360) / Math.max(1, scene.Height || 600);
+
+				return Math.max(width, far * pixel * pixels);
+			}
+
+			engine.WeaponsSeen = seen;
+
 			function ribbon (into, a, b, width, color, alpha, round) {
 				var pa = vectors.Subtract(a, eye);
 				var pb = vectors.Subtract(b, eye);
@@ -983,8 +1391,8 @@ Elemenx.Trait('SceneWeapons', {
 					/* A tracer is a short dash that flies along the ray. */
 					var length = vectors.Distance(one.From, one.To);
 					var way = vectors.Scale(vectors.Subtract(one.To, one.From), 1 / Math.max(1e-6, length));
-					var head = Math.min(length, age * length * 1.15 + 1);
-					var tail = Math.max(0, head - Math.min(6, length * 0.4));
+					var head = Math.min(length, age * length * 1.15 + metre());
+					var tail = Math.max(0, head - Math.min(6 * metre(), length * 0.4));
 
 					ribbon(ribbons, vectors.Add(one.From, vectors.Scale(way, tail)), vectors.Add(one.From, vectors.Scale(way, head)), one.Width, vectors.Scale(one.Color, 3), 1, false);
 				}
@@ -1017,14 +1425,34 @@ Elemenx.Trait('SceneWeapons', {
 			state.Shots.forEach(function (shot) {
 				var type = shot.Type;
 				var color = colorOf(type.Color, [1, 0.85, 0.55]);
-				var size = number(type.Size, 0.1);
+				var size = number(type.Size, 0.1) * metre();
 				var i;
 
 				if (type.Kind === 'beam') {
 					if (!shot.End) return;
 
-					ribbon(ribbons, shot.From, shot.End, number(type.Width, 0.05), vectors.Scale(color, 6), 1, false);
-					ribbon(ribbons, shot.From, shot.End, number(type.Width, 0.05) * 5, vectors.Scale(color, 0.8), 1, false);
+					/* One that tracks: from its ship to its target as they are drawn now. */
+					if (type.Track && shot.Target && scene.Objects[shot.Target] && scene.Objects[shot.Source] && vectors.Distance(placeOf(scene.Objects[shot.Target]), placeOf(scene.Objects[shot.Source])) <= number(type.Range, 400) * metre()) {
+						var lanceFrom = centerOf(scene.Objects[shot.Source]);
+						var lanceTo = centerOf(scene.Objects[shot.Target]);
+
+						ribbon(ribbons, lanceFrom, lanceTo, seen(lanceFrom, lanceTo, number(type.Width, 0.05) * metre(), 2), vectors.Scale(color, 6), 1, false);
+						ribbon(ribbons, lanceFrom, lanceTo, seen(lanceFrom, lanceTo, number(type.Width, 0.05) * 5 * metre(), 6), vectors.Scale(color, 0.8), 1, false);
+
+						return;
+					}
+
+					/* A beam of a ship in space: from its ship to what it struck as they are drawn now (else on along its way). */
+					var beamFrom = shot.From;
+					var beamTo = shot.End;
+
+					if (shot.Spaced && scene.Objects[shot.Source]) {
+						beamFrom = centerOf(scene.Objects[shot.Source]);
+						beamTo = shot.Struck && scene.Objects[shot.Struck] ? centerOf(scene.Objects[shot.Struck]) : vectors.Add(beamFrom, vectors.Subtract(shot.End, shot.From));
+					}
+
+					ribbon(ribbons, beamFrom, beamTo, seen(beamFrom, beamTo, number(type.Width, 0.05) * metre(), 1.5), vectors.Scale(color, 6), 1, false);
+					ribbon(ribbons, beamFrom, beamTo, seen(beamFrom, beamTo, number(type.Width, 0.05) * 5 * metre(), 4), vectors.Scale(color, 0.8), 1, false);
 
 					return;
 				}
@@ -1037,11 +1465,34 @@ Elemenx.Trait('SceneWeapons', {
 				for (i = 1; i < shot.Trail.length; i++) {
 					var part = i / shot.Trail.length;
 
-					if (type.Trail === 'smoke') ribbon(smoke, shot.Trail[i - 1], shot.Trail[i], 0.12 + (1 - part) * 0.5, [0.6, 0.6, 0.62], 0.28 * part, false);
-					else if (type.Trail === 'thin') ribbon(ribbons, shot.Trail[i - 1], shot.Trail[i], 0.01, vectors.Scale(color, 0.5 * part), 1, false);
+					if (type.Trail === 'smoke') ribbon(smoke, shot.Trail[i - 1], shot.Trail[i], (0.12 + (1 - part) * 0.5) * metre(), [0.6, 0.6, 0.62], 0.28 * part, false);
+					else if (type.Trail === 'thin') ribbon(ribbons, shot.Trail[i - 1], shot.Trail[i], 0.01 * metre(), vectors.Scale(color, 0.5 * part), 1, false);
+					else if (type.Trail === 'exhaust') ribbon(ribbons, shot.Trail[i - 1], shot.Trail[i], size * (0.4 + (1 - part) * 1.6), vectors.Scale(color, 0.9 * part * part), 1, false);
 					else ribbon(ribbons, shot.Trail[i - 1], shot.Trail[i], size * 0.6 * part, vectors.Scale(color, 1.5 * part), 1, false);
 				}
 			});
+
+			/* A weapon charging: a glow at its muzzle, growing. */
+			Object.keys(state.Charging).forEach(function (key) {
+				var one = state.Charging[key];
+				var object = scene.Objects[one.ID];
+				var part = Math.min(1, (now - one.Born) / Math.max(0.01, one.Until - one.Born));
+				var at;
+				var size;
+
+				if (!object || !object.World) return;
+
+				at = muzzleOf(object, null);
+				size = number(one.Type.Width, 1) * metre() * (1 + part * 6);
+
+				ribbon(ribbons, vectors.Subtract(at, [0, size, 0]), vectors.Add(at, [0, size, 0]), size, vectors.Scale(colorOf(one.Type.Color, [0.7, 0.85, 1]), 2 + part * 8), 1, true);
+			});
+
+			/* The flares of SceneMissiles. */
+			if (engine.MissilesDraw)
+				engine.MissilesDraw(function (a, b, width, color, alpha, round) {
+					ribbon(ribbons, a, b, width, color, alpha, round);
+				});
 
 			drawMarks(matrix);
 

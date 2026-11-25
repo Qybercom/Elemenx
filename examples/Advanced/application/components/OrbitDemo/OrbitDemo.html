@@ -22,7 +22,7 @@
 		<DemoGraph [name]="OrbitGraphOpen" (change)="OrbitGraphChanged" />
 	</div>
 	<div class="scene-demo-scene">
-		<Scene *if="OrbitFresh" [graphs]="OrbitGraphs" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding"><DemoLoading slot="loading" Title="Orbit" />
+		<Scene [graphs]="OrbitGraphs" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled" (landing)="OrbitLanding"><DemoLoading slot="loading" Title="Orbit" />
 			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Fly" />
 			<GameTargets slot="hud" />
 			<div slot="hud" class="scene-demo-tactics"><GameTactics /><GameRadar Shape="bubble" Size="220" Range="400" Zoomable="true" /></div>

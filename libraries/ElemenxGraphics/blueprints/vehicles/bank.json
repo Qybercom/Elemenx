@@ -1,0 +1,341 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vehicles-bank",
+	"parameters": [
+		{
+			"key": "BankPerTurn",
+			"type": "float",
+			"value": 0.9,
+			"comment": "Radians a ship banks for each radian a second it turns"
+		},
+		{
+			"key": "MostBank",
+			"type": "float",
+			"value": 0.6,
+			"comment": "Radians it banks at most"
+		},
+		{
+			"key": "FullSpeed",
+			"type": "float",
+			"value": 40,
+			"comment": "Metres a second from which it banks all it may in the air (slower, less)"
+		},
+		{
+			"key": "SpaceBank",
+			"type": "float",
+			"value": 0.4,
+			"comment": "Of its bank, how much it banks in space (no air to lean on)"
+		},
+		{
+			"key": "Rate",
+			"type": "float",
+			"value": 3,
+			"comment": "How fast it comes to its bank (a part of the way each second)"
+		},
+		{
+			"key": "ViewShare",
+			"type": "float",
+			"value": 1,
+			"comment": "Of its bank, how much every view of it (behind it, in its cockpit) banks with it"
+		}
+	],
+	"blocks": [
+		{
+			"id": "vehicles-bank-input-turn",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Turn"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-input-speed",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Speed"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-input-air",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Air"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-input-landed",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Landed"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-parameter-bankperturn",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "BankPerTurn"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-parameter-mostbank",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MostBank"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-parameter-fullspeed",
+			"type": "Parameter",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "FullSpeed"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-parameter-spacebank",
+			"type": "Parameter",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "SpaceBank"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-parameter-rate",
+			"type": "Parameter",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rate"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-parameter-viewshare",
+			"type": "Parameter",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "ViewShare"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-formula-roll",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Landed > 0.5 ? 0 : max(-MostBank, min(MostBank, Turn * (Air > 0.5 ? min(1, Speed / max(FullSpeed, 0.001)) : SpaceBank) * BankPerTurn))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-result-roll",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Roll"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-formula-rate",
+			"type": "Formula",
+			"x": 420,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Rate"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-result-rate",
+			"type": "Result",
+			"x": 800,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rate"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-formula-view",
+			"type": "Formula",
+			"x": 420,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "ViewShare"
+				}
+			]
+		},
+		{
+			"id": "vehicles-bank-result-view",
+			"type": "Result",
+			"x": 800,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "View"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "vehicles-bank-link-0",
+			"p1": "vehicles-bank-input-turn-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-Turn",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-1",
+			"p1": "vehicles-bank-input-speed-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-2",
+			"p1": "vehicles-bank-input-air-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-Air",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-3",
+			"p1": "vehicles-bank-input-landed-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-Landed",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-4",
+			"p1": "vehicles-bank-parameter-bankperturn-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-BankPerTurn",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-5",
+			"p1": "vehicles-bank-parameter-mostbank-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-MostBank",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-6",
+			"p1": "vehicles-bank-parameter-fullspeed-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-FullSpeed",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-7",
+			"p1": "vehicles-bank-parameter-spacebank-out-Value",
+			"p2": "vehicles-bank-formula-roll-in-SpaceBank",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-8",
+			"p1": "vehicles-bank-formula-roll-out-Value",
+			"p2": "vehicles-bank-result-roll-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-9",
+			"p1": "vehicles-bank-parameter-rate-out-Value",
+			"p2": "vehicles-bank-formula-rate-in-Rate",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-10",
+			"p1": "vehicles-bank-formula-rate-out-Value",
+			"p2": "vehicles-bank-result-rate-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-11",
+			"p1": "vehicles-bank-parameter-viewshare-out-Value",
+			"p2": "vehicles-bank-formula-view-in-ViewShare",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-bank-link-12",
+			"p1": "vehicles-bank-formula-view-out-Value",
+			"p2": "vehicles-bank-result-view-in-Value",
+			"kind": "value"
+		}
+	]
+}

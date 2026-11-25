@@ -1,0 +1,9 @@
+/* The commands of a ship: a row of buttons, the site of a landing before them. */
+.elemenx-game-commands {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	padding: 4px;
+	contain: layout style;
+}

@@ -1,0 +1,1348 @@
+{
+	"Name": "Lamborghini Revuelto",
+	"Model": "../../models/lamborghini_revuelto.glb",
+	"Size": 1.16,
+	"Materials": {
+		"GrilleNoAlpha[89]A": {
+			"ColorMap": null,
+			"BaseColor": [
+				0.03,
+				0.03,
+				0.035,
+				1
+			]
+		}
+	},
+	"Tune": {
+		"Turn": [
+			[
+				14,
+				53
+			],
+			[
+				28,
+				57
+			],
+			[
+				56,
+				66
+			],
+			[
+				83,
+				70
+			]
+		],
+		"Build": [
+			0.48,
+			0.28
+		],
+		"Mass": 1770,
+		"Brake": 34,
+		"Bite": 1.9,
+		"Coast": 2.8,
+		"Grip": 1.6,
+		"Downforce": 0.55,
+		"Power": 750000,
+		"Answer": 22,
+		"Agility": 2.2,
+		"Assist": 0.8,
+		"Rear": 1.2,
+		"Slide": 0.45,
+		"Ride": 0.85,
+		"Lock": 0.58,
+		"Keep": 110,
+		"AntiRoll": 130000,
+		"Balance": 0.33
+	},
+	"Pipes": [
+		[
+			0.106,
+			0.662,
+			-2.08
+		],
+		[
+			-0.106,
+			0.662,
+			-2.08
+		],
+		[
+			0.184,
+			0.662,
+			-2.08
+		],
+		[
+			-0.184,
+			0.662,
+			-2.08
+		]
+	],
+	"Roles": [
+		{
+			"ID": "steering",
+			"Kind": "steering",
+			"Name": "steering",
+			"Parts": [
+				{
+					"Piece": "node-850-0",
+					"Vertices": [
+						[
+							0,
+							91
+						]
+					]
+				},
+				{
+					"Piece": "node-852-0",
+					"Vertices": [
+						[
+							0,
+							853
+						],
+						[
+							855,
+							1011
+						]
+					]
+				},
+				{
+					"Piece": "node-854-0",
+					"Vertices": [
+						[
+							0,
+							21
+						]
+					]
+				},
+				{
+					"Piece": "node-856-0",
+					"Vertices": [
+						[
+							0,
+							11
+						]
+					]
+				},
+				{
+					"Piece": "node-858-0",
+					"Vertices": [
+						[
+							0,
+							3
+						]
+					]
+				},
+				{
+					"Piece": "node-860-0",
+					"Vertices": [
+						[
+							0,
+							75
+						]
+					]
+				},
+				{
+					"Piece": "node-862-0",
+					"Vertices": [
+						[
+							0,
+							63
+						]
+					]
+				},
+				{
+					"Piece": "node-864-0",
+					"Vertices": [
+						[
+							0,
+							159
+						]
+					]
+				},
+				{
+					"Piece": "node-866-0",
+					"Vertices": [
+						[
+							0,
+							79
+						]
+					]
+				},
+				{
+					"Piece": "node-868-0",
+					"Vertices": [
+						[
+							0,
+							331
+						]
+					]
+				},
+				{
+					"Piece": "node-870-0",
+					"Vertices": [
+						[
+							0,
+							540
+						],
+						[
+							542,
+							542
+						],
+						[
+							544,
+							2738
+						]
+					]
+				},
+				{
+					"Piece": "node-872-0",
+					"Vertices": [
+						[
+							0,
+							611
+						]
+					]
+				},
+				{
+					"Piece": "node-874-0",
+					"Vertices": [
+						[
+							0,
+							1615
+						],
+						[
+							1617,
+							1617
+						],
+						[
+							1619,
+							1956
+						]
+					]
+				},
+				{
+					"Piece": "node-876-0",
+					"Vertices": [
+						[
+							0,
+							294
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.322,
+					0.613,
+					0.342
+				],
+				"Axis": [
+					0,
+					0.243,
+					-0.97
+				],
+				"Angle": 140
+			},
+			"Drive": "steer",
+			"Open": 0
+		},
+		{
+			"ID": "paddle-up",
+			"Kind": "paddle",
+			"Name": "paddle-up",
+			"Parts": [
+				{
+					"Piece": "node-740-0",
+					"Vertices": [
+						[
+							0,
+							621
+						]
+					]
+				},
+				{
+					"Piece": "node-742-0",
+					"Vertices": [
+						[
+							0,
+							3
+						]
+					]
+				},
+				{
+					"Piece": "node-744-0",
+					"Vertices": [
+						[
+							0,
+							27
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "slide",
+				"Way": [
+					0,
+					0.243,
+					-0.97
+				],
+				"Reach": 0.012
+			},
+			"Drive": "paddle",
+			"Sign": 1,
+			"Follow": "steering",
+			"Open": 0
+		},
+		{
+			"ID": "paddle-down",
+			"Kind": "paddle",
+			"Name": "paddle-down",
+			"Parts": [
+				{
+					"Piece": "node-734-0",
+					"Vertices": [
+						[
+							0,
+							621
+						]
+					]
+				},
+				{
+					"Piece": "node-736-0",
+					"Vertices": [
+						[
+							0,
+							3
+						]
+					]
+				},
+				{
+					"Piece": "node-738-0",
+					"Vertices": [
+						[
+							0,
+							27
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "slide",
+				"Way": [
+					0,
+					0.243,
+					-0.97
+				],
+				"Reach": 0.012
+			},
+			"Drive": "paddle",
+			"Sign": -1,
+			"Follow": "steering",
+			"Open": 0
+		},
+		{
+			"ID": "gas",
+			"Kind": "pedal-gas",
+			"Name": "gas",
+			"Parts": [
+				{
+					"Piece": "node-752-0",
+					"Vertices": [
+						[
+							0,
+							27
+						]
+					]
+				},
+				{
+					"Piece": "node-754-0",
+					"Vertices": [
+						[
+							0,
+							63
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.16,
+					0.349,
+					0.86
+				],
+				"Axis": [
+					-1,
+					0,
+					0
+				],
+				"Angle": 16
+			},
+			"Drive": "gas",
+			"Open": 0
+		},
+		{
+			"ID": "brake",
+			"Kind": "pedal-brake",
+			"Name": "brake",
+			"Parts": [
+				{
+					"Piece": "node-746-0",
+					"Vertices": [
+						[
+							0,
+							11
+						]
+					]
+				},
+				{
+					"Piece": "node-748-0",
+					"Vertices": [
+						[
+							0,
+							23
+						]
+					]
+				},
+				{
+					"Piece": "node-750-0",
+					"Vertices": [
+						[
+							0,
+							89
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.302,
+					0.541,
+					0.88
+				],
+				"Axis": [
+					-1,
+					0,
+					0
+				],
+				"Angle": 14
+			},
+			"Drive": "brake",
+			"Open": 0
+		},
+		{
+			"ID": "wiper-left",
+			"Kind": "wiper",
+			"Name": "wiper-left",
+			"Parts": [
+				{
+					"Piece": "node-286-0",
+					"Vertices": [
+						[
+							0,
+							421
+						]
+					]
+				},
+				{
+					"Piece": "node-288-0",
+					"Vertices": [
+						[
+							0,
+							11
+						]
+					]
+				},
+				{
+					"Piece": "node-298-0",
+					"Vertices": [
+						[
+							0,
+							298
+						]
+					]
+				},
+				{
+					"Piece": "node-300-0",
+					"Vertices": [
+						[
+							0,
+							55
+						]
+					]
+				},
+				{
+					"Piece": "node-306-0",
+					"Vertices": [
+						[
+							0,
+							115
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.46,
+					0.66,
+					1.27
+				],
+				"Axis": [
+					0.154,
+					0.89,
+					0.429
+				],
+				"Angle": 95
+			},
+			"Drive": "wipers",
+			"Open": 0
+		},
+		{
+			"ID": "wiper-right",
+			"Kind": "wiper",
+			"Name": "wiper-right",
+			"Parts": [
+				{
+					"Piece": "node-290-0",
+					"Vertices": [
+						[
+							0,
+							317
+						]
+					]
+				},
+				{
+					"Piece": "node-292-0",
+					"Vertices": [
+						[
+							0,
+							415
+						]
+					]
+				},
+				{
+					"Piece": "node-294-0",
+					"Vertices": [
+						[
+							0,
+							11
+						]
+					]
+				},
+				{
+					"Piece": "node-302-0",
+					"Vertices": [
+						[
+							0,
+							288
+						]
+					]
+				},
+				{
+					"Piece": "node-304-0",
+					"Vertices": [
+						[
+							0,
+							55
+						]
+					]
+				},
+				{
+					"Piece": "node-308-0",
+					"Vertices": [
+						[
+							0,
+							73
+						]
+					]
+				},
+				{
+					"Piece": "node-310-0",
+					"Vertices": [
+						[
+							0,
+							57
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.035,
+					0.65,
+					1.33
+				],
+				"Axis": [
+					0.154,
+					0.89,
+					0.429
+				],
+				"Angle": 95
+			},
+			"Drive": "wipers",
+			"Open": 0
+		},
+		{
+			"ID": "doors",
+			"Kind": "door",
+			"Name": "doors",
+			"Parts": [
+				{
+					"Piece": "node-188-0",
+					"Vertices": [
+						[
+							0,
+							1067
+						]
+					]
+				},
+				{
+					"Piece": "node-190-0",
+					"Vertices": [
+						[
+							0,
+							1416
+						]
+					]
+				},
+				{
+					"Piece": "node-192-0",
+					"Vertices": [
+						[
+							0,
+							934
+						]
+					]
+				},
+				{
+					"Piece": "node-194-0",
+					"Vertices": [
+						[
+							0,
+							1065
+						]
+					]
+				},
+				{
+					"Piece": "node-196-0",
+					"Vertices": [
+						[
+							0,
+							1409
+						]
+					]
+				},
+				{
+					"Piece": "node-198-0",
+					"Vertices": [
+						[
+							0,
+							935
+						]
+					]
+				},
+				{
+					"Piece": "node-218-0",
+					"Vertices": [
+						[
+							0,
+							41
+						]
+					]
+				},
+				{
+					"Piece": "node-220-0",
+					"Vertices": [
+						[
+							0,
+							41
+						]
+					]
+				},
+				{
+					"Piece": "node-252-0",
+					"Vertices": [
+						[
+							0,
+							97
+						]
+					]
+				},
+				{
+					"Piece": "node-254-0",
+					"Vertices": [
+						[
+							0,
+							470
+						]
+					]
+				},
+				{
+					"Piece": "node-256-0",
+					"Vertices": [
+						[
+							0,
+							171
+						]
+					]
+				},
+				{
+					"Piece": "node-258-0",
+					"Vertices": [
+						[
+							0,
+							51
+						]
+					]
+				},
+				{
+					"Piece": "node-260-0",
+					"Vertices": [
+						[
+							0,
+							1241
+						]
+					]
+				},
+				{
+					"Piece": "node-262-0",
+					"Vertices": [
+						[
+							0,
+							97
+						]
+					]
+				},
+				{
+					"Piece": "node-264-0",
+					"Vertices": [
+						[
+							0,
+							470
+						]
+					]
+				},
+				{
+					"Piece": "node-266-0",
+					"Vertices": [
+						[
+							0,
+							171
+						]
+					]
+				},
+				{
+					"Piece": "node-268-0",
+					"Vertices": [
+						[
+							0,
+							51
+						]
+					]
+				},
+				{
+					"Piece": "node-270-0",
+					"Vertices": [
+						[
+							0,
+							1241
+						]
+					]
+				},
+				{
+					"Piece": "node-474-0",
+					"Vertices": [
+						[
+							0,
+							48
+						]
+					]
+				},
+				{
+					"Piece": "node-476-0",
+					"Vertices": [
+						[
+							0,
+							80
+						]
+					]
+				},
+				{
+					"Piece": "node-488-0",
+					"Vertices": [
+						[
+							0,
+							48
+						]
+					]
+				},
+				{
+					"Piece": "node-490-0",
+					"Vertices": [
+						[
+							0,
+							80
+						]
+					]
+				},
+				{
+					"Piece": "node-608-0",
+					"Vertices": [
+						[
+							0,
+							955
+						]
+					]
+				},
+				{
+					"Piece": "node-610-0",
+					"Vertices": [
+						[
+							0,
+							23
+						]
+					]
+				},
+				{
+					"Piece": "node-612-0",
+					"Vertices": [
+						[
+							0,
+							29
+						]
+					]
+				},
+				{
+					"Piece": "node-614-0",
+					"Vertices": [
+						[
+							0,
+							191
+						]
+					]
+				},
+				{
+					"Piece": "node-616-0",
+					"Vertices": [
+						[
+							0,
+							589
+						]
+					]
+				},
+				{
+					"Piece": "node-618-0",
+					"Vertices": [
+						[
+							0,
+							7
+						]
+					]
+				},
+				{
+					"Piece": "node-620-0",
+					"Vertices": [
+						[
+							0,
+							19
+						]
+					]
+				},
+				{
+					"Piece": "node-622-0",
+					"Vertices": [
+						[
+							0,
+							26
+						]
+					]
+				},
+				{
+					"Piece": "node-624-0",
+					"Vertices": [
+						[
+							0,
+							59
+						]
+					]
+				},
+				{
+					"Piece": "node-626-0",
+					"Vertices": [
+						[
+							0,
+							106
+						]
+					]
+				},
+				{
+					"Piece": "node-628-0",
+					"Vertices": [
+						[
+							0,
+							40
+						]
+					]
+				},
+				{
+					"Piece": "node-630-0",
+					"Vertices": [
+						[
+							0,
+							93
+						]
+					]
+				},
+				{
+					"Piece": "node-632-0",
+					"Vertices": [
+						[
+							0,
+							327
+						]
+					]
+				},
+				{
+					"Piece": "node-634-0",
+					"Vertices": [
+						[
+							0,
+							772
+						],
+						[
+							789,
+							1169
+						]
+					]
+				},
+				{
+					"Piece": "node-636-0",
+					"Vertices": [
+						[
+							0,
+							7
+						]
+					]
+				},
+				{
+					"Piece": "node-638-0",
+					"Vertices": [
+						[
+							0,
+							127
+						]
+					]
+				},
+				{
+					"Piece": "node-640-0",
+					"Vertices": [
+						[
+							0,
+							63
+						]
+					]
+				},
+				{
+					"Piece": "node-642-0",
+					"Vertices": [
+						[
+							0,
+							3
+						]
+					]
+				},
+				{
+					"Piece": "node-644-0",
+					"Vertices": [
+						[
+							0,
+							3
+						]
+					]
+				},
+				{
+					"Piece": "node-646-0",
+					"Vertices": [
+						[
+							0,
+							64
+						]
+					]
+				},
+				{
+					"Piece": "node-648-0",
+					"Vertices": [
+						[
+							0,
+							27
+						]
+					]
+				},
+				{
+					"Piece": "node-650-0",
+					"Vertices": [
+						[
+							0,
+							63
+						]
+					]
+				},
+				{
+					"Piece": "node-652-0",
+					"Vertices": [
+						[
+							0,
+							953
+						]
+					]
+				},
+				{
+					"Piece": "node-654-0",
+					"Vertices": [
+						[
+							0,
+							11
+						]
+					]
+				},
+				{
+					"Piece": "node-656-0",
+					"Vertices": [
+						[
+							0,
+							127
+						]
+					]
+				},
+				{
+					"Piece": "node-658-0",
+					"Vertices": [
+						[
+							0,
+							588
+						]
+					]
+				},
+				{
+					"Piece": "node-660-0",
+					"Vertices": [
+						[
+							0,
+							26
+						]
+					]
+				},
+				{
+					"Piece": "node-662-0",
+					"Vertices": [
+						[
+							0,
+							15
+						]
+					]
+				},
+				{
+					"Piece": "node-664-0",
+					"Vertices": [
+						[
+							0,
+							104
+						]
+					]
+				},
+				{
+					"Piece": "node-666-0",
+					"Vertices": [
+						[
+							0,
+							40
+						]
+					]
+				},
+				{
+					"Piece": "node-668-0",
+					"Vertices": [
+						[
+							0,
+							93
+						]
+					]
+				},
+				{
+					"Piece": "node-670-0",
+					"Vertices": [
+						[
+							0,
+							328
+						]
+					]
+				},
+				{
+					"Piece": "node-672-0",
+					"Vertices": [
+						[
+							0,
+							662
+						]
+					]
+				},
+				{
+					"Piece": "node-674-0",
+					"Vertices": [
+						[
+							0,
+							7
+						]
+					]
+				},
+				{
+					"Piece": "node-676-0",
+					"Vertices": [
+						[
+							0,
+							87
+						]
+					]
+				},
+				{
+					"Piece": "node-678-0",
+					"Vertices": [
+						[
+							0,
+							27
+						]
+					]
+				},
+				{
+					"Piece": "node-680-0",
+					"Vertices": [
+						[
+							0,
+							63
+						]
+					]
+				},
+				{
+					"Piece": "node-682-0",
+					"Vertices": [
+						[
+							0,
+							27
+						]
+					]
+				}
+			],
+			"Both": true,
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.75,
+					0.42,
+					0.85
+				],
+				"Axis": [
+					1,
+					0,
+					0
+				],
+				"Angle": 75
+			},
+			"Open": 0
+		},
+		{
+			"ID": "head-0",
+			"Kind": "lamp-head",
+			"Name": "head",
+			"Parts": [
+				{
+					"Piece": "node-951-0",
+					"Vertices": [
+						[
+							0,
+							73
+						]
+					]
+				},
+				{
+					"Piece": "node-961-0",
+					"Vertices": [
+						[
+							0,
+							73
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "glow"
+			},
+			"Light": {
+				"Kind": "head"
+			},
+			"Both": true
+		},
+		{
+			"ID": "rear-1",
+			"Kind": "lamp-rear",
+			"Name": "rear",
+			"Parts": [
+				{
+					"Piece": "node-986-0",
+					"Vertices": [
+						[
+							0,
+							202
+						]
+					]
+				},
+				{
+					"Piece": "node-988-0",
+					"Vertices": [
+						[
+							0,
+							202
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "glow"
+			},
+			"Light": {
+				"Kind": "rear"
+			},
+			"Both": true
+		},
+		{
+			"ID": "wheel-fl",
+			"Kind": "wheel",
+			"Name": "wheel FL",
+			"Corner": "FL",
+			"Parts": [
+				{
+					"Piece": "node-6-0"
+				},
+				{
+					"Piece": "node-11-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-fl",
+			"Kind": "caliper",
+			"Name": "caliper FL",
+			"Corner": "FL",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-14-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-fr",
+			"Kind": "wheel",
+			"Name": "wheel FR",
+			"Corner": "FR",
+			"Parts": [
+				{
+					"Piece": "node-23-0"
+				},
+				{
+					"Piece": "node-28-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-fr",
+			"Kind": "caliper",
+			"Name": "caliper FR",
+			"Corner": "FR",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-31-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-rl",
+			"Kind": "wheel",
+			"Name": "wheel RL",
+			"Corner": "RL",
+			"Parts": [
+				{
+					"Piece": "node-40-0"
+				},
+				{
+					"Piece": "node-45-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-rl",
+			"Kind": "caliper",
+			"Name": "caliper RL",
+			"Corner": "RL",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-48-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-rr",
+			"Kind": "wheel",
+			"Name": "wheel RR",
+			"Corner": "RR",
+			"Parts": [
+				{
+					"Piece": "node-57-0"
+				},
+				{
+					"Piece": "node-62-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-rr",
+			"Kind": "caliper",
+			"Name": "caliper RR",
+			"Corner": "RR",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-65-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		}
+	]
+}

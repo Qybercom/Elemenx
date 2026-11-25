@@ -71,4 +71,4 @@ GalaxyData: a galaxy as data (docs/SPACE-FORMAT.md): its passport, its supermass
 - [gives the stars round its black hole the planets and stations their room leaves them, and the swarm of its nuclear cluster](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L236) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L263) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 
-+17 more in the same files
++18 more in the same files

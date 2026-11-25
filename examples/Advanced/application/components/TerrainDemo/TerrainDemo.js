@@ -125,15 +125,13 @@ Elemenx.Component('TerrainDemo', {
 	TerrainHour: 16,
 	TerrainAurora: 'auto',
 	TerrainSeason: '',
-	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), its scene made again as one changes. */
+	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), given to the scene as one changes (it makes its shaders again itself, its view kept). */
 	TerrainGraphOpen: '',
 	TerrainGraphs: null,
-	TerrainFresh: true,
 	TerrainGraphOpened: function (name) {
 		this.TerrainGraphOpen = this.TerrainGraphOpen === name ? '' : name;
 	},
 	TerrainGraphChanged: function (event) {
-		var self = this;
 		var given = event && event.detail ? event.detail : event;
 		var graphs = Object.assign({}, this.TerrainGraphs || {});
 
@@ -141,11 +139,6 @@ Elemenx.Component('TerrainDemo', {
 		else delete graphs[given.Name];
 
 		this.TerrainGraphs = Object.keys(graphs).length ? graphs : null;
-		this.TerrainFresh = false;
-
-		setTimeout(function () {
-			self.TerrainFresh = true;
-		}, 0);
 	},
 	/* The year of the valley: a season fixed, or that of the day of the year at the latitude. */
 	TerrainSeasons: [

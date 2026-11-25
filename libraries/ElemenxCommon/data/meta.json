@@ -544,6 +544,7 @@
 				"Source(names)",
 				"Bake(graph)",
 				"Start(graph, context)",
+				"Agent(graph, context)",
 				"IR(graph, options)",
 				"Invoke(name, inputs)",
 				"Hash2(a, b)",

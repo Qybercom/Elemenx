@@ -1,0 +1,389 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vehicles-body",
+	"parameters": [
+		{
+			"key": "PitchPerG",
+			"type": "float",
+			"value": 1.2,
+			"comment": "Degrees the body of a car pitches for each g it speeds up or brakes at (nose up speeding up, down braking)"
+		},
+		{
+			"key": "RollPerG",
+			"type": "float",
+			"value": 2.5,
+			"comment": "Degrees the body of a car rolls out of a turn for each g it turns at"
+		},
+		{
+			"key": "MostPitch",
+			"type": "float",
+			"value": 4,
+			"comment": "Degrees it pitches at most"
+		},
+		{
+			"key": "MostRoll",
+			"type": "float",
+			"value": 6,
+			"comment": "Degrees it rolls at most"
+		},
+		{
+			"key": "Spring",
+			"type": "float",
+			"value": 45,
+			"comment": "How hard its springs bring it to where it leans (per second squared)"
+		},
+		{
+			"key": "Damp",
+			"type": "float",
+			"value": 0.55,
+			"comment": "How much its dampers hold it (1: no swing past, less: a little swing)"
+		}
+	],
+	"blocks": [
+		{
+			"id": "vehicles-body-input-accel",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Accel"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-input-lateral",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Lateral"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-input-stiff",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Stiff"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-input-grounded",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Grounded"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-parameter-pitchperg",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "PitchPerG"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-parameter-rollperg",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RollPerG"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-parameter-mostpitch",
+			"type": "Parameter",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MostPitch"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-parameter-mostroll",
+			"type": "Parameter",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "MostRoll"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-parameter-spring",
+			"type": "Parameter",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spring"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-parameter-damp",
+			"type": "Parameter",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Damp"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-formula-pitch",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-MostPitch, min(MostPitch, Accel / 9.81 * PitchPerG / max(Stiff, 0.1))) * PI / 180 * Grounded"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-result-pitch",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pitch"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-formula-roll",
+			"type": "Formula",
+			"x": 420,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(-MostRoll, min(MostRoll, Lateral / 9.81 * RollPerG / max(Stiff, 0.1))) * PI / 180 * Grounded"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-result-roll",
+			"type": "Result",
+			"x": 800,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Roll"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-formula-spring",
+			"type": "Formula",
+			"x": 420,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Spring * max(Stiff, 0.1)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-result-spring",
+			"type": "Result",
+			"x": 800,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spring"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-formula-damp",
+			"type": "Formula",
+			"x": 420,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Damp"
+				}
+			]
+		},
+		{
+			"id": "vehicles-body-result-damp",
+			"type": "Result",
+			"x": 800,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Damp"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "vehicles-body-link-0",
+			"p1": "vehicles-body-input-accel-out-Value",
+			"p2": "vehicles-body-formula-pitch-in-Accel",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-1",
+			"p1": "vehicles-body-parameter-pitchperg-out-Value",
+			"p2": "vehicles-body-formula-pitch-in-PitchPerG",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-2",
+			"p1": "vehicles-body-parameter-mostpitch-out-Value",
+			"p2": "vehicles-body-formula-pitch-in-MostPitch",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-3",
+			"p1": "vehicles-body-input-stiff-out-Value",
+			"p2": "vehicles-body-formula-pitch-in-Stiff",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-4",
+			"p1": "vehicles-body-input-grounded-out-Value",
+			"p2": "vehicles-body-formula-pitch-in-Grounded",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-5",
+			"p1": "vehicles-body-formula-pitch-out-Value",
+			"p2": "vehicles-body-result-pitch-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-6",
+			"p1": "vehicles-body-input-lateral-out-Value",
+			"p2": "vehicles-body-formula-roll-in-Lateral",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-7",
+			"p1": "vehicles-body-parameter-rollperg-out-Value",
+			"p2": "vehicles-body-formula-roll-in-RollPerG",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-8",
+			"p1": "vehicles-body-parameter-mostroll-out-Value",
+			"p2": "vehicles-body-formula-roll-in-MostRoll",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-9",
+			"p1": "vehicles-body-input-stiff-out-Value",
+			"p2": "vehicles-body-formula-roll-in-Stiff",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-10",
+			"p1": "vehicles-body-input-grounded-out-Value",
+			"p2": "vehicles-body-formula-roll-in-Grounded",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-11",
+			"p1": "vehicles-body-formula-roll-out-Value",
+			"p2": "vehicles-body-result-roll-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-12",
+			"p1": "vehicles-body-parameter-spring-out-Value",
+			"p2": "vehicles-body-formula-spring-in-Spring",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-13",
+			"p1": "vehicles-body-input-stiff-out-Value",
+			"p2": "vehicles-body-formula-spring-in-Stiff",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-14",
+			"p1": "vehicles-body-formula-spring-out-Value",
+			"p2": "vehicles-body-result-spring-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-15",
+			"p1": "vehicles-body-parameter-damp-out-Value",
+			"p2": "vehicles-body-formula-damp-in-Damp",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-body-link-16",
+			"p1": "vehicles-body-formula-damp-out-Value",
+			"p2": "vehicles-body-result-damp-in-Value",
+			"kind": "value"
+		}
+	]
+}

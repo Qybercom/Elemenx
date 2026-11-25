@@ -17,7 +17,7 @@ The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground o
 
 Kinds of the ground (the setting terrain): ground (Terrain: World, the graph of its world (SceneWorld: its land, relief, climate, biomes, sketch and what is made on it, the only place they are told; with none there is no ground), Swell (how wild its sea, 0 to 1.5: SceneWaves; wilder in the rain), SwellWay (degrees the wind drives it), Graphs (graphs of its own of the types of its sketch and its carves: {'sketch/<type>', 'carve/<type>': a graph}, as a world gives them): a ground of noise, SceneTerrainGenerator.Flat, in chunks finer near the eye, with its sea; the objects its World makes are in the scene as Generated, made again with it and never saved), sun (Sun: its light from far), unit (Walker: Speed, MaxSlope, Swim; a Model; Patrol: points [x, z] or [x, z, y] it goes round for good), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
 
-The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays clips of its pieces (Clip: the one it plays when idle): walk on a way by itself, Play(id, clip, callback) the others (attack, cast, work, die); the wind bends what grows. View top or isometric sees a ground in parallel rays, as a game of two dimensions.
+The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays clips of its pieces (Clip: the one it plays when idle; a change of clip fades as TransitionGraph says, a gait into a gait in time with its steps; going, the gaits of its speed blended, BlendGraph; Walking: on the spot at that speed; a clip of the arms played while it goes is a layer over its legs): walk on a way by itself, Play(id, clip, callback) the others (attack, cast, work, die); the wind bends what grows. View top or isometric sees a ground in parallel rays, as a game of two dimensions.
 
 A strategy game, a race and any other game is a component declared inside it (GameStrategy, GameRace of ElemenxGaming: the trait SceneBehaviour).
 
@@ -44,6 +44,8 @@ What a scene waits for, its programs and models, comes behind the page and holds
 | `BokehFocus` | `''` |
 | `Orbits` | `true` |
 | `Labels` | `true` |
+| `TransitionGraph` | `null` |
+| `BlendGraph` | `null` |
 | `Graphs` | `null` |
 | `Clusters` | `true` |
 | `Details` | `true` |
@@ -167,7 +169,7 @@ What a scene waits for, its programs and models, comes behind the page and holds
 
 ## Tests
 
-- [fires by the Fire button with a Hold for a beam, and leaves the trigger of the pad to the Scene](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/advanced-combat.test.js#L22) — `tests/regression/advanced-combat.test.js`
+- [fires by the Fire button with a Hold for a beam, and leaves the trigger of the pad to the Scene](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/advanced-combat.test.js#L35) — `tests/regression/advanced-combat.test.js`
 - [reads a graph of an effect and the blocks of the passes with no Scene: Blueprints makes what declares them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-effect-blueprints.test.js#L77) — `tests/regression/library-effect-blueprints.test.js`
 - [reads the speed, the revolutions of the redline of the car itself, the gear and the lamps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-dash.test.js#L51) — `tests/regression/library-game-dash.test.js`
 - [shows the instruments of the hero as it changes: of the car it drives, of the character once it left it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-dash.test.js#L78) — `tests/regression/library-game-dash.test.js`
@@ -180,4 +182,4 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L252) — `tests/regression/library-game-strategy.test.js`
 - [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L280) — `tests/regression/library-game-strategy.test.js`
 
-+353 more in the same files
++374 more in the same files

@@ -26,7 +26,7 @@
  * - Graph(type, {Compile(plan, options), End, Uses, Bake(made), Unbake(record), Text(glsl, options)}) adds a kind of
  *   graph (End: the type of block it ends at; Uses: kinds whose blocks stand in it too, as an effect takes the blocks of
  *   a generator; Bake and Unbake: what is made as JSON and back; Text: what is made of a text written by hand); Graphs() lists them. This library has generator (code of numbers that gives
- *   each Result by its Key) and flow (events and actions, run by Start). The kinds of shaders are of the Service
+ *   each Result by its Key), flow (events and actions, run by Start) and behaviour (a tree of an agent, run by Agent). The kinds of shaders are of the Service
  *   BlueprintShaders (ElemenxUI), which defines them, with the GLSL of the blocks, as it is made: pass (a fragment
  *   shader over the whole picture, its Output a vec4), material (a function of GLSL that changes a surface, its
  *   Surface the color, alpha, roughness, metalness, glow and normal) and render (passes of a picture, each a block
@@ -70,7 +70,7 @@
  *   is made once (Hash: what makes it, not where its blocks are). Of a pass {Type, Hash, Fragment, Uniforms
  *   [{Name, Type}], Textures [{Name, Uniform}], Parameters, Values(parameters, extra)}: Values gives the uniforms of
  *   the parameters (by key, else their value) and of extra (Time, Pixel, Textures by name). Of a material the same
- *   with Source (the function blueprintSurface) in place of Fragment. Of a render {Passes, Run(context, parameters)};
+ *   with Source (the function blueprintSurface) in place of Fragment. Of a render {Passes, Run(context, parameters)}; of a behaviour {Agent(context)};
  *   of a generator {Run(parameters, inputs)}; of a flow {Start(context)}. Code(graph) makes a generator JavaScript: {Source
  *   (the body of a function of (B, M, N): Blueprints, Math, Noise), Run (the same values as the Run of Compile, with no
  *   walk of its blocks: a ground reads it at every point), Keys}, null when a block of it has no code; a worker makes
@@ -97,14 +97,15 @@
  *   properties), When (its Value when Test holds, else Else: what only its
  *   Value needs is made only then), Line, Area, Level, Grid, TunnelWall, PassageWalls, Fall, Nearest, Painted, Strokes, River and Edits (of
  * the Geometry Service: of a line, an area or points given as a list of numbers, floats), Result, Compare, And, Or, Not, Field, Get, Set, Event,
- * Branch, Sequence, For, Delay, Action, Emit; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output,
+ * Branch, Sequence, For, Delay, Action, Emit, Response (a curve of 0 to 1: linear, power, logistic, step), and of a tree of
+ * behaviour Root, Selector, Steps, Parallel, Utility, Condition, Invert, Cooldown, Limit, Loop, Wait, Remember and Task; BlueprintShaders adds UV, Pixel, Position, Normal, Texture, Output,
  * Surface and Present, and the GLSL of the numbers.
  * Errors start with 'Elemenx Blueprints:'. The same functions run in Node: they read no page.
  */
 Elemenx.Service('Blueprints', {
 	$Meta: {
 		Description: 'Graphs of blocks in the JSON of Flowprint, made into code and flows of actions (and into shaders by BlueprintShaders).',
-		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Inlined(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'Chain(seed, index)', 'CurveAt(keys, x, smooth, loop)', 'Numeric(graph, values, types, keys)', 'NumericCode(graph, values, types, keys)', 'Wasm(numeric)']
+		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Inlined(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'Agent(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'Chain(seed, index)', 'CurveAt(keys, x, smooth, loop)', 'Numeric(graph, values, types, keys)', 'NumericCode(graph, values, types, keys)', 'Wasm(numeric)']
 	},
 
 	Version: 1,
@@ -1521,6 +1522,326 @@ Elemenx.Service('Blueprints', {
 		};
 
 		return instance;
+	},
+
+	/* Blueprints: behaviour */
+
+	/*
+	 * Agent(graph, context): one that does as a behaviour graph says, a tree of its blocks from its Root, each tick from the
+	 * top (a branch of more weight takes over from the one running). Statuses: success, failure, running. Its Tick(board,
+	 * elapsed) walks the tree with board (what it knows: the Input blocks read it, a Remember block writes it) and gives {Status,
+	 * Running (the blocks of the way running now, the root first), Leaves}; Stop() stops what runs. context: Tasks ({Name:
+	 * function (request) giving a status, or true / false: what a Task block of that Name does}; request {Name, Value, Block, Memory (of that block and agent),
+	 * First (begun now), Elapsed, Time, Board, Agent}), Abort (function (request) when a running task is left), Agent (what
+	 * the tasks are told of whom they act for), Parameters. Nothing of a game or of a scene: an application gives what its
+	 * tasks do.
+	 */
+	Agent: function (graph, context) {
+		var made = this.Compile(graph);
+		if (made.Type !== 'behaviour')
+			throw new Error('Elemenx Blueprints: Agent runs a behaviour graph, not a ' + made.Type + ' graph');
+
+		return made.Agent(context);
+	},
+
+	Behaviour: function (plan, context, defaults) {
+		var self = this;
+		var given = context || {};
+		var memory = {};
+		var time = 0;
+		var ticks = 0;
+		var running = [];
+		var leaves = {};
+		var root = plan.Order.filter(function (id) {
+			return plan.Blocks[id].type === 'Root' && plan.Blocks[id].enabled !== false;
+		})[0];
+		var agent = {Running: [], Memory: memory, Context: given};
+		var run;
+		var board;
+		var seen;
+		var now;
+
+		/* The children of a block, in the order they stand (top first, then left). */
+		function children (id) {
+			return (plan.Next[id].Children || []).filter(function (child) {
+				return plan.Blocks[child].enabled !== false;
+			}).sort(function (a, b) {
+				return plan.Blocks[a].y - plan.Blocks[b].y || plan.Blocks[a].x - plan.Blocks[b].x;
+			});
+		}
+
+		/* What a block remembers; fresh when it was not on the way last tick (left, then come to again). */
+		function memoryOf (id) {
+			var kept = memory[id];
+
+			if (!kept || kept.Tick < ticks - 1) kept = memory[id] = {Tick: ticks, Fresh: true};
+			else kept.Fresh = false;
+
+			kept.Tick = ticks;
+
+			return kept;
+		}
+
+		function inputsOf (id) {
+			return self.Gather(plan, id, run);
+		}
+
+		function status (value) {
+			if (value === true || value === 'success') return 'success';
+
+			return value === 'running' ? 'running' : 'failure';
+		}
+
+		/* A task left running (a branch of more weight took over): told to stop. */
+		function abort (id) {
+			var block = plan.Blocks[id];
+			var name = String(self.Properties(block).Name || '');
+
+			delete leaves[id];
+
+			if (typeof given.Abort === 'function')
+				given.Abort({Name: name, Block: id, Memory: memory[id] || {}, Board: board, Agent: given.Agent});
+
+			delete memory[id];
+		}
+
+		function tick (id) {
+			var block = plan.Blocks[id];
+			var properties = self.Properties(block);
+			var kept = memoryOf(id);
+			var list = children(id);
+			var result = 'failure';
+			var inputs;
+			var i;
+			var one;
+			var action;
+			var scores;
+			var best;
+
+			seen.push(id);
+
+			switch (block.type) {
+				case 'Root':
+					result = list.length ? tick(list[0]) : 'success';
+
+					break;
+
+				case 'Selector':
+					for (i = 0; i < list.length; i++) {
+						one = tick(list[i]);
+
+						if (one !== 'failure') {
+							result = one;
+
+							break;
+						}
+					}
+
+					break;
+
+				case 'Steps':
+					if (kept.Fresh)
+						kept.Index = 0;
+
+					result = 'success';
+
+					for (i = kept.Index; i < list.length; i++) {
+						one = tick(list[i]);
+
+						if (one === 'running') {
+							kept.Index = i;
+							result = 'running';
+
+							break;
+						}
+
+						if (one === 'failure') {
+							kept.Index = 0;
+							result = 'failure';
+
+							break;
+						}
+					}
+
+					if (result === 'success')
+						kept.Index = 0;
+
+					break;
+
+				case 'Parallel':
+					scores = list.map(tick);
+					result = properties.Need === 'one' ? scores.indexOf('success') !== -1 ? 'success' : scores.indexOf('running') !== -1 ? 'running' : 'failure' : scores.indexOf('failure') !== -1 ? 'failure' : scores.indexOf('running') !== -1 ? 'running' : 'success';
+
+					break;
+
+				/*
+				 * Of its children the one of the greatest Score (a Formula, a Response: what the child is worth now; none above 0:
+				 * failure), kept at least Commit seconds once chosen, then left for one worth Switch times as much.
+				 */
+				case 'Utility':
+					scores = list.map(function (child) {
+						return {ID: child, Score: Number(inputsOf(child).Score) || 0};
+					}).filter(function (one) {
+						return one.Score > 0;
+					});
+					best = scores.reduce(function (top, one) {
+						return !top || one.Score > top.Score ? one : top;
+					}, null);
+					one = kept.Fresh ? null : scores.filter(function (each) {
+						return each.ID === kept.Chosen;
+					})[0];
+
+					if (one && best && best.ID !== one.ID && (time - kept.Since < Number(properties.Commit || 0) || best.Score < one.Score * Number(properties.Switch || 1.2)))
+						best = one;
+
+					if (!best) {
+						kept.Chosen = '';
+
+						break;
+					}
+
+					if (best.ID !== kept.Chosen) {
+						kept.Chosen = best.ID;
+						kept.Since = time;
+					}
+
+					kept.Scores = scores;
+					result = tick(best.ID);
+
+					if (result !== 'running')
+						kept.Chosen = '';
+
+					break;
+
+				case 'Condition':
+					inputs = inputsOf(id);
+					result = inputs.Test ? list.length ? tick(list[0]) : 'success' : 'failure';
+
+					break;
+
+				case 'Invert':
+					one = list.length ? tick(list[0]) : 'success';
+					result = one === 'running' ? 'running' : one === 'success' ? 'failure' : 'success';
+
+					break;
+
+				case 'Cooldown':
+					if (time < (kept.Ready || 0)) break;
+
+					result = list.length ? tick(list[0]) : 'success';
+
+					if (result !== 'running')
+						kept.Ready = time + Number(properties.Seconds || 0);
+
+					break;
+
+				case 'Limit':
+					if (kept.Fresh)
+						kept.Since = time;
+
+					result = time - kept.Since > Number(properties.Seconds || 0) ? 'failure' : list.length ? tick(list[0]) : 'running';
+
+					break;
+
+				case 'Loop':
+					if (kept.Fresh)
+						kept.Done = 0;
+
+					one = list.length ? tick(list[0]) : 'success';
+
+					if (one === 'failure') break;
+
+					if (one === 'success')
+						kept.Done++;
+
+					result = Number(properties.Count || 0) > 0 && kept.Done >= Number(properties.Count) ? 'success' : 'running';
+
+					/* Done its Count: a success, begun again when it is come to next. */
+					if (result === 'success')
+						kept.Done = 0;
+
+					break;
+
+				case 'Wait':
+					if (kept.Fresh)
+						kept.Until = time + Number(inputsOf(id).Seconds || 0);
+
+					result = time >= kept.Until ? 'success' : 'running';
+
+					break;
+
+				case 'Remember':
+					board[String(properties.Name || '')] = inputsOf(id).Value;
+					result = 'success';
+
+					break;
+
+				case 'Task':
+					action = given.Tasks && given.Tasks[String(properties.Name || '')];
+					inputs = inputsOf(id);
+					leaves[id] = true;
+					result = typeof action === 'function' ? status(action({Name: String(properties.Name || ''), Value: inputs.Value, Block: id, Memory: kept, First: !!kept.Fresh, Elapsed: now, Time: time, Board: board, Agent: given.Agent})) : 'failure';
+
+					if (result !== 'running')
+						delete leaves[id];
+
+					break;
+
+				default:
+					result = 'failure';
+			}
+
+			return result;
+		}
+
+		agent.Tick = function (known, elapsed) {
+			var was = leaves;
+			var result;
+
+			if (!root)
+				return {Status: 'failure', Running: [], Leaves: []};
+
+			now = Math.max(0, Number(elapsed) || 0);
+			time += now;
+			ticks++;
+			board = known || {};
+			seen = [];
+			leaves = {};
+			run = {Outputs: {}, Parameters: given.Parameters || {}, Inputs: board, Context: given, Memo: true, Graph: {parameters: defaults || plan.Graph.parameters}};
+
+			result = tick(root);
+
+			/* What ran last tick and runs no more is stopped. */
+			Object.keys(was).forEach(function (id) {
+				if (!leaves[id]) {
+					leaves[id] = true;
+
+					abort(id);
+				}
+			});
+
+			running = seen.filter(function (id) {
+				var kept = memory[id];
+
+				return !!kept && kept.Tick === ticks;
+			});
+			agent.Running = running;
+
+			return {Status: result, Running: running.slice(), Leaves: Object.keys(leaves)};
+		};
+
+		agent.Stop = function () {
+			Object.keys(leaves).forEach(abort);
+
+			leaves = {};
+		};
+
+		/* The score each child of a Utility block had at the last tick ([{ID, Score}]): to show why it chose. */
+		agent.Scores = function (id) {
+			return memory[id] && memory[id].Scores ? memory[id].Scores.slice() : [];
+		};
+
+		return agent;
 	},
 
 	/* The properties of a block of a spec of noise (NoiseSpec), and the spec of their values. */
@@ -3738,6 +4059,58 @@ Elemenx.Service('Blueprints', {
 						return self.Flow(plan, context, this.Parameters);
 					}
 				};
+			}
+		});
+
+		/* A tree of behaviour from its Root (Agent): the blocks of numbers of a generator give its scores and its tests. */
+		this.Graph('behaviour', {
+			End: 'Root',
+			Uses: ['generator'],
+			Compile: function (plan) {
+				return {
+					Agent: function (context) {
+						return self.Behaviour(plan, context, this.Parameters);
+					}
+				};
+			}
+		});
+
+		/*
+		 * The blocks of a tree of behaviour: each has a Score (what it is worth to a Utility over it: 1 by default) and an
+		 * In; one that holds others has Children (linked to as many as it holds, in the order they stand, top first).
+		 */
+		var tree = ['behaviour'];
+		var score = {Key: 'Score', Type: 'float', Value: 1};
+
+		this.Node('Root', {Graphs: tree, Group: 'behaviour', Flow: {Out: ['Children']}, Inputs: []});
+		this.Node('Selector', {Graphs: tree, Group: 'behaviour', Comment: 'The first child that does not fail', Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Steps', {Graphs: tree, Group: 'behaviour', Comment: 'Its children one after another, till one fails', Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Parallel', {Graphs: tree, Group: 'behaviour', Comment: 'All its children at once: done when all are (Need all) or one is (Need one)', Properties: [{Key: 'Need', Type: 'select', Options: ['all', 'one'], Value: 'all'}], Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Utility', {Graphs: tree, Group: 'behaviour', Comment: 'The child of the greatest Score, kept Commit seconds, left for one worth Switch times as much', Properties: [{Key: 'Commit', Type: 'number', Value: 1, Min: 0}, {Key: 'Switch', Type: 'number', Value: 1.2, Min: 1}], Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Condition', {Graphs: tree, Group: 'behaviour', Comment: 'Its child while Test holds, else fails', Flow: {In: ['In'], Out: ['Children']}, Inputs: [{Key: 'Test', Type: 'bool', Value: true}, score]});
+		this.Node('Invert', {Graphs: tree, Group: 'behaviour', Comment: 'Its child, a success a failure and the other way', Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Cooldown', {Graphs: tree, Group: 'behaviour', Comment: 'Its child, then fails for Seconds', Properties: [{Key: 'Seconds', Type: 'number', Value: 1, Min: 0}], Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Limit', {Graphs: tree, Group: 'behaviour', Comment: 'Its child for Seconds at most, then fails', Properties: [{Key: 'Seconds', Type: 'number', Value: 5, Min: 0}], Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Loop', {Graphs: tree, Group: 'behaviour', Comment: 'Its child again and again (Count times; 0: for ever), till it fails', Properties: [{Key: 'Count', Type: 'number', Value: 0, Min: 0}], Flow: {In: ['In'], Out: ['Children']}, Inputs: [score]});
+		this.Node('Wait', {Graphs: tree, Group: 'behaviour', Comment: 'Running for Seconds, then a success', Flow: {In: ['In']}, Inputs: [{Key: 'Seconds', Type: 'float', Value: 1}, score]});
+		this.Node('Remember', {Graphs: tree, Group: 'behaviour', Comment: 'Writes Value into what the agent knows by Name', Properties: [{Key: 'Name', Type: 'text', Value: ''}], Flow: {In: ['In']}, Inputs: [{Key: 'Value', Type: 'any'}, score]});
+		this.Node('Task', {Graphs: tree, Group: 'behaviour', Comment: 'What the application does by Name', Properties: [{Key: 'Name', Type: 'text', Value: ''}], Flow: {In: ['In']}, Inputs: [{Key: 'Value', Type: 'any'}, score]});
+
+		/*
+		 * A response of a number of 0 to 1 (what a Score is made of, as in a utility of an agent): Shape linear (Slope X +
+		 * Shift), power (X to the Exponent), logistic (an S round Shift, Steep its steepness), step (1 from Shift on), Invert
+		 * one minus it; the end kept to 0 to 1.
+		 */
+		this.Node('Response', {Graphs: numeric, Group: 'math', Comment: 'A curve of a number of 0 to 1: linear, power, logistic or step', Properties: [{Key: 'Shape', Type: 'select', Options: ['linear', 'power', 'logistic', 'step'], Value: 'linear'}, {Key: 'Slope', Type: 'number', Value: 1}, {Key: 'Exponent', Type: 'number', Value: 2}, {Key: 'Shift', Type: 'number', Value: 0}, {Key: 'Steep', Type: 'number', Value: 10}, {Key: 'Invert', Type: 'bool', Value: false}], Inputs: [{Key: 'X', Type: 'float', Value: 0}], Outputs: [{Key: 'Out', Type: 'float'}],
+			Compute: function (inputs, properties) {
+				var x = Math.max(0, Math.min(1, Number(inputs.X) || 0));
+				var shape = properties.Shape || 'linear';
+				var shift = Number(properties.Shift) || 0;
+				var out = shape === 'power' ? Math.pow(x, Number(properties.Exponent) || 1) : shape === 'logistic' ? 1 / (1 + Math.exp(-(Number(properties.Steep) || 10) * (x - (shift || 0.5)))) : shape === 'step' ? x >= shift ? 1 : 0 : x * (properties.Slope === undefined ? 1 : Number(properties.Slope)) + shift;
+
+				out = Math.max(0, Math.min(1, out));
+
+				return {Out: properties.Invert === true || properties.Invert === 'true' ? 1 - out : out};
 			}
 		});
 

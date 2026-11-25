@@ -28,6 +28,8 @@ Of(scene) — реестр сцены, один на её элемент. Он �
 - die — сыграть клип die и оставить;
 - keep — ничего.
 
+Раненый, но живой играет свой клип hit (вздрагивает), если он есть у его модели, — не чаще раза в полсекунды, чтобы луч, бьющий каждый кадр, не держал его на первом кадре. У моделей со скелетом hit и die есть всегда: это графы действий манекена (SceneMannequin.Actions).
+
 Bar(context, x, y, part, color, width, height) — полоса здоровья на холсте 2D с серединой в x, y (пиксели): заливка шириной width и высотой height, её доля part (0…1) цветом color, вокруг тёмная рамка на пиксель шире. Ей рисуют полосы GameCombat и GameStrategy.
 
 Units — каким бывает юнит по своей модели (`resources/vitals/units.json`: archer, knight, orc, villager, soldier, robot; таблицу можно менять и дополнять): {Max (здоровье), Damage (урон в секунду вблизи), Range (метры), Sight (метры)}. UnitOf(object) возвращает строку его модели, для модели без строки — пустой объект. Здоровье модели стоит над здоровьем вида, свой трейт Health или MaxHealth — над ним.
@@ -49,6 +51,7 @@ Units — каким бывает юнит по своей модели (`resour
 - [lets handlers change or cancel a change before it is applied; spares its own team; applies one change ID once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L63) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
 - [keeps a host and its clients the same: a client asks, the host applies and sends the state, in order](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L88) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
 - [regenerates, saves and loads, and reads what it does not know yet](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L123) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
+- [makes one hurt in a scene flinch (its clip hit), not again while it does, and not once it is dead](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/services/Vitals/Vitals.test.js#L142) — `libraries/ElemenxGaming/services/Vitals/Vitals.test.js`
 - [patches a shader loud, draws a bar of health once and reads a shader graph of the library once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/hardcode-tables.test.js#L130) — `tests/regression/hardcode-tables.test.js`
 - [gives the kinds of the scene their health, shows it on the card, and lets the weapons aim only at what lives](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js#L98) — `libraries/ElemenxGaming/components/GameCombat/GameCombat.test.js`
 - [takes a hit by its layers of shield one after another, tells each, fills them again after a while, and hurts the health only with what is left](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneShipSystems/SceneShipSystems.test.js#L131) — `libraries/ElemenxGraphics/traits/SceneShipSystems/SceneShipSystems.test.js`

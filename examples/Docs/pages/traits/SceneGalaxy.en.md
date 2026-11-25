@@ -9,7 +9,7 @@ A drag turns the view round where it looks, a right drag (or with Shift) moves i
 
 - GalaxyData(): the data shown (null till it came). GalaxyView(): {Target (ly, where it looks), Yaw, Pitch, Distance (ly)}; SetGalaxyView(view) puts it there. GalaxyFocus(id): the view flies to a star (or the centre: '').
 - GalaxyStars(): the stars near the view as they are drawn now (each {ID, Name, Place (where it is at GalaxyTime), Mass, Class, Color...}). GalaxyPicked(): the ID of the star picked.
-- EnterSystem(id, callback, options): the view flies into the star (options {Now: at once, as a ship jumped there}) and the scene shows its system (Setting space: its System of GalaxyData.System, its Cosmos of where it is in the galaxy); event enter {ID, Star, Key}. LeaveSystem(callback): out to the galaxy again, the view drawing back from the star; event leave {ID}. GalaxyEntered(): the ID of the star whose system is shown ('' in none).
+- EnterSystem(id, callback, options): the view flies into the star (options {Now: at once, as a ship jumped there}) and the scene shows its system (Setting space: its System of GalaxyData.System, its Cosmos of where it is in the galaxy); event enter {ID, Star, Key}. LeaveSystem(callback): out to the galaxy again, the view drawing back from the star till the galaxy is seen whole round it; event leave {ID}. GalaxyEntered(): the ID of the star whose system is shown ('' in none).
 
 ## Methods
 

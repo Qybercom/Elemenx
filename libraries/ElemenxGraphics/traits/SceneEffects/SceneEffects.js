@@ -290,19 +290,8 @@ Elemenx.Trait('SceneEffects', {
 		 */
 		function thrustOf (object, thrust) {
 			var settings = object.Values && object.Values.Vehicle || {};
-			var graph = settings.ThrustGraph || self.GraphOf('ThrustGraph', 'vehicles/thrust') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/vehicles/thrust');
-			var codes = scene.ThrustCodes = scene.ThrustCodes || [];
-			var code = codes.filter(function (one) {
-				return one.Graph === graph;
-			})[0];
 
-			if (!code) {
-				code = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
-
-				codes.push(code);
-			}
-
-			return code.Code.Run({}, {Thrust: thrust || 0});
+			return engine.GraphCode('ThrustGraph', 'vehicles/thrust', settings.ThrustGraph).Run({}, {Thrust: thrust || 0});
 		}
 
 		/* What an effect is told to look like. */

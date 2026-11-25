@@ -2,6 +2,8 @@
 	<div class="elemenx-game-flight-row">
 		<GameStat [Label]="$T('gaming.flight.speed')" [Value]="Speed" [Size]="Size" />
 		<GameStat *if="Height" [Label]="$T('gaming.flight.height')" [Value]="Height" Size="small" />
+		<GameStat *if="MassLock > 0" [Label]="$T('gaming.flight.masslock')" [Value]="MassLock + '%'" Tone="warning" Size="small" />
+		<GameStat *if="Autopilot" [Label]="$T('gaming.flight.autopilot')" [Value]="Autopilot" Tone="accent" Size="small" />
 		<GameStat *if="Travel" [Label]="$T('gaming.flight.travel')" [Value]="Travel" Tone="accent" Size="small" />
 		<Meter Size="small" Min="0" Max="100" [Label]="$T('gaming.flight.throttle')" Unit="%" ShowValue="true" [value]="Throttle" />
 	</div>
@@ -30,5 +32,7 @@
 	<ol class="elemenx-game-flight-nav" *if="Places.length" [attribute.aria-label]="$T('gaming.flight.nav')">
 		<li *for="place of Places" *key="place.ID"><span class="elemenx-game-flight-kind">{{place.Kind}}</span> {{place.Name}} <span class="elemenx-game-flight-far">{{place.Far}} · {{place.Bearing}}&#176;</span></li>
 	</ol>
+	<GameCommands *if="Commands" [For]="For" Size="small" />
+	<GameArms *if="Arms" [For]="For" Size="small" />
 	<slot></slot>
 </div>

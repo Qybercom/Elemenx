@@ -6,10 +6,10 @@ var owned = [];
 var PLANET = {Seed: 'terra', Ocean: 0.5, LocationSize: 1, Markers: [{ID: 'base', Name: 'Base Alpha', Latitude: 18, Longitude: 32}]};
 
 /* A scene of Terra round the Sun: its planet of its own (planet; false: none, a body of the Type given), its moons. */
-async function mount (planet, moons, type, extra) {
+async function mount (planet, moons, type, extra, inside) {
 	var ready = null;
 	var component = Elemenx.Component(unique('LandingHost'), {$Template: '<div style="width: 320px; height: 200px"><Scene Paused="true" Quality="low" Background="false" (ready)="Ready">' +
-		'<SceneObject ID="sun" Kind="star"><SceneObject ID="terra" Kind="planet" Surface-Type="' + (type || 'terran') + '"' + (planet === false ? '' : ' [surface-planet]="Planet"') + ' Radius="6371" Distance="1" Day="24"' + (extra || '') + '>' + (moons || '') + '</SceneObject></SceneObject>' +
+		'<SceneObject ID="sun" Kind="star"><SceneObject ID="terra" Kind="planet" Surface-Type="' + (type || 'terran') + '"' + (planet === false ? '' : ' [surface-planet]="Planet"') + ' Radius="6371" Distance="1" Day="24"' + (extra || '') + '>' + (moons || '') + '</SceneObject></SceneObject>' + (inside || '') +
 	'</Scene></div>', Planet: planet || PLANET, Ready: function (space) {
 		ready = space;
 	}})();
@@ -204,7 +204,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Scene', 'SceneObject', 'service:SceneWorld', 'service:SceneLocations', 'service:ScenePlanet']);
+		Use(['Scene', 'SceneObject', 'GameCommands', 'Select', 'Button', 'service:SceneWorld', 'service:SceneLocations', 'service:ScenePlanet']);
 	}, 150000);
 
 	beforeEach(function () {
@@ -279,6 +279,17 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 
 		expect(item.querySelector('.elemenx-option-hint').textContent).toMatch(/^(day|night|день|ночь)$/);
 		expect(scene.Land('me', {Marker: 'nowhere'})).toBe(false);
+
+		/* The programs made from here on, and whether behind. */
+		var made = [];
+		var program = engine.Renderer.Program;
+
+		engine.Renderer.Program = function (vertex, fragment, behind) {
+			made.push({Fragment: String(fragment), Behind: !!behind});
+
+			return program.apply(this, arguments);
+		};
+
 		expect(scene.Land('me', {Marker: 'base'})).toBe(true);
 		expect(scene.LandingOpen).toBe(false);
 
@@ -340,6 +351,17 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		/* The location of the point is the ground now: the very cell of the planet, what is of space away. */
 		expect(located).toEqual([Elemenx.Service('SceneLocations').At(Object.assign({Radius: 6371}, PLANET), 18, 32)]);
 		expect(inner.Location.ID).toBe(located[0]);
+
+		/*
+		 * The land of the location (its materials) made behind, not waited for by the veil: the land of no materials drawn
+		 * till it is made. Regression: the veil over the ship hovering to land stood 15 s for that one program. What the
+		 * location asks of the card as it comes (engine.Prepare: warm) asked again here: the steps of the test draw nothing.
+		 */
+		engine.Warm();
+
+		expect(made.filter(function (one) {
+			return one.Behind && one.Fragment.indexOf('vMaterials') !== -1;
+		}).length).toBeGreaterThan(0);
 		expect(inner.Ground).toBeTruthy();
 		expect(inner.Surface).toBe(null);
 		expect(terra.Hidden).toBe(true);
@@ -374,6 +396,31 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		/* What the location makes is never saved: it is made again of the landing. */
 		expect(JSON.stringify(scene.Save().Added)).not.toContain('me-location');
 
+		/*
+		 * A thing added on the ground of the location, no parent told: of the location (its ground), standing where it is told,
+		 * seen; it goes with the location. Regression: it went round the first star, away and unseen.
+		 */
+		scene.Add('thing', {ID: 'crate', Model: 'cube', Size: 1, X: hero.Flying.At[0] + 12, Y: hero.Flying.At[2]});
+
+		frames(2);
+
+		expect(inner.Objects.crate.Parent).toBe('me-location');
+		expect(inner.Objects.crate.Away).toBeFalsy();
+
+		/* Of its size in metres in real sizes too, as what walks there (Regression: 2.4 cm, the fiftieth of a thing of space). */
+		scene.Scale = 'real';
+
+		engine.Compose();
+
+		expect(inner.Objects.crate.Size).toBeCloseTo(1, 6);
+
+		scene.Scale = '';
+
+		engine.Compose();
+
+		expect(inner.Objects.crate.World[0]).toBeCloseTo(hero.Flying.At[0] + 12, 6);
+		expect(inner.Objects.crate.World[1]).toBeCloseTo(Math.max(0, inner.Ground.Field.Height(hero.Flying.At[0] + 12, hero.Flying.At[2])), 3);
+
 		await tick(20);
 
 		expect(scene.ShipCan).toBe('takeoff');
@@ -384,6 +431,7 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		frames(3000, phased('orbit'));
 
 		expect(phases.slice(phases.indexOf('landed'))).toEqual(['landed', 'lift', 'climb', 'ascent', 'orbit']);
+		expect(inner.Objects.crate).toBeFalsy();
 		expect(inner.Location).toBe(null);
 		expect(inner.Ground).toBe(null);
 		expect(inner.Surface).toBe(null);
@@ -1072,6 +1120,25 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		/* Nearer than 2000 km over it: offered, with the hint. */
 		expect(scene.ShipOrbit).toBe(true);
 		expect(scene.ShipHint).toBe('orbit');
+
+		/* On the map of a galaxy neither is offered (regression: Landing and To orbit stood over the map); back, again. */
+		scene.Setting = 'galaxy';
+
+		engine.Frame(now += 100, true);
+
+		await tick(20);
+
+		expect(scene.ShipOrbit).toBe(false);
+		expect(scene.ShipCan).toBe('');
+
+		scene.Setting = 'space';
+
+		engine.Frame(now += 100, true);
+
+		await tick(20);
+
+		expect(scene.ShipOrbit).toBe(true);
+		expect(scene.ShipCan).toBe('land');
 		expect(scene.ToOrbit('nobody')).toBe(false);
 		expect(scene.ToOrbit('me')).toBe(true);
 
@@ -1107,6 +1174,109 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		inner.Keys.KeyW = false;
 
 		expect(hero.Orbiting).toBe(null);
+	}, 120000);
+
+	/*
+	 * Contract: ShipCommands(id) and ShipCommand(id, command, options) of the scene, ShipButtons, and GameCommands of
+	 * ElemenxGaming showing them: near a body, land (its markers, day or night there) and orbit (the hint under 2000 km);
+	 * the buttons of the scene itself go with ShipButtons false, the commands stay; a press of Land at a site lands there.
+	 */
+	it('gives the commands of a ship as data and on GameCommands, the buttons of the scene only with ShipButtons', async function () {
+		var scene = await mount(undefined, '', '', '', '<GameCommands slot="hud" Every="0" />');
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var told = [];
+		var panel;
+		var buttons;
+		var commands;
+
+		engine.Frame(now += 100, true);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 1.2], Facing: [1, 0, 0], Length: 30}});
+		scene.Control('me');
+
+		engine.Frame(now += 100, true);
+		engine.Frame(now += 100, true);
+
+		await tick(20);
+
+		expect(scene.ShipCommands('me')).toEqual([{ID: 'land', Markers: [expect.objectContaining({ID: 'base', Name: 'Base Alpha', Day: expect.any(Boolean)})]}, {ID: 'orbit', Hint: 'orbit'}]);
+		/* Of the hero when none is given; none of what is no ship. */
+		expect(scene.ShipCommands('')).toEqual(scene.ShipCommands('me'));
+		expect(scene.ShipCommands('nobody')).toEqual([]);
+		expect(scene.ShipCommand('me', 'takeoff')).toBe(false);
+
+		/* The buttons of the scene itself, then none of them with ShipButtons false; the commands stay. */
+		expect(scene.$Element().querySelector('.elemenx-scene-landing')).toBeTruthy();
+
+		scene.ShipButtons = false;
+
+		await tick(20);
+
+		expect(scene.$Element().querySelector('.elemenx-scene-landing')).toBe(null);
+		expect(scene.ShipCan).toBe('land');
+
+		/* GameCommands: Land and To orbit, the hint, the sites (under the ship, then the markers). */
+		panel = scene.$Element().querySelector('.elemenx-game-commands');
+		buttons = Array.from(panel.querySelectorAll('button')).map(function (one) {
+			return one.textContent.trim();
+		});
+		commands = Elemenx.Instance(panel);
+
+		expect(buttons).toEqual(expect.arrayContaining(['Land', 'To orbit']));
+		expect(panel.textContent).toContain('2000 km');
+		expect(commands.Sites.map(function (one) {
+			return one.Value;
+		})).toEqual(['', 'base']);
+
+		commands.$On('command', function (event) {
+			told.push(event);
+		});
+		commands.SiteChosen('base');
+		commands.Command('land');
+
+		expect(told[0]).toEqual({ID: 'land', Done: true});
+		expect(inner.Objects.me.Landing).toBeTruthy();
+		/* Coming down, it has no more to land. */
+		expect(scene.ShipCommand('me', 'land')).toBe(false);
+	}, 120000);
+
+	/*
+	 * Regression: a landing told with the pilot out of the seat, walking in the ship (SceneAboard), took the control back to
+	 * the ship: the walker stood still in it all the way down.
+	 */
+	it('leaves who walks in a ship on foot as it comes down by the command', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var phases = [];
+
+		scene.$On('landing', function (event) {
+			phases.push(event.Phase);
+		});
+
+		engine.Frame(now += 100, true);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'terra', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'terra', From: [0, 0, 3], Facing: [0, 0, 1], Length: 89}});
+		scene.Add('unit', {ID: 'crew', Size: 1.8, X: 0, Y: 0});
+
+		engine.Frame(now += 100, true);
+
+		scene.Control('crew');
+
+		expect(scene.Board('crew', 'me')).toBe(true);
+
+		engine.Frame(now += 100, true);
+
+		scene.$Element().dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyG', key: 'g', bubbles: true}));
+
+		expect(inner.Afoot.crew).toMatchObject({Vehicle: 'me'});
+		expect(inner.Hero).toBe('crew');
+		expect(scene.Land('me', {Body: 'terra'})).toBe(true);
+		expect(inner.Hero).toBe('crew');
+		expect(phases).toEqual(['transfer']);
 	}, 120000);
 
 	/*

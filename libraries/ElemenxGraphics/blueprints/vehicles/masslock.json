@@ -1,0 +1,209 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vehicles-masslock",
+	"parameters": [
+		{
+			"key": "Near",
+			"type": "float",
+			"value": 5000,
+			"comment": "Metres to a ship of another team where a ship goes no faster than Speed"
+		},
+		{
+			"key": "Far",
+			"type": "float",
+			"value": 60000,
+			"comment": "Metres to a ship of another team past which nothing holds it back"
+		},
+		{
+			"key": "Speed",
+			"type": "float",
+			"value": 300,
+			"comment": "The speed of a fight (m/s): the fastest near a ship of another team"
+		}
+	],
+	"blocks": [
+		{
+			"id": "vehicles-masslock-input-distance",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Distance"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-input-top",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-parameter-near",
+			"type": "Parameter",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Near"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-parameter-far",
+			"type": "Parameter",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Far"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-parameter-speed",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Speed"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-formula-top",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "min(Top, Speed * pow(max(Top, Speed) / max(Speed, 1), smoothstep(Near, Far, Distance)))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-result-top",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-formula-lock",
+			"type": "Formula",
+			"x": 420,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "1 - smoothstep(Near, Far, Distance)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-masslock-result-lock",
+			"type": "Result",
+			"x": 800,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Lock"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "vehicles-masslock-link-0",
+			"p1": "vehicles-masslock-input-top-out-Value",
+			"p2": "vehicles-masslock-formula-top-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-1",
+			"p1": "vehicles-masslock-parameter-speed-out-Value",
+			"p2": "vehicles-masslock-formula-top-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-2",
+			"p1": "vehicles-masslock-parameter-near-out-Value",
+			"p2": "vehicles-masslock-formula-top-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-3",
+			"p1": "vehicles-masslock-parameter-far-out-Value",
+			"p2": "vehicles-masslock-formula-top-in-Far",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-4",
+			"p1": "vehicles-masslock-input-distance-out-Value",
+			"p2": "vehicles-masslock-formula-top-in-Distance",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-5",
+			"p1": "vehicles-masslock-formula-top-out-Value",
+			"p2": "vehicles-masslock-result-top-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-6",
+			"p1": "vehicles-masslock-parameter-near-out-Value",
+			"p2": "vehicles-masslock-formula-lock-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-7",
+			"p1": "vehicles-masslock-parameter-far-out-Value",
+			"p2": "vehicles-masslock-formula-lock-in-Far",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-8",
+			"p1": "vehicles-masslock-input-distance-out-Value",
+			"p2": "vehicles-masslock-formula-lock-in-Distance",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-masslock-link-9",
+			"p1": "vehicles-masslock-formula-lock-out-Value",
+			"p2": "vehicles-masslock-result-lock-in-Value",
+			"kind": "value"
+		}
+	]
+}

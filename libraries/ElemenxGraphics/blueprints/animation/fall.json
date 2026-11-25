@@ -1,0 +1,1586 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-fall",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-fall-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-leftarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-20
+						],
+						[
+							0.0625,
+							-14.26
+						],
+						[
+							0.125,
+							-9.39
+						],
+						[
+							0.1875,
+							-6.14
+						],
+						[
+							0.25,
+							-5
+						],
+						[
+							0.3125,
+							-6.14
+						],
+						[
+							0.375,
+							-9.39
+						],
+						[
+							0.4375,
+							-14.26
+						],
+						[
+							0.5,
+							-20
+						],
+						[
+							0.5625,
+							-25.74
+						],
+						[
+							0.625,
+							-30.61
+						],
+						[
+							0.6875,
+							-33.86
+						],
+						[
+							0.75,
+							-35
+						],
+						[
+							0.8125,
+							-33.86
+						],
+						[
+							0.875,
+							-30.61
+						],
+						[
+							0.9375,
+							-25.74
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-leftarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							25
+						],
+						[
+							0.0625,
+							31.89
+						],
+						[
+							0.125,
+							37.73
+						],
+						[
+							0.1875,
+							41.63
+						],
+						[
+							0.25,
+							43
+						],
+						[
+							0.3125,
+							41.63
+						],
+						[
+							0.375,
+							37.73
+						],
+						[
+							0.4375,
+							31.89
+						],
+						[
+							0.5,
+							25
+						],
+						[
+							0.5625,
+							18.11
+						],
+						[
+							0.625,
+							12.27
+						],
+						[
+							0.6875,
+							8.37
+						],
+						[
+							0.75,
+							7
+						],
+						[
+							0.8125,
+							8.37
+						],
+						[
+							0.875,
+							12.27
+						],
+						[
+							0.9375,
+							18.11
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							30
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-25
+						],
+						[
+							0.0625,
+							-21.17
+						],
+						[
+							0.125,
+							-17.93
+						],
+						[
+							0.1875,
+							-15.76
+						],
+						[
+							0.25,
+							-15
+						],
+						[
+							0.3125,
+							-15.76
+						],
+						[
+							0.375,
+							-17.93
+						],
+						[
+							0.4375,
+							-21.17
+						],
+						[
+							0.5,
+							-25
+						],
+						[
+							0.5625,
+							-28.83
+						],
+						[
+							0.625,
+							-32.07
+						],
+						[
+							0.6875,
+							-34.24
+						],
+						[
+							0.75,
+							-35
+						],
+						[
+							0.8125,
+							-34.24
+						],
+						[
+							0.875,
+							-32.07
+						],
+						[
+							0.9375,
+							-28.83
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							45
+						],
+						[
+							0.0625,
+							39.26
+						],
+						[
+							0.125,
+							34.39
+						],
+						[
+							0.1875,
+							31.14
+						],
+						[
+							0.25,
+							30
+						],
+						[
+							0.3125,
+							31.14
+						],
+						[
+							0.375,
+							34.39
+						],
+						[
+							0.4375,
+							39.26
+						],
+						[
+							0.5,
+							45
+						],
+						[
+							0.5625,
+							50.74
+						],
+						[
+							0.625,
+							55.61
+						],
+						[
+							0.6875,
+							58.86
+						],
+						[
+							0.75,
+							60
+						],
+						[
+							0.8125,
+							58.86
+						],
+						[
+							0.875,
+							55.61
+						],
+						[
+							0.9375,
+							50.74
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-30
+						],
+						[
+							0.0625,
+							-23.11
+						],
+						[
+							0.125,
+							-17.27
+						],
+						[
+							0.1875,
+							-13.37
+						],
+						[
+							0.25,
+							-12
+						],
+						[
+							0.3125,
+							-13.37
+						],
+						[
+							0.375,
+							-17.27
+						],
+						[
+							0.4375,
+							-23.11
+						],
+						[
+							0.5,
+							-30
+						],
+						[
+							0.5625,
+							-36.89
+						],
+						[
+							0.625,
+							-42.73
+						],
+						[
+							0.6875,
+							-46.63
+						],
+						[
+							0.75,
+							-48
+						],
+						[
+							0.8125,
+							-46.63
+						],
+						[
+							0.875,
+							-42.73
+						],
+						[
+							0.9375,
+							-36.89
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-rightarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							20
+						],
+						[
+							0.0625,
+							25.74
+						],
+						[
+							0.125,
+							30.61
+						],
+						[
+							0.1875,
+							33.86
+						],
+						[
+							0.25,
+							35
+						],
+						[
+							0.3125,
+							33.86
+						],
+						[
+							0.375,
+							30.61
+						],
+						[
+							0.4375,
+							25.74
+						],
+						[
+							0.5,
+							20
+						],
+						[
+							0.5625,
+							14.26
+						],
+						[
+							0.625,
+							9.39
+						],
+						[
+							0.6875,
+							6.14
+						],
+						[
+							0.75,
+							5
+						],
+						[
+							0.8125,
+							6.14
+						],
+						[
+							0.875,
+							9.39
+						],
+						[
+							0.9375,
+							14.26
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-rightarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-25
+						],
+						[
+							0.0625,
+							-18.11
+						],
+						[
+							0.125,
+							-12.27
+						],
+						[
+							0.1875,
+							-8.37
+						],
+						[
+							0.25,
+							-7
+						],
+						[
+							0.3125,
+							-8.37
+						],
+						[
+							0.375,
+							-12.27
+						],
+						[
+							0.4375,
+							-18.11
+						],
+						[
+							0.5,
+							-25
+						],
+						[
+							0.5625,
+							-31.89
+						],
+						[
+							0.625,
+							-37.73
+						],
+						[
+							0.6875,
+							-41.63
+						],
+						[
+							0.75,
+							-43
+						],
+						[
+							0.8125,
+							-41.63
+						],
+						[
+							0.875,
+							-37.73
+						],
+						[
+							0.9375,
+							-31.89
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							30
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							25
+						],
+						[
+							0.0625,
+							21.17
+						],
+						[
+							0.125,
+							17.93
+						],
+						[
+							0.1875,
+							15.76
+						],
+						[
+							0.25,
+							15
+						],
+						[
+							0.3125,
+							15.76
+						],
+						[
+							0.375,
+							17.93
+						],
+						[
+							0.4375,
+							21.17
+						],
+						[
+							0.5,
+							25
+						],
+						[
+							0.5625,
+							28.83
+						],
+						[
+							0.625,
+							32.07
+						],
+						[
+							0.6875,
+							34.24
+						],
+						[
+							0.75,
+							35
+						],
+						[
+							0.8125,
+							34.24
+						],
+						[
+							0.875,
+							32.07
+						],
+						[
+							0.9375,
+							28.83
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							45
+						],
+						[
+							0.0625,
+							50.74
+						],
+						[
+							0.125,
+							55.61
+						],
+						[
+							0.1875,
+							58.86
+						],
+						[
+							0.25,
+							60
+						],
+						[
+							0.3125,
+							58.86
+						],
+						[
+							0.375,
+							55.61
+						],
+						[
+							0.4375,
+							50.74
+						],
+						[
+							0.5,
+							45
+						],
+						[
+							0.5625,
+							39.26
+						],
+						[
+							0.625,
+							34.39
+						],
+						[
+							0.6875,
+							31.14
+						],
+						[
+							0.75,
+							30
+						],
+						[
+							0.8125,
+							31.14
+						],
+						[
+							0.875,
+							34.39
+						],
+						[
+							0.9375,
+							39.26
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-30
+						],
+						[
+							0.0625,
+							-36.89
+						],
+						[
+							0.125,
+							-42.73
+						],
+						[
+							0.1875,
+							-46.63
+						],
+						[
+							0.25,
+							-48
+						],
+						[
+							0.3125,
+							-46.63
+						],
+						[
+							0.375,
+							-42.73
+						],
+						[
+							0.4375,
+							-36.89
+						],
+						[
+							0.5,
+							-30
+						],
+						[
+							0.5625,
+							-23.11
+						],
+						[
+							0.625,
+							-17.27
+						],
+						[
+							0.6875,
+							-13.37
+						],
+						[
+							0.75,
+							-12
+						],
+						[
+							0.8125,
+							-13.37
+						],
+						[
+							0.875,
+							-17.27
+						],
+						[
+							0.9375,
+							-23.11
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-8
+						],
+						[
+							0.0625,
+							-6.85
+						],
+						[
+							0.125,
+							-5.88
+						],
+						[
+							0.1875,
+							-5.23
+						],
+						[
+							0.25,
+							-5
+						],
+						[
+							0.3125,
+							-5.23
+						],
+						[
+							0.375,
+							-5.88
+						],
+						[
+							0.4375,
+							-6.85
+						],
+						[
+							0.5,
+							-8
+						],
+						[
+							0.5625,
+							-9.15
+						],
+						[
+							0.625,
+							-10.12
+						],
+						[
+							0.6875,
+							-10.77
+						],
+						[
+							0.75,
+							-11
+						],
+						[
+							0.8125,
+							-10.77
+						],
+						[
+							0.875,
+							-10.12
+						],
+						[
+							0.9375,
+							-9.15
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0.8
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-fall-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-fall-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-fall-link-0",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-1",
+			"p1": "animation-fall-curve-head-x-out-Value",
+			"p2": "animation-fall-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-2",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-leftarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-3",
+			"p1": "animation-fall-curve-leftarm-y-out-Value",
+			"p2": "animation-fall-result-leftarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-4",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-5",
+			"p1": "animation-fall-curve-leftarm-z-out-Value",
+			"p2": "animation-fall-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-6",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-7",
+			"p1": "animation-fall-curve-leftfingers-out-Value",
+			"p2": "animation-fall-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-8",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-9",
+			"p1": "animation-fall-curve-leftforearm-y-out-Value",
+			"p2": "animation-fall-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-10",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-11",
+			"p1": "animation-fall-curve-leftleg-x-out-Value",
+			"p2": "animation-fall-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-12",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-13",
+			"p1": "animation-fall-curve-leftupleg-x-out-Value",
+			"p2": "animation-fall-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-14",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-15",
+			"p1": "animation-fall-curve-leftupleg-z-out-Value",
+			"p2": "animation-fall-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-16",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-rightarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-17",
+			"p1": "animation-fall-curve-rightarm-y-out-Value",
+			"p2": "animation-fall-result-rightarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-18",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-19",
+			"p1": "animation-fall-curve-rightarm-z-out-Value",
+			"p2": "animation-fall-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-20",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-21",
+			"p1": "animation-fall-curve-rightfingers-out-Value",
+			"p2": "animation-fall-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-22",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-23",
+			"p1": "animation-fall-curve-rightforearm-y-out-Value",
+			"p2": "animation-fall-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-24",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-25",
+			"p1": "animation-fall-curve-rightleg-x-out-Value",
+			"p2": "animation-fall-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-26",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-27",
+			"p1": "animation-fall-curve-rightupleg-x-out-Value",
+			"p2": "animation-fall-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-28",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-29",
+			"p1": "animation-fall-curve-rightupleg-z-out-Value",
+			"p2": "animation-fall-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-30",
+			"p1": "animation-fall-phase-out-Value",
+			"p2": "animation-fall-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-31",
+			"p1": "animation-fall-curve-spine-x-out-Value",
+			"p2": "animation-fall-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-32",
+			"p1": "animation-fall-number-pose-out-Value",
+			"p2": "animation-fall-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-33",
+			"p1": "animation-fall-number-length-out-Value",
+			"p2": "animation-fall-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-34",
+			"p1": "animation-fall-number-loop-out-Value",
+			"p2": "animation-fall-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-fall-link-35",
+			"p1": "animation-fall-number-stride-out-Value",
+			"p2": "animation-fall-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

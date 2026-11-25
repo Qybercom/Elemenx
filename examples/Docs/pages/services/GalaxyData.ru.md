@@ -77,4 +77,4 @@ GalaxyData: галактика как данные (docs/SPACE-FORMAT.md) — п
 - [gives the stars round its black hole the planets and stations their room leaves them, and the swarm of its nuclear cluster](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L236) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L263) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 
-+17 ещё в тех же файлах
++18 ещё в тех же файлах

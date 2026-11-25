@@ -1,0 +1,237 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-blend",
+	"parameters": [
+		{
+			"key": "Hold",
+			"type": "float",
+			"value": 0.1,
+			"comment": "Part of the way from one gait to the next spent still in the first (and in the second at its end): no blend of two at a speed just past one"
+		}
+	],
+	"blocks": [
+		{
+			"id": "animation-blend-input-speed",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Speed"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-input-walk",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Walk"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-input-jog",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Jog"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-input-sprint",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Sprint"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-parameter-hold",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Hold"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-formula-low",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Jog > 0 && Speed >= Jog && Sprint > 0 ? 1 : 0"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-result-low",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Low"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-formula-high",
+			"type": "Formula",
+			"x": 420,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Jog > 0 && Speed >= Jog && Sprint > 0 ? 2 : 1"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-result-high",
+			"type": "Result",
+			"x": 800,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "High"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-formula-weight",
+			"type": "Formula",
+			"x": 420,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Jog <= 0 ? 0 : (Speed < Jog ? smoothstep(Walk + (Jog - Walk) * Hold, Jog - (Jog - Walk) * Hold, Speed) : (Sprint > 0 ? smoothstep(Jog + (Sprint - Jog) * Hold, Sprint - (Sprint - Jog) * Hold, Speed) : 0))"
+				}
+			]
+		},
+		{
+			"id": "animation-blend-result-weight",
+			"type": "Result",
+			"x": 800,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Weight"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-blend-link-0",
+			"p1": "animation-blend-input-speed-out-Value",
+			"p2": "animation-blend-formula-low-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-1",
+			"p1": "animation-blend-input-jog-out-Value",
+			"p2": "animation-blend-formula-low-in-Jog",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-2",
+			"p1": "animation-blend-input-sprint-out-Value",
+			"p2": "animation-blend-formula-low-in-Sprint",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-3",
+			"p1": "animation-blend-formula-low-out-Value",
+			"p2": "animation-blend-result-low-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-4",
+			"p1": "animation-blend-input-speed-out-Value",
+			"p2": "animation-blend-formula-high-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-5",
+			"p1": "animation-blend-input-jog-out-Value",
+			"p2": "animation-blend-formula-high-in-Jog",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-6",
+			"p1": "animation-blend-input-sprint-out-Value",
+			"p2": "animation-blend-formula-high-in-Sprint",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-7",
+			"p1": "animation-blend-formula-high-out-Value",
+			"p2": "animation-blend-result-high-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-8",
+			"p1": "animation-blend-input-speed-out-Value",
+			"p2": "animation-blend-formula-weight-in-Speed",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-9",
+			"p1": "animation-blend-input-walk-out-Value",
+			"p2": "animation-blend-formula-weight-in-Walk",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-10",
+			"p1": "animation-blend-input-jog-out-Value",
+			"p2": "animation-blend-formula-weight-in-Jog",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-11",
+			"p1": "animation-blend-input-sprint-out-Value",
+			"p2": "animation-blend-formula-weight-in-Sprint",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-12",
+			"p1": "animation-blend-parameter-hold-out-Value",
+			"p2": "animation-blend-formula-weight-in-Hold",
+			"kind": "value"
+		},
+		{
+			"id": "animation-blend-link-13",
+			"p1": "animation-blend-formula-weight-out-Value",
+			"p2": "animation-blend-result-weight-in-Value",
+			"kind": "value"
+		}
+	]
+}

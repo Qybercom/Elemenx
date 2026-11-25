@@ -1,7 +1,7 @@
 <!-- generated -->
 # GameRadar
 
-The radar of a vehicle, declared inside a Scene (the trait SceneBehaviour): what it knows round it (Contacts of the scene: SceneTactics) within Range metres, its nose up. Shape plan is a map seen from over it (GameMinimap: a mark for each, rings of a third of its range); bubble is the space round it seen from behind and over it, a disc of its rings at its height, each contact over or under it on a stalk. What is of another team is marked as a foe, of its own as a friend, a place (NavPoint) and a blocker of warp as points; its target ringed. A press on a mark makes it the target of the vehicle (SetTarget): the event target ({Vehicle, Target}). For is the vehicle (empty: the one the hero sits in, or is in); it reads each Every seconds (0.2). Size is its width in pixels; Zoomable adds + and - (the range halved or doubled); Label names it for screen readers.
+The radar of a vehicle, declared inside a Scene (the trait SceneBehaviour): what it knows round it (Contacts of the scene: SceneTactics) within Range metres, its nose up. Shape plan is a map seen from over it (GameMinimap: a mark for each, rings of a third of its range); bubble is the space round it seen from behind and over it, a disc of its rings at its height, each contact over or under it on a stalk. What is of another team is marked as a foe, of its own as a friend, a place (NavPoint) and a blocker of warp as points; its target ringed; missiles (SceneMissiles) small, one at the vehicle red (incoming), flares as sparks. A press on a mark makes it the target of the vehicle (SetTarget): the event target ({Vehicle, Target}). For is the vehicle (empty: the one the hero sits in, or is in); it reads each Every seconds (0.2). Size is its width in pixels; Zoomable adds + and - (the range halved or doubled); Label names it for screen readers.
 
 ## Properties
 
@@ -48,4 +48,6 @@ The radar of a vehicle, declared inside a Scene (the trait SceneBehaviour): what
 
 ## Tests
 
+- [GameArms shows what a ship has, its locks and the warning of a missile at it, and is hidden for a ship with none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-arms.test.js#L38) — `tests/regression/library-game-arms.test.js`
+- [GameRadar marks missiles small, the one at the vehicle as incoming, flares as sparks](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-arms.test.js#L138) — `tests/regression/library-game-arms.test.js`
 - [gives a seat the modes of its role and the command seat those of the roles no seat has; mans a turret, knows what is round, shares a target](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tactics.test.js#L47) — `tests/regression/library-tactics.test.js`

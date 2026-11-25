@@ -45,6 +45,6 @@ SceneLocations: локации планеты ScenePlanet. Каждая лока
 - [has the highways of its planet as roads of its sketch, meeting those of the location beside at their border](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneLocations/SceneLocations.test.js#L282) — `libraries/ElemenxGraphics/services/SceneLocations/SceneLocations.test.js`
 - [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L162) — `tests/regression/library-scene-landing.test.js`
 - [flies down from space to a marker through the air, sets down in the location of the point, and goes up to a low orbit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L218) — `tests/regression/library-scene-landing.test.js`
-- [flies on into the location beside at the same point of the planet, through a passage behind a veil, the far ground of the planet past it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L497) — `tests/regression/library-scene-landing.test.js`
+- [flies on into the location beside at the same point of the planet, through a passage behind a veil, the far ground of the planet past it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L545) — `tests/regression/library-scene-landing.test.js`
 
 +3 ещё в тех же файлах

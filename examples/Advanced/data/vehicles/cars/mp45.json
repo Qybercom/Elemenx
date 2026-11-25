@@ -1,0 +1,121 @@
+{
+	"Name": "McLaren MP4/5",
+	"Model": "../../models/mclaren_mp45_formula_one.glb",
+	"Size": 1,
+	"Apart": "Object_(18|46)$",
+	"Materials": {
+		"GrilleNoAlpha[89]A": {
+			"ColorMap": null,
+			"BaseColor": [
+				0.03,
+				0.03,
+				0.035,
+				1
+			]
+		}
+	},
+	"Seat": [
+		0,
+		0.72,
+		0.1
+	],
+	"Tune": {
+		"Turn": [
+			[
+				14,
+				58
+			],
+			[
+				28,
+				66
+			],
+			[
+				56,
+				78
+			],
+			[
+				83,
+				86
+			]
+		],
+		"Build": [
+			0.34,
+			0.2
+		],
+		"Mass": 540,
+		"Base": 2.95,
+		"Width": 1.5,
+		"Brake": 44,
+		"Bite": 2.3,
+		"Coast": 4.5,
+		"Grip": 1.85,
+		"Downforce": 1.1,
+		"Power": 510000,
+		"Answer": 28,
+		"Agility": 2.8,
+		"Assist": 0.75,
+		"Rear": 1.08,
+		"Slide": 0.45,
+		"Ride": 0.5,
+		"Lock": 0.5,
+		"Keep": 130,
+		"AntiRoll": 80000,
+		"Balance": 0.25
+	},
+	"Pipes": [
+		[
+			0.228,
+			0.14,
+			-1.78
+		],
+		[
+			-0.228,
+			0.14,
+			-1.78
+		]
+	],
+	"Roles": [
+		{
+			"ID": "wheel-fl",
+			"Kind": "wheel",
+			"Name": "wheel FL",
+			"Corner": "FL",
+			"Parts": [
+				{
+					"Piece": "node-46-0-rb"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-fr",
+			"Kind": "wheel",
+			"Name": "wheel FR",
+			"Corner": "FR",
+			"Parts": [
+				{
+					"Piece": "node-46-0-lb"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-rr",
+			"Kind": "wheel",
+			"Name": "wheel RR",
+			"Corner": "RR",
+			"Parts": [
+				{
+					"Piece": "node-18-0-lb"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		}
+	]
+}

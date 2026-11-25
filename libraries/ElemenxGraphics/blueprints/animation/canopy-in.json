@@ -1,0 +1,1545 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-canopy-in",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-canopy-in-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							10
+						],
+						[
+							0.6,
+							0
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							0
+						],
+						[
+							0.6,
+							0
+						],
+						[
+							1,
+							-30
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-4
+						],
+						[
+							0.3,
+							-40
+						],
+						[
+							0.6,
+							-30
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-76
+						],
+						[
+							0.3,
+							-50
+						],
+						[
+							0.6,
+							-62
+						],
+						[
+							1,
+							-74
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							15
+						],
+						[
+							0.3,
+							70
+						],
+						[
+							0.6,
+							70
+						],
+						[
+							1,
+							18
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-12
+						],
+						[
+							0.3,
+							-15
+						],
+						[
+							0.6,
+							-10
+						],
+						[
+							1,
+							-55
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							85
+						],
+						[
+							0.6,
+							80
+						],
+						[
+							1,
+							88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						],
+						[
+							0.3,
+							30
+						],
+						[
+							0.6,
+							30
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							-70
+						],
+						[
+							0.6,
+							-60
+						],
+						[
+							1,
+							-88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							35
+						],
+						[
+							0.6,
+							25
+						],
+						[
+							1,
+							4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightarm-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							0
+						],
+						[
+							0.6,
+							0
+						],
+						[
+							1,
+							-30
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightarm-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							4
+						],
+						[
+							0.3,
+							40
+						],
+						[
+							0.6,
+							30
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							76
+						],
+						[
+							0.3,
+							50
+						],
+						[
+							0.6,
+							62
+						],
+						[
+							1,
+							74
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							15
+						],
+						[
+							0.3,
+							70
+						],
+						[
+							0.6,
+							70
+						],
+						[
+							1,
+							18
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							12
+						],
+						[
+							0.3,
+							15
+						],
+						[
+							0.6,
+							10
+						],
+						[
+							1,
+							55
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							85
+						],
+						[
+							0.6,
+							80
+						],
+						[
+							1,
+							88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						],
+						[
+							0.3,
+							30
+						],
+						[
+							0.6,
+							30
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							-70
+						],
+						[
+							0.6,
+							-80
+						],
+						[
+							1,
+							-88
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							-35
+						],
+						[
+							0.6,
+							-10
+						],
+						[
+							1,
+							-4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							0.05
+						],
+						[
+							0.6,
+							-0.2
+						],
+						[
+							1,
+							-0.6
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-root-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							0
+						],
+						[
+							0.6,
+							0
+						],
+						[
+							1,
+							-0.0356
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-root-z",
+			"type": "Result",
+			"x": 520,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.z"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							20
+						],
+						[
+							0.6,
+							12
+						],
+						[
+							1,
+							-4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-curve-spine-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.3,
+							-8
+						],
+						[
+							0.6,
+							0
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-spine-z",
+			"type": "Result",
+			"x": 520,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.z"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.6
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 2540,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 2540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-canopy-in-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-canopy-in-link-0",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-1",
+			"p1": "animation-canopy-in-curve-head-x-out-Value",
+			"p2": "animation-canopy-in-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-2",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-3",
+			"p1": "animation-canopy-in-curve-leftarm-x-out-Value",
+			"p2": "animation-canopy-in-result-leftarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-4",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-5",
+			"p1": "animation-canopy-in-curve-leftarm-y-out-Value",
+			"p2": "animation-canopy-in-result-leftarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-6",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-7",
+			"p1": "animation-canopy-in-curve-leftarm-z-out-Value",
+			"p2": "animation-canopy-in-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-8",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-9",
+			"p1": "animation-canopy-in-curve-leftfingers-out-Value",
+			"p2": "animation-canopy-in-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-10",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-11",
+			"p1": "animation-canopy-in-curve-leftforearm-y-out-Value",
+			"p2": "animation-canopy-in-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-12",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-13",
+			"p1": "animation-canopy-in-curve-leftleg-x-out-Value",
+			"p2": "animation-canopy-in-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-14",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-15",
+			"p1": "animation-canopy-in-curve-leftthumb-out-Value",
+			"p2": "animation-canopy-in-result-leftthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-16",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-17",
+			"p1": "animation-canopy-in-curve-leftupleg-x-out-Value",
+			"p2": "animation-canopy-in-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-18",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-19",
+			"p1": "animation-canopy-in-curve-leftupleg-z-out-Value",
+			"p2": "animation-canopy-in-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-20",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightarm-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-21",
+			"p1": "animation-canopy-in-curve-rightarm-x-out-Value",
+			"p2": "animation-canopy-in-result-rightarm-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-22",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-23",
+			"p1": "animation-canopy-in-curve-rightarm-y-out-Value",
+			"p2": "animation-canopy-in-result-rightarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-24",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-25",
+			"p1": "animation-canopy-in-curve-rightarm-z-out-Value",
+			"p2": "animation-canopy-in-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-26",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-27",
+			"p1": "animation-canopy-in-curve-rightfingers-out-Value",
+			"p2": "animation-canopy-in-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-28",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-29",
+			"p1": "animation-canopy-in-curve-rightforearm-y-out-Value",
+			"p2": "animation-canopy-in-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-30",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-31",
+			"p1": "animation-canopy-in-curve-rightleg-x-out-Value",
+			"p2": "animation-canopy-in-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-32",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-33",
+			"p1": "animation-canopy-in-curve-rightthumb-out-Value",
+			"p2": "animation-canopy-in-result-rightthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-34",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-35",
+			"p1": "animation-canopy-in-curve-rightupleg-x-out-Value",
+			"p2": "animation-canopy-in-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-36",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-37",
+			"p1": "animation-canopy-in-curve-rightupleg-z-out-Value",
+			"p2": "animation-canopy-in-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-38",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-39",
+			"p1": "animation-canopy-in-curve-root-y-out-Value",
+			"p2": "animation-canopy-in-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-40",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-root-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-41",
+			"p1": "animation-canopy-in-curve-root-z-out-Value",
+			"p2": "animation-canopy-in-result-root-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-42",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-43",
+			"p1": "animation-canopy-in-curve-spine-x-out-Value",
+			"p2": "animation-canopy-in-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-44",
+			"p1": "animation-canopy-in-phase-out-Value",
+			"p2": "animation-canopy-in-curve-spine-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-45",
+			"p1": "animation-canopy-in-curve-spine-z-out-Value",
+			"p2": "animation-canopy-in-result-spine-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-46",
+			"p1": "animation-canopy-in-number-pose-out-Value",
+			"p2": "animation-canopy-in-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-47",
+			"p1": "animation-canopy-in-number-length-out-Value",
+			"p2": "animation-canopy-in-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-48",
+			"p1": "animation-canopy-in-number-loop-out-Value",
+			"p2": "animation-canopy-in-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-canopy-in-link-49",
+			"p1": "animation-canopy-in-number-stride-out-Value",
+			"p2": "animation-canopy-in-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

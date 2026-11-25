@@ -5,6 +5,14 @@
 			"speed": "Скорость",
 			"height": "Высота",
 			"travel": "Путь",
+			"autopilot": "Автопилот",
+			"masslock": "Масс-лок",
+			"arrived": "на месте",
+			"autopilots": {
+				"hold": "держит курс",
+				"approach": "подлёт",
+				"follow": "следует"
+			},
 			"throttle": "Газ",
 			"shield": "Щит {id}",
 			"tripped": "Выключен перегревом",

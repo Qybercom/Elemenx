@@ -1,0 +1,34 @@
+<div class="elemenx-game-panel elemenx-game-arms" [class]="[Size]" role="group" [attribute.aria-label]="Label || $T('gaming.arms.label')" [hidden]="!Arms">
+	<div class="elemenx-game-arms-warning" *if="Warning" role="alert">{{Warning}}</div>
+	<div class="elemenx-game-arms-row" *if="Arms && Arms.Missiles">
+		<span class="elemenx-game-arms-stat">{{MissilesText()}}</span>
+		<span class="elemenx-game-arms-lock" [class.locked]="Arms.Locked.length > 0">{{Locks}}</span>
+		<Button [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="fire" [Label]="$T('gaming.arms.launch')" [disabled]="!Arms.Locked.length || !Arms.Left" [title]="$T('gaming.arms.launchHint')" (click)="Launch" />
+	</div>
+	<div class="elemenx-game-arms-row" *if="Arms && Arms.Hunters">
+		<span class="elemenx-game-arms-stat">{{MagazineText('hunters', Arms.Hunters)}}</span>
+		<Button [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="fire" [Label]="$T('gaming.arms.hunter')" [disabled]="!Arms.Locked.length || !Arms.Hunters.Left" [title]="$T('gaming.arms.hunterHint')" (click)="Hunter" />
+	</div>
+	<div class="elemenx-game-arms-row" *if="Arms && Arms.Torpedoes">
+		<span class="elemenx-game-arms-stat">{{MagazineText('torpedoes', Arms.Torpedoes)}}</span>
+		<Button [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="fire" [Label]="$T('gaming.arms.torpedo')" [disabled]="!Arms.Locked.length || !Arms.Torpedoes.Left" [title]="$T('gaming.arms.torpedoHint')" (click)="Torpedo" />
+	</div>
+	<div class="elemenx-game-arms-row" *if="Arms && Arms.Driver">
+		<span class="elemenx-game-arms-stat">{{MagazineText('driver', Arms.Driver)}}</span>
+		<Button [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="crosshair" [Label]="$T('gaming.arms.drive')" [disabled]="!Arms.Driver.Left || !Arms.Driver.Ready" [title]="$T('gaming.arms.driveHint')" (click)="Drive" />
+	</div>
+	<div class="elemenx-game-arms-row" *if="Arms && Arms.Lance">
+		<span class="elemenx-game-arms-stat" [class.charging]="Arms.Lance.Charge >= 0 || Arms.Lance.Burning">{{LanceText()}}</span>
+		<Button [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="target" [Label]="$T('gaming.arms.lanceFire')" [disabled]="!Arms.Lance.Ready" [title]="$T('gaming.arms.lanceHint')" (click)="FireLance" />
+	</div>
+	<div class="elemenx-game-arms-row" *if="Arms && Arms.Railgun">
+		<span class="elemenx-game-arms-stat" [class.charging]="Arms.Railgun.Charge >= 0">{{RailgunText()}}</span>
+		<Toggle [Label]="$T('gaming.arms.railDirect')" [checked]="RailDirect" (change)="RailDirectChanged" />
+		<Button [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="send" [Label]="$T('gaming.arms.railFire')" [disabled]="!Arms.Railgun.Left || !Arms.Railgun.Ready || Arms.Railgun.Charge >= 0" [title]="$T('gaming.arms.railHint')" (click)="FireRailgun" />
+	</div>
+	<div class="elemenx-game-arms-row" *if="Arms && (Arms.Flares || Arms.Defence)">
+		<span class="elemenx-game-arms-stat" *if="Arms.Flares">{{FlaresText()}}</span>
+		<Button *if="Arms.Flares" [Size]="Size === 'large' ? 'medium' : 'small'" Variant="ghost" Icon="flame" [Label]="$T('gaming.arms.flares')" [disabled]="!Arms.Flares.Left" [title]="$T('gaming.arms.flaresHint')" (click)="Release" />
+		<Toggle *if="Arms.Defence" [Label]="$T('gaming.arms.defence')" [checked]="Arms.Defence.On" (change)="DefenceChanged" />
+	</div>
+</div>

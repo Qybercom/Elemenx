@@ -954,6 +954,61 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-game-bar-trail`
 - `elemenx-game-bar-value`
 
+## GameArms
+
+- `elemenx-game-arms`
+- `elemenx-game-arms-lock`: `locked`
+- `elemenx-game-arms-row`
+- `elemenx-game-arms-stat`: `charging`
+- `elemenx-game-arms-warning`
+
+## GameCommands
+
+- `elemenx-game-commands`
+
+## GameConsole
+
+- `elemenx-game-console`
+- `elemenx-game-console-body`
+- `elemenx-game-console-head`
+- `elemenx-game-console-role`
+- `elemenx-game-console-row`
+- `elemenx-game-console-ship`
+
+## GameDash
+
+- `elemenx-game-dash`: `large`, `small`
+
+## GameFlight
+
+- `elemenx-game-flight`
+- `elemenx-game-flight-far`
+- `elemenx-game-flight-kind`
+- `elemenx-game-flight-nav`
+- `elemenx-game-flight-reactor`
+- `elemenx-game-flight-row`
+
+## GameRadar
+
+- `elemenx-game-radar`
+- `elemenx-game-radar-bubble`
+- `elemenx-game-radar-foot`
+- `elemenx-game-radar-rings`
+- `elemenx-game-radar-space`
+- `elemenx-game-radar-zoom`
+
+## GameTactics
+
+- `elemenx-game-tactics`
+
+## GameTargets
+
+- `elemenx-game-target`: `ally`, `chosen`, `enemy`, `incoming`, `missile`
+- `elemenx-game-target-lead`
+- `elemenx-game-target-lock`: `locked`
+- `elemenx-game-target-name`
+- `elemenx-game-targets`
+
 ## GameDialogue
 
 - `elemenx-game-dialogue`
@@ -1016,7 +1071,7 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 
 ## GameMinimap
 
-- `elemenx-game-marker`: `ally`, `edge`, `enemy`, `quest`
+- `elemenx-game-marker`: `ally`, `edge`, `enemy`, `flare`, `incoming`, `missile`, `quest`
 - `elemenx-game-minimap`: `round`
 - `elemenx-game-minimap-caption`
 - `elemenx-game-minimap-map`
@@ -1631,6 +1686,8 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-world-editor`
 - `elemenx-world-editor-actions`
 - `elemenx-world-editor-bar`
+- `elemenx-world-editor-cutscene`
+- `elemenx-world-editor-cutscene-scene`
 - `elemenx-world-editor-body`
 - `elemenx-world-editor-found`
 - `elemenx-world-editor-graph`

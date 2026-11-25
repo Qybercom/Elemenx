@@ -175,9 +175,10 @@ describe('Contract: the galaxy of a Scene (Setting galaxy): its glow, its stars 
 		expect(scene.Setting).toBe('galaxy');
 		expect(scene.GalaxyEntered()).toBe('');
 
-		frames(scene, 70);
+		frames(scene, 90);
 
-		expect(scene.GalaxyView().Distance).toBeCloseTo(40, 0);
+		/* Out as far as the galaxy is seen whole round the star (its radius and a fifth), not 40 light years. */
+		expect(scene.GalaxyView().Distance).toBeCloseTo(scene.GalaxyData().Manifest.Radius * 1.2, -1);
 	});
 
 	/*

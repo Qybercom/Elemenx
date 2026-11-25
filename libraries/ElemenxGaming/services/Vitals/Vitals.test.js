@@ -137,4 +137,40 @@ describe('Contract: Vitals, the health of what a game can hurt, with one way in'
 
 		expect(other.Get('wall')).toMatchObject({Value: 420, Max: 500});
 	});
+
+	/* Contract: the ledger of a scene (Of): one hurt and alive plays its clip hit, once in half a second; one killed does not. */
+	it('makes one hurt in a scene flinch (its clip hit), not again while it does, and not once it is dead', function () {
+		var inner = {Seconds: 10, Objects: {man: {ID: 'man', Kind: 'unit', Traits: {Health: {Max: 100, Death: 'keep'}}, Values: {Health: 100}}, crate: {ID: 'crate', Kind: 'thing', Traits: {Health: {Max: 10, Death: 'keep'}}, Values: {Health: 10}}}};
+		var played = [];
+		var scene = {VitalsLedger: null, Scene: function () {
+			return inner;
+		}, Play: function (id, name) {
+			played.push(id + ':' + name);
+
+			return id === 'man';
+		}, Remove: function () {}, AddBehaviour: function () {
+			return function () {};
+		}};
+		var ledger = vitals.Of(scene);
+
+		ledger.Damage('man', {Amount: 10});
+		ledger.Damage('man', {Amount: 10});
+
+		expect(played).toEqual(['man:hit']);
+
+		inner.Seconds = 10.6;
+
+		ledger.Damage('man', {Amount: 10});
+		ledger.Damage('crate', {Amount: 2});
+		ledger.Damage('crate', {Amount: 2});
+
+		/* A thing of no clip hit is asked each time: it never flinched. */
+		expect(played).toEqual(['man:hit', 'man:hit', 'crate:hit', 'crate:hit']);
+
+		inner.Seconds = 12;
+
+		ledger.Damage('man', {Amount: 500});
+
+		expect(played.length).toBe(4);
+	});
 });

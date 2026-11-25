@@ -1,0 +1,1951 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-float",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-float-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-3.03
+						],
+						[
+							0.0625,
+							-3.4
+						],
+						[
+							0.125,
+							-4.17
+						],
+						[
+							0.1875,
+							-5.22
+						],
+						[
+							0.25,
+							-6.39
+						],
+						[
+							0.3125,
+							-7.5
+						],
+						[
+							0.375,
+							-8.38
+						],
+						[
+							0.4375,
+							-8.9
+						],
+						[
+							0.5,
+							-8.97
+						],
+						[
+							0.5625,
+							-8.6
+						],
+						[
+							0.625,
+							-7.83
+						],
+						[
+							0.6875,
+							-6.78
+						],
+						[
+							0.75,
+							-5.61
+						],
+						[
+							0.8125,
+							-4.5
+						],
+						[
+							0.875,
+							-3.62
+						],
+						[
+							0.9375,
+							-3.1
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-12.05
+						],
+						[
+							0.0625,
+							-12.8
+						],
+						[
+							0.125,
+							-14.34
+						],
+						[
+							0.1875,
+							-16.44
+						],
+						[
+							0.25,
+							-18.77
+						],
+						[
+							0.3125,
+							-20.99
+						],
+						[
+							0.375,
+							-22.75
+						],
+						[
+							0.4375,
+							-23.79
+						],
+						[
+							0.5,
+							-23.95
+						],
+						[
+							0.5625,
+							-23.2
+						],
+						[
+							0.625,
+							-21.66
+						],
+						[
+							0.6875,
+							-19.56
+						],
+						[
+							0.75,
+							-17.23
+						],
+						[
+							0.8125,
+							-15.01
+						],
+						[
+							0.875,
+							-13.25
+						],
+						[
+							0.9375,
+							-12.21
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-42
+						],
+						[
+							0.0625,
+							-38.56
+						],
+						[
+							0.125,
+							-35.64
+						],
+						[
+							0.1875,
+							-33.69
+						],
+						[
+							0.25,
+							-33
+						],
+						[
+							0.3125,
+							-33.69
+						],
+						[
+							0.375,
+							-35.64
+						],
+						[
+							0.4375,
+							-38.56
+						],
+						[
+							0.5,
+							-42
+						],
+						[
+							0.5625,
+							-45.44
+						],
+						[
+							0.625,
+							-48.36
+						],
+						[
+							0.6875,
+							-50.31
+						],
+						[
+							0.75,
+							-51
+						],
+						[
+							0.8125,
+							-50.31
+						],
+						[
+							0.875,
+							-48.36
+						],
+						[
+							0.9375,
+							-45.44
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							22
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftfoot-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							18
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftfoot-x",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFoot.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-24.07
+						],
+						[
+							0.0625,
+							-25.07
+						],
+						[
+							0.125,
+							-27.12
+						],
+						[
+							0.1875,
+							-29.92
+						],
+						[
+							0.25,
+							-33.03
+						],
+						[
+							0.3125,
+							-35.99
+						],
+						[
+							0.375,
+							-38.34
+						],
+						[
+							0.4375,
+							-39.72
+						],
+						[
+							0.5,
+							-39.93
+						],
+						[
+							0.5625,
+							-38.93
+						],
+						[
+							0.625,
+							-36.88
+						],
+						[
+							0.6875,
+							-34.08
+						],
+						[
+							0.75,
+							-30.97
+						],
+						[
+							0.8125,
+							-28.01
+						],
+						[
+							0.875,
+							-25.66
+						],
+						[
+							0.9375,
+							-24.28
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							40.92
+						],
+						[
+							0.0625,
+							39.8
+						],
+						[
+							0.125,
+							37.49
+						],
+						[
+							0.1875,
+							34.34
+						],
+						[
+							0.25,
+							30.84
+						],
+						[
+							0.3125,
+							27.51
+						],
+						[
+							0.375,
+							24.87
+						],
+						[
+							0.4375,
+							23.31
+						],
+						[
+							0.5,
+							23.08
+						],
+						[
+							0.5625,
+							24.2
+						],
+						[
+							0.625,
+							26.51
+						],
+						[
+							0.6875,
+							29.66
+						],
+						[
+							0.75,
+							33.16
+						],
+						[
+							0.8125,
+							36.49
+						],
+						[
+							0.875,
+							39.13
+						],
+						[
+							0.9375,
+							40.69
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							10
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-22
+						],
+						[
+							0.0625,
+							-19.32
+						],
+						[
+							0.125,
+							-17.05
+						],
+						[
+							0.1875,
+							-15.53
+						],
+						[
+							0.25,
+							-15
+						],
+						[
+							0.3125,
+							-15.53
+						],
+						[
+							0.375,
+							-17.05
+						],
+						[
+							0.4375,
+							-19.32
+						],
+						[
+							0.5,
+							-22
+						],
+						[
+							0.5625,
+							-24.68
+						],
+						[
+							0.625,
+							-26.95
+						],
+						[
+							0.6875,
+							-28.47
+						],
+						[
+							0.75,
+							-29
+						],
+						[
+							0.8125,
+							-28.47
+						],
+						[
+							0.875,
+							-26.95
+						],
+						[
+							0.9375,
+							-24.68
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							14
+						],
+						[
+							0.0625,
+							16.3
+						],
+						[
+							0.125,
+							18.24
+						],
+						[
+							0.1875,
+							19.54
+						],
+						[
+							0.25,
+							20
+						],
+						[
+							0.3125,
+							19.54
+						],
+						[
+							0.375,
+							18.24
+						],
+						[
+							0.4375,
+							16.3
+						],
+						[
+							0.5,
+							14
+						],
+						[
+							0.5625,
+							11.7
+						],
+						[
+							0.625,
+							9.76
+						],
+						[
+							0.6875,
+							8.46
+						],
+						[
+							0.75,
+							8
+						],
+						[
+							0.8125,
+							8.46
+						],
+						[
+							0.875,
+							9.76
+						],
+						[
+							0.9375,
+							11.7
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							29.08
+						],
+						[
+							0.0625,
+							30.2
+						],
+						[
+							0.125,
+							32.51
+						],
+						[
+							0.1875,
+							35.66
+						],
+						[
+							0.25,
+							39.16
+						],
+						[
+							0.3125,
+							42.49
+						],
+						[
+							0.375,
+							45.13
+						],
+						[
+							0.4375,
+							46.69
+						],
+						[
+							0.5,
+							46.92
+						],
+						[
+							0.5625,
+							45.8
+						],
+						[
+							0.625,
+							43.49
+						],
+						[
+							0.6875,
+							40.34
+						],
+						[
+							0.75,
+							36.84
+						],
+						[
+							0.8125,
+							33.51
+						],
+						[
+							0.875,
+							30.87
+						],
+						[
+							0.9375,
+							29.31
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							22
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightfoot-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							18
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightfoot-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFoot.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							28
+						],
+						[
+							0.0625,
+							24.94
+						],
+						[
+							0.125,
+							22.34
+						],
+						[
+							0.1875,
+							20.61
+						],
+						[
+							0.25,
+							20
+						],
+						[
+							0.3125,
+							20.61
+						],
+						[
+							0.375,
+							22.34
+						],
+						[
+							0.4375,
+							24.94
+						],
+						[
+							0.5,
+							28
+						],
+						[
+							0.5625,
+							31.06
+						],
+						[
+							0.625,
+							33.66
+						],
+						[
+							0.6875,
+							35.39
+						],
+						[
+							0.75,
+							36
+						],
+						[
+							0.8125,
+							35.39
+						],
+						[
+							0.875,
+							33.66
+						],
+						[
+							0.9375,
+							31.06
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							17.08
+						],
+						[
+							0.0625,
+							18.2
+						],
+						[
+							0.125,
+							20.51
+						],
+						[
+							0.1875,
+							23.66
+						],
+						[
+							0.25,
+							27.16
+						],
+						[
+							0.3125,
+							30.49
+						],
+						[
+							0.375,
+							33.13
+						],
+						[
+							0.4375,
+							34.69
+						],
+						[
+							0.5,
+							34.92
+						],
+						[
+							0.5625,
+							33.8
+						],
+						[
+							0.625,
+							31.49
+						],
+						[
+							0.6875,
+							28.34
+						],
+						[
+							0.75,
+							24.84
+						],
+						[
+							0.8125,
+							21.51
+						],
+						[
+							0.875,
+							18.87
+						],
+						[
+							0.9375,
+							17.31
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							10
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-16
+						],
+						[
+							0.0625,
+							-18.68
+						],
+						[
+							0.125,
+							-20.95
+						],
+						[
+							0.1875,
+							-22.47
+						],
+						[
+							0.25,
+							-23
+						],
+						[
+							0.3125,
+							-22.47
+						],
+						[
+							0.375,
+							-20.95
+						],
+						[
+							0.4375,
+							-18.68
+						],
+						[
+							0.5,
+							-16
+						],
+						[
+							0.5625,
+							-13.32
+						],
+						[
+							0.625,
+							-11.05
+						],
+						[
+							0.6875,
+							-9.53
+						],
+						[
+							0.75,
+							-9
+						],
+						[
+							0.8125,
+							-9.53
+						],
+						[
+							0.875,
+							-11.05
+						],
+						[
+							0.9375,
+							-13.32
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							6
+						],
+						[
+							0.0625,
+							7.15
+						],
+						[
+							0.125,
+							8.12
+						],
+						[
+							0.1875,
+							8.77
+						],
+						[
+							0.25,
+							9
+						],
+						[
+							0.3125,
+							8.77
+						],
+						[
+							0.375,
+							8.12
+						],
+						[
+							0.4375,
+							7.15
+						],
+						[
+							0.5,
+							6
+						],
+						[
+							0.5625,
+							4.85
+						],
+						[
+							0.625,
+							3.88
+						],
+						[
+							0.6875,
+							3.23
+						],
+						[
+							0.75,
+							3
+						],
+						[
+							0.8125,
+							3.23
+						],
+						[
+							0.875,
+							3.88
+						],
+						[
+							0.9375,
+							4.85
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-float-curve-spine-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							1.98
+						],
+						[
+							0.0625,
+							1.73
+						],
+						[
+							0.125,
+							1.22
+						],
+						[
+							0.1875,
+							0.52
+						],
+						[
+							0.25,
+							-0.26
+						],
+						[
+							0.3125,
+							-1
+						],
+						[
+							0.375,
+							-1.58
+						],
+						[
+							0.4375,
+							-1.93
+						],
+						[
+							0.5,
+							-1.98
+						],
+						[
+							0.5625,
+							-1.73
+						],
+						[
+							0.625,
+							-1.22
+						],
+						[
+							0.6875,
+							-0.52
+						],
+						[
+							0.75,
+							0.26
+						],
+						[
+							0.8125,
+							1
+						],
+						[
+							0.875,
+							1.58
+						],
+						[
+							0.9375,
+							1.93
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-spine-z",
+			"type": "Result",
+			"x": 520,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.z"
+				}
+			]
+		},
+		{
+			"id": "animation-float-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-float-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 4
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-float-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-float-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-float-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-float-link-0",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-1",
+			"p1": "animation-float-curve-head-x-out-Value",
+			"p2": "animation-float-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-2",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-3",
+			"p1": "animation-float-curve-leftarm-y-out-Value",
+			"p2": "animation-float-result-leftarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-4",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-5",
+			"p1": "animation-float-curve-leftarm-z-out-Value",
+			"p2": "animation-float-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-6",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-7",
+			"p1": "animation-float-curve-leftfingers-out-Value",
+			"p2": "animation-float-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-8",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftfoot-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-9",
+			"p1": "animation-float-curve-leftfoot-x-out-Value",
+			"p2": "animation-float-result-leftfoot-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-10",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-11",
+			"p1": "animation-float-curve-leftforearm-y-out-Value",
+			"p2": "animation-float-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-12",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-13",
+			"p1": "animation-float-curve-leftleg-x-out-Value",
+			"p2": "animation-float-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-14",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-15",
+			"p1": "animation-float-curve-leftthumb-out-Value",
+			"p2": "animation-float-result-leftthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-16",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-17",
+			"p1": "animation-float-curve-leftupleg-x-out-Value",
+			"p2": "animation-float-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-18",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-19",
+			"p1": "animation-float-curve-leftupleg-z-out-Value",
+			"p2": "animation-float-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-20",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-21",
+			"p1": "animation-float-curve-rightarm-y-out-Value",
+			"p2": "animation-float-result-rightarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-22",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-23",
+			"p1": "animation-float-curve-rightarm-z-out-Value",
+			"p2": "animation-float-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-24",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-25",
+			"p1": "animation-float-curve-rightfingers-out-Value",
+			"p2": "animation-float-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-26",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightfoot-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-27",
+			"p1": "animation-float-curve-rightfoot-x-out-Value",
+			"p2": "animation-float-result-rightfoot-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-28",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-29",
+			"p1": "animation-float-curve-rightforearm-y-out-Value",
+			"p2": "animation-float-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-30",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-31",
+			"p1": "animation-float-curve-rightleg-x-out-Value",
+			"p2": "animation-float-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-32",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-33",
+			"p1": "animation-float-curve-rightthumb-out-Value",
+			"p2": "animation-float-result-rightthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-34",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-35",
+			"p1": "animation-float-curve-rightupleg-x-out-Value",
+			"p2": "animation-float-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-36",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-37",
+			"p1": "animation-float-curve-rightupleg-z-out-Value",
+			"p2": "animation-float-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-38",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-39",
+			"p1": "animation-float-curve-spine-x-out-Value",
+			"p2": "animation-float-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-40",
+			"p1": "animation-float-phase-out-Value",
+			"p2": "animation-float-curve-spine-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-41",
+			"p1": "animation-float-curve-spine-z-out-Value",
+			"p2": "animation-float-result-spine-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-42",
+			"p1": "animation-float-number-pose-out-Value",
+			"p2": "animation-float-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-43",
+			"p1": "animation-float-number-length-out-Value",
+			"p2": "animation-float-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-44",
+			"p1": "animation-float-number-loop-out-Value",
+			"p2": "animation-float-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-float-link-45",
+			"p1": "animation-float-number-stride-out-Value",
+			"p2": "animation-float-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

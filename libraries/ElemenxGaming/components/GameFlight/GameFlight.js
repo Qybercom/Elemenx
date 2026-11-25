@@ -1,10 +1,12 @@
 /*
  * The instruments of a ship over a Scene, declared inside it (the trait SceneBehaviour): what Readout of the scene reads of
  * For (an ID; empty: the hero) each Every seconds (0.15): its speed, its height and the air round it (Probe of the scene),
- * its travel (warp, jump: its phase, its step), its throttle; of its systems (SceneShipSystems) its reactors (their heat,
+ * its travel (warp, jump: its phase, its step), what its autopilot does, how much the mass lock holds it back, its throttle; of its systems (SceneShipSystems) its reactors (their heat,
  * what they give, shut down by their heat), what each system is given of the power, the layers of its shield, a blocker of
  * warp its sensors see, and the places it knows of, the nearest first (Nav of them shown). Engineer adds the hands of an
- * engineer (or of a pilot alone): the shares of the power, each reactor on or off, venting their heat. Size small, medium or
+ * engineer (or of a pilot alone): the shares of the power, each reactor on or off, venting their heat; Commands the commands
+ * of the ship below them (GameCommands: land, take off, to orbit), for a pilot who flies it; Arms its missiles, locks,
+ * flares and point defence (GameArms), a warning of a missile at it. Size small, medium or
  * large; Label names it for screen readers; its default slot holds buttons of its own. Regression: the demos of space each
  * wrote their own lines of the flight.
  */
@@ -22,6 +24,8 @@ Elemenx.Component('GameFlight', {
 			Every: 'How often it reads, in seconds.',
 			Nav: 'How many places it knows it shows, the nearest first.',
 			Engineer: 'Adds the hands of an engineer: the shares of the power, the reactors on and off, venting their heat.',
+			Commands: 'Adds the commands of the ship (GameCommands): land, take off, to orbit.',
+			Arms: 'Adds the arms of the ship (GameArms): missiles, locks, flares, point defence, the warning of a missile.',
 			Size: {Options: ['small', 'medium', 'large'], Description: 'small, medium or large.'},
 			Label: 'Its name for screen readers.'
 		},
@@ -31,12 +35,16 @@ Elemenx.Component('GameFlight', {
 	Every: 0.15,
 	Nav: 5,
 	Engineer: false,
+	Commands: false,
+	Arms: false,
 	Size: 'medium',
 	Label: '',
 	Shown: false,
 	Speed: '',
 	Height: '',
 	Travel: '',
+	Autopilot: '',
+	MassLock: 0,
 	Throttle: 0,
 	Reactors: [],
 	Power: null,
@@ -80,6 +88,10 @@ Elemenx.Component('GameFlight', {
 
 		this.Speed = metres >= 1000 ? (metres / 1000).toFixed(metres >= 100000 ? 0 : 2) + ' km/s' : Math.round(metres) + ' m/s';
 		this.Height = air && air.Altitude !== null && air.Altitude !== undefined ? Math.round(air.Altitude).toLocaleString() + ' km · ' + (air.Zone || air.Phase || '') + (air.Pressure > 0 ? ' · ' + (air.Pressure >= 0.01 ? air.Pressure.toFixed(2) : air.Pressure.toExponential(1)) + ' bar' : '') : '';
+		/* What its autopilot does (Autopilot of the scene): its mode, arrived. */
+		this.Autopilot = read.Autopilot ? Elemenx.Locale.Text('gaming.flight.autopilots.' + read.Autopilot.split(':')[0]) + (read.Autopilot.indexOf(':arrived') > 0 ? ' · ' + Elemenx.Locale.Text('gaming.flight.arrived') : '') : '';
+		/* Held back near ships of another team (the soft mass lock of the scene): how much, 0 to 100. */
+		this.MassLock = Math.round((read.MassLock || 0) * 100);
 		this.Travel = read.Travel ? read.Travel.Kind + ' · ' + read.Travel.Phase + (read.Travel.Step ? ' · ' + read.Travel.Step : '') : '';
 		this.Throttle = Math.round(Math.abs(read.Throttle || 0) * 100);
 		this.Reactors = systems ? systems.Reactors.map(function (one) {

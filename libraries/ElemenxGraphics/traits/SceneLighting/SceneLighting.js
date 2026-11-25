@@ -127,6 +127,14 @@ Elemenx.Trait('SceneLighting', {
 		};
 
 		/* Its programs asked for when the scene starts, those of the weather too (lightning, rain and snow falling, splashes): none comes in the play. */
+		/* Its graphs given anew (Scene: engine.Regraph): its shaders made again of them (the clouds and the air). */
+		engine.Regraphs = engine.Regraphs || [];
+
+		engine.Regraphs.push(function () {
+			shaders = self.Clouded(self.Aired(self.LightingShaders(graphics)));
+			state.Programs = null;
+		});
+
 		engine.PostWarm = function () {
 			programs();
 

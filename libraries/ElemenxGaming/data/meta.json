@@ -1475,6 +1475,24 @@
 					"Description": "Adds the hands of an engineer: the shares of the power, the reactors on and off, venting their heat."
 				},
 				{
+					"Name": "Commands",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Adds the commands of the ship (GameCommands): land, take off, to orbit."
+				},
+				{
+					"Name": "Arms",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Adds the arms of the ship (GameArms): missiles, locks, flares, point defence, the warning of a missile."
+				},
+				{
 					"Name": "Size",
 					"Type": "select",
 					"Default": "medium",
@@ -1553,6 +1571,140 @@
 			"Current": "",
 			"Events": [],
 			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "GameCommands",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "send",
+			"Description": "The commands of a ship now: land (at a site of the body or under it), take off, go to orbit; a press gives the command.",
+			"Props": [
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the ship; empty: the hero, or the ship the hero sits in or walks in."
+				},
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 0.25,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it reads, in seconds."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"command"
+			],
+			"EventDescriptions": {
+				"command": "A command was given: {ID (land, takeoff, orbit), Done (false where the ship could not)}."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "GameArms",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "crosshair",
+			"Description": "The missiles, locks, flares and point defence of a ship, a warning of a missile at it; a salvo, flares and point defence at a press.",
+			"Props": [
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the ship; empty: the hero, or the ship the hero sits in or walks in."
+				},
+				{
+					"Name": "Every",
+					"Type": "number",
+					"Default": 0.2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How often it reads, in seconds."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"launch",
+				"torpedo",
+				"hunter",
+				"drive",
+				"lance",
+				"railgun",
+				"flares"
+			],
+			"EventDescriptions": {
+				"launch": "A salvo was launched: {Count (0: none, nothing locked or none left)}.",
+				"torpedo": "A torpedo was launched: {Count}.",
+				"hunter": "A salvo of heavy missiles was launched: {Count}.",
+				"drive": "The mass driver fired: {Done}.",
+				"lance": "The lance began to charge: {Done}.",
+				"railgun": "The railgun faster than light began to charge: {Done, Mode}.",
+				"flares": "Flares were released: {Count}."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -2195,6 +2347,9 @@
 			"ally",
 			"edge",
 			"enemy",
+			"flare",
+			"incoming",
+			"missile",
 			"quest"
 		],
 		"elemenx-game-minimap-player": [],
@@ -2237,6 +2392,16 @@
 		"elemenx-game-flight-far": [],
 		"elemenx-slider": [],
 		"elemenx-game-tactics": [],
+		"elemenx-game-commands": [],
+		"elemenx-game-arms": [],
+		"elemenx-game-arms-row": [],
+		"elemenx-game-arms-stat": [
+			"charging"
+		],
+		"elemenx-game-arms-lock": [
+			"locked"
+		],
+		"elemenx-game-arms-warning": [],
 		"elemenx-game-radar": [],
 		"elemenx-game-radar-rings": [],
 		"elemenx-game-radar-space": [],
@@ -2253,10 +2418,15 @@
 		"elemenx-game-target": [
 			"ally",
 			"chosen",
-			"enemy"
+			"enemy",
+			"incoming",
+			"missile"
 		],
 		"elemenx-game-target-name": [],
-		"elemenx-game-target-lead": []
+		"elemenx-game-target-lead": [],
+		"elemenx-game-target-lock": [
+			"locked"
+		]
 	},
 	"Kinds": [
 		{

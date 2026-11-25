@@ -209,6 +209,16 @@ Elemenx.Trait('SceneScatter', {
 		}
 
 		/* Its programs, asked for when the scene starts; with the fragments of the Scene (more: {Top, Voxel}) those it draws all it sows by. */
+		/* Its graphs given anew (Scene: engine.Regraph): its shaders made again of them (the grass and the wind). */
+		engine.Regraphs = engine.Regraphs || [];
+
+		engine.Regraphs.push(function () {
+			shaders = self.Grassed(self.Winded(self.ScatterShaders(graphics)));
+			state.Programs = null;
+			state.Top = null;
+			state.Voxel = null;
+		});
+
 		engine.ScatterWarm = function (more) {
 			programs();
 

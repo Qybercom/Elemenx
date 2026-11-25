@@ -1,0 +1,659 @@
+{
+	"Name": "Porsche 911 GT3 R",
+	"Model": "../../models/2024_porsche_992_gt3_r.glb",
+	"Size": 1.28,
+	"Materials": {
+		"GrilleNoAlpha[89]A": {
+			"ColorMap": null,
+			"BaseColor": [
+				0.03,
+				0.03,
+				0.035,
+				1
+			]
+		}
+	},
+	"Seat": [
+		0.31,
+		0.97,
+		-0.25
+	],
+	"Tune": {
+		"Turn": [
+			[
+				14,
+				58
+			],
+			[
+				28,
+				64
+			],
+			[
+				56,
+				74
+			],
+			[
+				83,
+				78
+			]
+		],
+		"Build": [
+			0.38,
+			0.22
+		],
+		"Mass": 1250,
+		"Top": 82,
+		"Brake": 40,
+		"Bite": 2.2,
+		"Coast": 3.2,
+		"Grip": 1.85,
+		"Downforce": 1,
+		"Power": 420000,
+		"Answer": 26,
+		"Agility": 2.6,
+		"Assist": 0.75,
+		"Rear": 1.1,
+		"Slide": 0.4,
+		"Ride": 0.55,
+		"Lock": 0.6,
+		"Keep": 120,
+		"AntiRoll": 150000,
+		"Balance": 0.3
+	},
+	"Pipes": [
+		[
+			0.042,
+			0.257,
+			-1.81
+		],
+		[
+			-0.042,
+			0.257,
+			-1.81
+		]
+	],
+	"Roles": [
+		{
+			"ID": "steering",
+			"Kind": "steering",
+			"Name": "steering",
+			"Parts": [
+				{
+					"Piece": "node-277-0",
+					"Vertices": [
+						[
+							0,
+							1074
+						]
+					]
+				},
+				{
+					"Piece": "node-280-0",
+					"Vertices": [
+						[
+							0,
+							4497
+						]
+					]
+				},
+				{
+					"Piece": "node-284-0",
+					"Vertices": [
+						[
+							0,
+							3268
+						]
+					]
+				},
+				{
+					"Piece": "node-287-0",
+					"Vertices": [
+						[
+							0,
+							12178
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.24,
+					0.564,
+					0.165
+				],
+				"Axis": [
+					0,
+					0.33,
+					-0.944
+				],
+				"Angle": 140
+			},
+			"Drive": "steer",
+			"Open": 0
+		},
+		{
+			"ID": "wiper",
+			"Kind": "wiper",
+			"Name": "wiper",
+			"Parts": [
+				{
+					"Piece": "node-486-0",
+					"Vertices": [
+						[
+							0,
+							516
+						]
+					]
+				},
+				{
+					"Piece": "node-489-0",
+					"Vertices": [
+						[
+							0,
+							957
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					-0.01,
+					0.596,
+					0.93
+				],
+				"Axis": [
+					0,
+					0.9,
+					0.436
+				],
+				"Angle": 60
+			},
+			"Drive": "wipers",
+			"Open": 0
+		},
+		{
+			"ID": "doors",
+			"Kind": "door",
+			"Name": "doors",
+			"Parts": [
+				{
+					"Piece": "node-208-0",
+					"Vertices": [
+						[
+							0,
+							3411
+						]
+					]
+				},
+				{
+					"Piece": "node-211-0",
+					"Vertices": [
+						[
+							0,
+							78
+						]
+					]
+				},
+				{
+					"Piece": "node-214-0",
+					"Vertices": [
+						[
+							0,
+							77
+						]
+					]
+				},
+				{
+					"Piece": "node-217-0",
+					"Vertices": [
+						[
+							0,
+							1862
+						]
+					]
+				},
+				{
+					"Piece": "node-220-0",
+					"Vertices": [
+						[
+							0,
+							331
+						]
+					]
+				},
+				{
+					"Piece": "node-223-0",
+					"Vertices": [
+						[
+							0,
+							31
+						]
+					]
+				},
+				{
+					"Piece": "node-226-0",
+					"Vertices": [
+						[
+							0,
+							11
+						]
+					]
+				},
+				{
+					"Piece": "node-229-0",
+					"Vertices": [
+						[
+							0,
+							3105
+						]
+					]
+				},
+				{
+					"Piece": "node-232-0",
+					"Vertices": [
+						[
+							0,
+							58
+						]
+					]
+				},
+				{
+					"Piece": "node-235-0",
+					"Vertices": [
+						[
+							0,
+							151
+						]
+					]
+				},
+				{
+					"Piece": "node-239-0",
+					"Vertices": [
+						[
+							0,
+							3105
+						]
+					]
+				},
+				{
+					"Piece": "node-242-0",
+					"Vertices": [
+						[
+							0,
+							3574
+						]
+					]
+				},
+				{
+					"Piece": "node-245-0",
+					"Vertices": [
+						[
+							0,
+							78
+						]
+					]
+				},
+				{
+					"Piece": "node-248-0",
+					"Vertices": [
+						[
+							0,
+							77
+						]
+					]
+				},
+				{
+					"Piece": "node-251-0",
+					"Vertices": [
+						[
+							0,
+							1862
+						]
+					]
+				},
+				{
+					"Piece": "node-254-0",
+					"Vertices": [
+						[
+							0,
+							331
+						]
+					]
+				},
+				{
+					"Piece": "node-257-0",
+					"Vertices": [
+						[
+							0,
+							31
+						]
+					]
+				},
+				{
+					"Piece": "node-260-0",
+					"Vertices": [
+						[
+							0,
+							58
+						]
+					]
+				},
+				{
+					"Piece": "node-263-0",
+					"Vertices": [
+						[
+							0,
+							11
+						]
+					]
+				},
+				{
+					"Piece": "node-266-0",
+					"Vertices": [
+						[
+							0,
+							151
+						]
+					]
+				}
+			],
+			"Both": true,
+			"Motion": {
+				"Type": "hinge",
+				"Pivot": [
+					0.78,
+					0.5,
+					0.6
+				],
+				"Axis": [
+					0,
+					-1,
+					0
+				],
+				"Angle": 65
+			},
+			"Open": 0
+		},
+		{
+			"ID": "head-0",
+			"Kind": "lamp-head",
+			"Name": "head",
+			"Parts": [
+				{
+					"Piece": "node-72-0",
+					"Vertices": [
+						[
+							0,
+							2207
+						]
+					]
+				},
+				{
+					"Piece": "node-78-0",
+					"Vertices": [
+						[
+							0,
+							8823
+						]
+					]
+				},
+				{
+					"Piece": "node-147-0",
+					"Vertices": [
+						[
+							0,
+							3099
+						]
+					]
+				},
+				{
+					"Piece": "node-150-0",
+					"Vertices": [
+						[
+							0,
+							423
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "glow"
+			},
+			"Light": {
+				"Kind": "head"
+			},
+			"Both": true
+		},
+		{
+			"ID": "rear-1",
+			"Kind": "lamp-rear",
+			"Name": "rear",
+			"Parts": [
+				{
+					"Piece": "node-69-0",
+					"Vertices": [
+						[
+							0,
+							1086
+						]
+					]
+				},
+				{
+					"Piece": "node-75-0",
+					"Vertices": [
+						[
+							0,
+							2463
+						]
+					]
+				},
+				{
+					"Piece": "node-99-0",
+					"Vertices": [
+						[
+							0,
+							362
+						]
+					]
+				},
+				{
+					"Piece": "node-108-0",
+					"Vertices": [
+						[
+							0,
+							71
+						]
+					]
+				},
+				{
+					"Piece": "node-111-0",
+					"Vertices": [
+						[
+							0,
+							49
+						]
+					]
+				},
+				{
+					"Piece": "node-114-0",
+					"Vertices": [
+						[
+							0,
+							49
+						]
+					]
+				},
+				{
+					"Piece": "node-144-0",
+					"Vertices": [
+						[
+							0,
+							230
+						]
+					]
+				}
+			],
+			"Motion": {
+				"Type": "glow"
+			},
+			"Light": {
+				"Kind": "rear"
+			},
+			"Both": true
+		},
+		{
+			"ID": "wheel-fl",
+			"Kind": "wheel",
+			"Name": "wheel FL",
+			"Corner": "FL",
+			"Parts": [
+				{
+					"Piece": "node-10-0"
+				},
+				{
+					"Piece": "node-13-0"
+				},
+				{
+					"Piece": "node-17-0"
+				},
+				{
+					"Piece": "node-20-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-fl",
+			"Kind": "caliper",
+			"Name": "caliper FL",
+			"Corner": "FL",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-183-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-fr",
+			"Kind": "wheel",
+			"Name": "wheel FR",
+			"Corner": "FR",
+			"Parts": [
+				{
+					"Piece": "node-55-0"
+				},
+				{
+					"Piece": "node-58-0"
+				},
+				{
+					"Piece": "node-62-0"
+				},
+				{
+					"Piece": "node-65-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-fr",
+			"Kind": "caliper",
+			"Name": "caliper FR",
+			"Corner": "FR",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-201-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-rl",
+			"Kind": "wheel",
+			"Name": "wheel RL",
+			"Corner": "RL",
+			"Parts": [
+				{
+					"Piece": "node-25-0"
+				},
+				{
+					"Piece": "node-28-0"
+				},
+				{
+					"Piece": "node-32-0"
+				},
+				{
+					"Piece": "node-35-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-rl",
+			"Kind": "caliper",
+			"Name": "caliper RL",
+			"Corner": "RL",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-190-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-rr",
+			"Kind": "wheel",
+			"Name": "wheel RR",
+			"Corner": "RR",
+			"Parts": [
+				{
+					"Piece": "node-40-0"
+				},
+				{
+					"Piece": "node-43-0"
+				},
+				{
+					"Piece": "node-47-0"
+				},
+				{
+					"Piece": "node-50-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-rr",
+			"Kind": "caliper",
+			"Name": "caliper RR",
+			"Corner": "RR",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-194-0"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		}
+	]
+}

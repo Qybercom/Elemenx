@@ -29,7 +29,9 @@
  * The scene emits landing ({ID, Phase, Body, Latitude, Longitude, Altitude (km)}) at each phase: transfer, entry, approach,
  * hover, touchdown, landed, lift, climb, ascent, orbit, manual; and location ({ID, Location, Body}) when one is made.
  * ToOrbit(ship) takes a ship near a body to its parking orbit by one curve, and round it by itself (a key of flight lets it
- * go); TakeOff ends on it too. The command To orbit of the scene does it (ShipOrbit), with a hint nearer than 2000 km over
+ * go); TakeOff ends on it too. ShipCommands(id) are the commands a ship has now (land with the markers of the body, takeoff,
+ * orbit), ShipCommand(id, command, options) gives one: for the consoles and panels of a game (GameCommands); the buttons of
+ * the scene itself only with ShipButtons. The command To orbit of the scene does it (ShipOrbit), with a hint nearer than 2000 km over
  * the body (ShipHint: orbit). The command Landing of the scene (a button while a ship is driven near a body it can come down on) lists the markers of
  * the body (Markers of its Surface or of its Planet: [{ID, Name, Latitude, Longitude}]) and lets a point of it be picked.
  */
@@ -52,17 +54,14 @@ Elemenx.Trait('SceneLanding', {
 		 * HoverThrust}. The way down of the view (Land of a body, no ship) heats of it too: one heat of the air.
 		 */
 		engine.LandingLook = function (given) {
-			var graph = self.GraphOf('LandingLookGraph', 'landing/look') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/landing/look');
+			var code = engine.GraphCode('LandingLookGraph', 'landing/look');
 			var inputs = {Thick: 0, Speed: 0, Over: 0, Going: 0, Throttle: 0, Manual: 0, T: 0, Landed: 0, Pull: 0, Flat: 0, Top: 1};
-			var made = scene.LandingLookCode;
-			if (!made || made.Graph !== graph)
-				made = scene.LandingLookCode = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
 
 			Object.keys(given || {}).forEach(function (key) {
 				inputs[key] = given[key];
 			});
 
-			return made.Code.Run({}, inputs);
+			return code.Run({}, inputs);
 		};
 
 		function number (value, fallback) {
@@ -438,7 +437,7 @@ Elemenx.Trait('SceneLanding', {
 			}
 
 			if (!have) {
-				self.Add('effect', Object.assign({ID: id, Type: kind}, settings));
+				self.Add('effect', Object.assign({ID: id, Type: kind, Parent: null}, settings));
 
 				told[kind] = on;
 
@@ -469,7 +468,7 @@ Elemenx.Trait('SceneLanding', {
 				if (scene.Objects[hero.ID + ':sonicboom'])
 					self.Remove(hero.ID + ':sonicboom');
 
-				self.Add('effect', {ID: hero.ID + ':sonicboom', Type: 'sonicboom', Follow: hero.ID, Size: size});
+				self.Add('effect', {ID: hero.ID + ':sonicboom', Type: 'sonicboom', Follow: hero.ID, Size: size, Parent: null});
 
 				landing.Boomed = scene.Seconds;
 
@@ -746,8 +745,9 @@ Elemenx.Trait('SceneLanding', {
 			hero.Located = length / scaleOf(hero);
 			hero.Size = hero.Located;
 
-			self.Add('ground', {ID: ground, World: world, Generated: true});
-			self.Add('sun', {ID: light, Elevation: sun.Elevation, Azimuth: sun.Azimuth, Disc: sun.Disc, Moon: sun.Moon, MoonElevation: sun.MoonElevation, MoonAzimuth: sun.MoonAzimuth, MoonPhase: sun.MoonPhase, MoonSize: sun.MoonSize, Generated: true});
+			/* Its ground and its sun of the scene as ever (Parent null: what is added into a location is else of its ground). */
+			self.Add('ground', {ID: ground, World: world, Generated: true, Parent: null});
+			self.Add('sun', {ID: light, Parent: null, Elevation: sun.Elevation, Azimuth: sun.Azimuth, Disc: sun.Disc, Moon: sun.Moon, MoonElevation: sun.MoonElevation, MoonAzimuth: sun.MoonAzimuth, MoonPhase: sun.MoonPhase, MoonSize: sun.MoonSize, Generated: true});
 
 			engine.Prepare(true);
 
@@ -944,8 +944,10 @@ Elemenx.Trait('SceneLanding', {
 
 			scene.Location = {ID: id, Body: body.ID, Place: location.Place, Frame: frame, Ground: located.Ground, Sun: located.Sun, Hero: located.Hero, Planet: true, Passages: location.Passages, Lit: 0};
 
+			placeGone(located);
+
 			self.Remove(located.Ground);
-			self.Add('ground', {ID: located.Ground, World: location.World, Generated: true});
+			self.Add('ground', {ID: located.Ground, World: location.World, Generated: true, Parent: null});
 
 			/* What the view needs of it made before the game goes on: behind the veil of a passage, or darker only if it keeps waiting. */
 			engine.Prepare(!located.Through);
@@ -959,6 +961,15 @@ Elemenx.Trait('SceneLanding', {
 		 * High enough over a location going up: in the air over the surface, the location let go, as fast and the way it went,
 		 * the view where it was (its turn about the ship kept); a plan goes on up to its parking orbit, the player flies on.
 		 */
+		/* What was added in a location (of its ground: Scene.Include) goes with it, as the place is left or another comes. */
+		function placeGone (located) {
+			scene.Order.filter(function (object) {
+				return !object.Owner && object.Parent === located.Ground;
+			}).forEach(function (object) {
+				self.Remove(object.ID);
+			});
+		}
+
 		function leaveLocation (hero, manual) {
 			var landing = hero.Landing;
 			var located = scene.Location;
@@ -977,6 +988,8 @@ Elemenx.Trait('SceneLanding', {
 			var seen = hero.Seen ? {Right: out(hero.Seen.Right), Up: out(hero.Seen.Up), Ahead: out(hero.Seen.Ahead)} : null;
 			var cam = out(vectors.Normalize(vectors.Subtract(scene.Camera.Position, hero.World || air.At)));
 			var velocity = vectors.Scale(out(air.Way), 0.001);
+
+			placeGone(located);
 
 			scene.Location = null;
 			hero.Located = 0;
@@ -1261,6 +1274,7 @@ Elemenx.Trait('SceneLanding', {
 			var speedUp;
 			var axes;
 			var pitch;
+			var bank;
 
 			/* Over a sea its floor is the water: it hangs over it and sets down on it, not on the bed. */
 			function floorAt (x, z) {
@@ -1400,7 +1414,9 @@ Elemenx.Trait('SceneLanding', {
 			/* Its tilt: nose down as it speeds up, along its way when fast; banked as it turns. */
 			pitch = clamp(-speedUp / 9.8 * 0.8, -0.35, 0.35) + Math.atan2(air.Way[1], Math.max(1, flat)) * smooth(30, 120, flat);
 			air.Pitch += (pitch - air.Pitch) * Math.min(1, elapsed * 3);
-			air.Roll += (clamp(yawRate * Math.min(1, flat / 40) * 0.9, -0.6, 0.6) - air.Roll) * Math.min(1, elapsed * 3);
+			/* Banked as it turns, of the graph of the bank (vehicles/bank: in the air). */
+			bank = engine.GraphCode('BankGraph', 'vehicles/bank', vehicle.BankGraph).Run({}, {Turn: yawRate, Speed: flat, Air: 1, Landed: 0});
+			air.Roll += (bank.Roll - air.Roll) * Math.min(1, elapsed * bank.Rate);
 
 			axes = axesOf(vectors.Normalize([dir[0] * Math.cos(air.Pitch), Math.sin(air.Pitch), dir[2] * Math.cos(air.Pitch)]), [0, 1, 0], air.Roll);
 
@@ -1419,13 +1435,21 @@ Elemenx.Trait('SceneLanding', {
 			crossStep(hero);
 		}
 
-		/* What the command of the scene offers now: land (a ship near a body it can come down on), takeoff (down in a location), or nothing. */
-		function offer () {
-			var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
+		/*
+		 * What a ship can do now (ShipCommands): land (near a body it can come down on), takeoff (down in a location), or
+		 * nothing (Can); go round the body it is near (Orbit), nearer than 2000 km over it the hint to (Hint 'orbit').
+		 */
+		function offerOf (hero) {
 			var can = '';
 			var body;
 
-			if (hero && hero.Values.Vehicle && hero.Values.Vehicle.Kind === 'ship' && hero.Traits.Entry) {
+			/*
+			 * On the map of a galaxy (SceneGalaxy: Setting galaxy) no ship lands nor goes round a body: the system it is in is not
+			 * shown. Regression: Landing and To orbit stood over the map, of the bodies of the system left.
+			 */
+			var mapped = self.Setting === 'galaxy';
+
+			if (!mapped && hero && hero.Values.Vehicle && hero.Values.Vehicle.Kind === 'ship' && hero.Traits.Entry) {
 				if (scene.Location && hero.Flying && hero.Flying.Landed) {
 					can = 'takeoff';
 				}
@@ -1445,7 +1469,7 @@ Elemenx.Trait('SceneLanding', {
 			var orbit = false;
 			var hint = '';
 
-			if (hero && hero.Ship && hero.Traits.Entry && !hero.Landing && !hero.Orbiting && !scene.Location && !scene.Surface && !scene.Ground) {
+			if (!mapped && hero && hero.Ship && hero.Traits.Entry && !hero.Landing && !hero.Orbiting && !scene.Location && !scene.Surface && !scene.Ground) {
 				body = bodyFor(hero, '');
 
 				if (body && hero.World && body.World && vectors.Distance(body.World, hero.World) < body.Size * 30) {
@@ -1453,6 +1477,17 @@ Elemenx.Trait('SceneLanding', {
 					hint = (vectors.Distance(body.World, hero.World) / body.Size - 1) * body.Radius < 2000 ? 'orbit' : '';
 				}
 			}
+
+			return {Can: can, Orbit: orbit, Hint: hint};
+		}
+
+		/* What the command of the scene offers now, of the hero. */
+		function offer () {
+			var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
+			var offered = offerOf(hero);
+			var can = offered.Can;
+			var orbit = offered.Orbit;
+			var hint = offered.Hint;
 
 			if (self.ShipOrbit !== orbit)
 				self.ShipOrbit = orbit;
@@ -1469,6 +1504,39 @@ Elemenx.Trait('SceneLanding', {
 				}
 			}
 		}
+
+		/* What is offered, on the map of a galaxy too (no ship is stepped there: Scene draws the galaxy alone). */
+		engine.LandingOffer = offer;
+
+		/*
+		 * The ship of a command: the one given, else the hero if it is a ship, else the one the hero sits in or walks in
+		 * (SceneAboard: Seated, Afoot) or is inside of; null for none.
+		 */
+		engine.CommandShip = function (id) {
+			var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
+			var seated = hero && scene.Seated ? scene.Seated[hero.ID] : null;
+			var afoot = hero && scene.Afoot ? scene.Afoot[hero.ID] : null;
+			var ship = id ? scene.Objects[id] : hero && hero.Values.Vehicle && hero.Values.Vehicle.Kind === 'ship' ? hero : seated ? scene.Objects[seated.Vehicle] : afoot ? scene.Objects[afoot.Vehicle] : scene.InsideShip ? scene.Objects[scene.InsideShip] : null;
+
+			return ship && ship.Values.Vehicle && ship.Values.Vehicle.Kind === 'ship' ? ship : null;
+		};
+
+		/* The commands a ship has now: [{ID: land, Markers [{ID, Name, Day}]}, {ID: takeoff}, {ID: orbit, Hint}]. */
+		engine.ShipCommandsOf = function (ship) {
+			var offered = ship ? offerOf(ship) : {Can: '', Orbit: false, Hint: ''};
+			var list = [];
+
+			if (offered.Can === 'land')
+				list.push({ID: 'land', Markers: scene.Location ? [] : markersNow(ship)});
+
+			if (offered.Can === 'takeoff')
+				list.push({ID: 'takeoff'});
+
+			if (offered.Orbit)
+				list.push({ID: 'orbit', Hint: offered.Hint});
+
+			return list;
+		};
 
 		scene.Vehicles.ship = function (hero, keys, elapsed) {
 			sunStep();
@@ -1589,7 +1657,12 @@ Elemenx.Trait('SceneLanding', {
 				longitude = marker.Longitude;
 			}
 
-			if (scene.Hero !== hero.ID)
+			/*
+			 * Who walks in it (SceneAboard: Afoot) goes on walking: it comes down by itself. Regression: a landing told with the
+			 * pilot out of the seat took the control back to the ship, the walker stood still in it all the way down.
+			 */
+			/* Nor who sits at a console of it (ShipCommand from a console): the ship comes down by itself under them. */
+			if (scene.Hero !== hero.ID && !(scene.Afoot && scene.Afoot[scene.Hero] && scene.Afoot[scene.Hero].Vehicle === hero.ID) && !(scene.Seated && scene.Seated[scene.Hero] && scene.Seated[scene.Hero].Vehicle === hero.ID))
 				engine.Control(hero.ID);
 
 			under = vectors.Normalize(toBody(body, vectors.Normalize(vectors.Subtract(hero.World || vectors.Add(body.World, [0, 0, body.Size * 2]), body.World))));
@@ -1680,16 +1753,18 @@ Elemenx.Trait('SceneLanding', {
 			return engine.LandShip(hero, {Body: body.ID, Latitude: place.Latitude, Longitude: place.Longitude});
 		};
 
-		engine.LandingMarkers = function () {
-			var hero = scene.Objects[scene.Hero];
+		/* The markers of the body a ship is near, each with whether it is day there now. */
+		function markersNow (hero) {
 			var body = hero ? bodyFor(hero, '') : null;
-
 			var radius = body ? body.Radius * 1000 : 1;
 
-			/* Each with whether it is day there now. */
 			return body ? markersOf(body).map(function (marker) {
 				return Object.assign(marker, {Day: sunOver(body, siteFrame({Latitude: marker.Latitude, Longitude: marker.Longitude, Turn: 0}, radius)).Elevation > 0});
 			}) : [];
+		}
+
+		engine.LandingMarkers = function () {
+			return markersNow(scene.Objects[scene.Hero]);
 		};
 	},
 
@@ -1754,5 +1829,38 @@ Elemenx.Trait('SceneLanding', {
 		var scene = this.Scene();
 		if (scene.Hero)
 			this.TakeOff(scene.Hero);
+	},
+
+	/*
+	 * The commands of a ship now, for consoles and panels of a game (GameCommands): [{ID: land, Markers [{ID, Name, Day}]},
+	 * {ID: takeoff}, {ID: orbit, Hint ('orbit': nearer than 2000 km over the body)}]; of the ship id, else the hero if it is
+	 * one, else the ship the hero sits in or walks in. None on the map of a galaxy.
+	 */
+	ShipCommands: function (id) {
+		var engine = this.Engine();
+		var ship = engine && engine.CommandShip ? engine.CommandShip(id) : null;
+
+		return ship ? engine.ShipCommandsOf(ship) : [];
+	},
+
+	/*
+	 * Gives a ship a command of ShipCommands (land: options {Marker} or {Latitude, Longitude}, else under it; takeoff;
+	 * orbit): false where it cannot now. Who walks in it or sits at a console of it keeps the keys.
+	 */
+	ShipCommand: function (id, command, options) {
+		var engine = this.Engine();
+		var ship = engine && engine.CommandShip ? engine.CommandShip(id) : null;
+		var offered = ship ? engine.ShipCommandsOf(ship).map(function (one) {
+			return one.ID;
+		}) : [];
+		if (offered.indexOf(command) < 0) return false;
+
+		if (command === 'land')
+			return this.Land(ship.ID, options || {});
+
+		if (command === 'takeoff')
+			return this.TakeOff(ship.ID);
+
+		return this.ToOrbit(ship.ID);
 	}
 });

@@ -6,7 +6,7 @@ SceneGalaxy: галактика как режим сцены (Setting="galaxy", 
 
 - GalaxyData(), GalaxyView(), SetGalaxyView(view) ({Target, Yaw, Pitch, Distance} в св. годах), GalaxyFocus(id) ('' — центр).
 - GalaxyStars() — звёзды рядом с видом, как нарисованы сейчас; GalaxyPicked() — выбранная.
-- EnterSystem(id, callback) — полёт в звезду и показ её системы (Setting space, System из GalaxyData.System, Cosmos из GalaxyData.Cosmos), событие enter {ID, Star, Key}; LeaveSystem(callback) — обратно в галактику, событие leave {ID}; GalaxyEntered() — чья система показана.
+- EnterSystem(id, callback) — полёт в звезду и показ её системы (Setting space, System из GalaxyData.System, Cosmos из GalaxyData.Cosmos), событие enter {ID, Star, Key}; LeaveSystem(callback) — обратно в галактику: вид отлетает от звезды так, чтобы галактика была видна целиком (радиус галактики и ещё пятая часть), звезда в середине; событие leave {ID}; GalaxyEntered() — чья система показана.
 
 ## Соседние звёзды и вход без полёта
 

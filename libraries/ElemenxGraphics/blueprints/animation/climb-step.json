@@ -1,0 +1,1362 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "animation-climb-step",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "animation-climb-step-phase",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Phase"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-head-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							-10
+						],
+						[
+							0.7,
+							0
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-head-x",
+			"type": "Result",
+			"x": 520,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Head.x"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-4
+						],
+						[
+							0.35,
+							-60
+						],
+						[
+							0.7,
+							-50
+						],
+						[
+							1,
+							-4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-76
+						],
+						[
+							0.35,
+							20
+						],
+						[
+							0.7,
+							-10
+						],
+						[
+							1,
+							-76
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							15
+						],
+						[
+							0.35,
+							70
+						],
+						[
+							0.7,
+							70
+						],
+						[
+							1,
+							15
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							-12
+						],
+						[
+							0.35,
+							-50
+						],
+						[
+							0.7,
+							-80
+						],
+						[
+							1,
+							-12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							95
+						],
+						[
+							0.7,
+							30
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						],
+						[
+							0.35,
+							30
+						],
+						[
+							0.7,
+							30
+						],
+						[
+							1,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							-85
+						],
+						[
+							0.7,
+							10
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-leftupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							6
+						],
+						[
+							0.7,
+							6
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-leftupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LeftUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightarm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							4
+						],
+						[
+							0.35,
+							40
+						],
+						[
+							0.7,
+							30
+						],
+						[
+							1,
+							4
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightarm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightarm-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							76
+						],
+						[
+							0.35,
+							10
+						],
+						[
+							0.7,
+							40
+						],
+						[
+							1,
+							76
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightarm-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightArm.z"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightfingers",
+			"type": "Curve",
+			"x": 260,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							15
+						],
+						[
+							0.35,
+							70
+						],
+						[
+							0.7,
+							70
+						],
+						[
+							1,
+							15
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightfingers",
+			"type": "Result",
+			"x": 520,
+			"y": 1140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightFingers"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightforearm-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							12
+						],
+						[
+							0.35,
+							40
+						],
+						[
+							0.7,
+							80
+						],
+						[
+							1,
+							12
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightforearm-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightForeArm.y"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							95
+						],
+						[
+							0.7,
+							45
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightthumb",
+			"type": "Curve",
+			"x": 260,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							8
+						],
+						[
+							0.35,
+							30
+						],
+						[
+							0.7,
+							30
+						],
+						[
+							1,
+							8
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightthumb",
+			"type": "Result",
+			"x": 520,
+			"y": 1440,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightThumb"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightupleg-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							-85
+						],
+						[
+							0.7,
+							-40
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightupleg-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1540,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.x"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-rightupleg-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							-6
+						],
+						[
+							0.7,
+							-6
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-rightupleg-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1640,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "RightUpLeg.z"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-root-y",
+			"type": "Curve",
+			"x": 260,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							0
+						],
+						[
+							0.7,
+							0.28
+						],
+						[
+							1,
+							0.42
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-root-y",
+			"type": "Result",
+			"x": 520,
+			"y": 1740,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.y"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-root-z",
+			"type": "Curve",
+			"x": 260,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							0
+						],
+						[
+							0.7,
+							0.12
+						],
+						[
+							1,
+							0.2
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-root-z",
+			"type": "Result",
+			"x": 520,
+			"y": 1840,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Root.z"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-curve-spine-x",
+			"type": "Curve",
+			"x": 260,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Keys",
+					"value": [
+						[
+							0,
+							0
+						],
+						[
+							0.35,
+							12
+						],
+						[
+							0.7,
+							18
+						],
+						[
+							1,
+							0
+						]
+					]
+				},
+				{
+					"key": "Smooth",
+					"value": "smooth"
+				},
+				{
+					"key": "Loop",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-spine-x",
+			"type": "Result",
+			"x": 520,
+			"y": 1940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Spine.x"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-number-pose",
+			"type": "Number",
+			"x": 780,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-pose",
+			"type": "Result",
+			"x": 1000,
+			"y": 2040,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pose"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-number-length",
+			"type": "Number",
+			"x": 780,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 1.2
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-length",
+			"type": "Result",
+			"x": 1000,
+			"y": 2140,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-number-loop",
+			"type": "Number",
+			"x": 780,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-loop",
+			"type": "Result",
+			"x": 1000,
+			"y": 2240,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Loop"
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-number-stride",
+			"type": "Number",
+			"x": 780,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Value",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "animation-climb-step-result-stride",
+			"type": "Result",
+			"x": 1000,
+			"y": 2340,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Stride"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "animation-climb-step-link-0",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-head-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-1",
+			"p1": "animation-climb-step-curve-head-x-out-Value",
+			"p2": "animation-climb-step-result-head-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-2",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-3",
+			"p1": "animation-climb-step-curve-leftarm-y-out-Value",
+			"p2": "animation-climb-step-result-leftarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-4",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-5",
+			"p1": "animation-climb-step-curve-leftarm-z-out-Value",
+			"p2": "animation-climb-step-result-leftarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-6",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-7",
+			"p1": "animation-climb-step-curve-leftfingers-out-Value",
+			"p2": "animation-climb-step-result-leftfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-8",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-9",
+			"p1": "animation-climb-step-curve-leftforearm-y-out-Value",
+			"p2": "animation-climb-step-result-leftforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-10",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-11",
+			"p1": "animation-climb-step-curve-leftleg-x-out-Value",
+			"p2": "animation-climb-step-result-leftleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-12",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-13",
+			"p1": "animation-climb-step-curve-leftthumb-out-Value",
+			"p2": "animation-climb-step-result-leftthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-14",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-15",
+			"p1": "animation-climb-step-curve-leftupleg-x-out-Value",
+			"p2": "animation-climb-step-result-leftupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-16",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-leftupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-17",
+			"p1": "animation-climb-step-curve-leftupleg-z-out-Value",
+			"p2": "animation-climb-step-result-leftupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-18",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightarm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-19",
+			"p1": "animation-climb-step-curve-rightarm-y-out-Value",
+			"p2": "animation-climb-step-result-rightarm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-20",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightarm-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-21",
+			"p1": "animation-climb-step-curve-rightarm-z-out-Value",
+			"p2": "animation-climb-step-result-rightarm-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-22",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightfingers-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-23",
+			"p1": "animation-climb-step-curve-rightfingers-out-Value",
+			"p2": "animation-climb-step-result-rightfingers-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-24",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightforearm-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-25",
+			"p1": "animation-climb-step-curve-rightforearm-y-out-Value",
+			"p2": "animation-climb-step-result-rightforearm-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-26",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-27",
+			"p1": "animation-climb-step-curve-rightleg-x-out-Value",
+			"p2": "animation-climb-step-result-rightleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-28",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightthumb-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-29",
+			"p1": "animation-climb-step-curve-rightthumb-out-Value",
+			"p2": "animation-climb-step-result-rightthumb-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-30",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightupleg-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-31",
+			"p1": "animation-climb-step-curve-rightupleg-x-out-Value",
+			"p2": "animation-climb-step-result-rightupleg-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-32",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-rightupleg-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-33",
+			"p1": "animation-climb-step-curve-rightupleg-z-out-Value",
+			"p2": "animation-climb-step-result-rightupleg-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-34",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-root-y-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-35",
+			"p1": "animation-climb-step-curve-root-y-out-Value",
+			"p2": "animation-climb-step-result-root-y-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-36",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-root-z-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-37",
+			"p1": "animation-climb-step-curve-root-z-out-Value",
+			"p2": "animation-climb-step-result-root-z-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-38",
+			"p1": "animation-climb-step-phase-out-Value",
+			"p2": "animation-climb-step-curve-spine-x-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-39",
+			"p1": "animation-climb-step-curve-spine-x-out-Value",
+			"p2": "animation-climb-step-result-spine-x-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-40",
+			"p1": "animation-climb-step-number-pose-out-Value",
+			"p2": "animation-climb-step-result-pose-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-41",
+			"p1": "animation-climb-step-number-length-out-Value",
+			"p2": "animation-climb-step-result-length-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-42",
+			"p1": "animation-climb-step-number-loop-out-Value",
+			"p2": "animation-climb-step-result-loop-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "animation-climb-step-link-43",
+			"p1": "animation-climb-step-number-stride-out-Value",
+			"p2": "animation-climb-step-result-stride-in-Value",
+			"kind": "value"
+		}
+	]
+}

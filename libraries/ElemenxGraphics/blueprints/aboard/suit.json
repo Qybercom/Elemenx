@@ -1,0 +1,457 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "aboard-suit",
+	"parameters": [
+		{
+			"key": "Thrust",
+			"type": "float",
+			"value": 1.2,
+			"comment": "How fast the jets of the suit speed one up (m/s²)"
+		},
+		{
+			"key": "BoostThrust",
+			"type": "float",
+			"value": 3,
+			"comment": "The same with Shift held"
+		},
+		{
+			"key": "Top",
+			"type": "float",
+			"value": 3,
+			"comment": "The fastest one goes by the ship (m/s)"
+		},
+		{
+			"key": "BoostTop",
+			"type": "float",
+			"value": 6,
+			"comment": "The same with Shift held"
+		},
+		{
+			"key": "Assist",
+			"type": "float",
+			"value": 0.9,
+			"comment": "How fast the suit stops one by the ship when no jet is asked for (1/s; 0: one drifts on)"
+		},
+		{
+			"key": "Tether",
+			"type": "float",
+			"value": 40,
+			"comment": "How far from the airlock the line lets one go (m)"
+		},
+		{
+			"key": "Cycle",
+			"type": "float",
+			"value": 1.5,
+			"comment": "Seconds the airlock takes to let one out or in"
+		},
+		{
+			"key": "Reach",
+			"type": "float",
+			"value": 2.5,
+			"comment": "How near the airlock one must be to go through it (m)"
+		}
+	],
+	"blocks": [
+		{
+			"id": "aboard-suit-input-boost",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Boost"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-input-apart",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Apart"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-thrust",
+			"type": "Parameter",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Thrust"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-boostthrust",
+			"type": "Parameter",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "BoostThrust"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-top",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Top"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-boosttop",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "BoostTop"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-assist",
+			"type": "Parameter",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Assist"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-tether",
+			"type": "Parameter",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Tether"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-cycle",
+			"type": "Parameter",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cycle"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-parameter-reach",
+			"type": "Parameter",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Reach"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-formula-push",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Boost > 0.5 ? BoostThrust : Thrust"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-result-push",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Push"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-formula-top",
+			"type": "Formula",
+			"x": 420,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Boost > 0.5 ? BoostTop : Top"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-result-top",
+			"type": "Result",
+			"x": 800,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Top"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-formula-damp",
+			"type": "Formula",
+			"x": 420,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Assist"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-result-damp",
+			"type": "Result",
+			"x": 800,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Damp"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-formula-pull",
+			"type": "Formula",
+			"x": 420,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Apart > Tether ? (Apart - Tether) * 0.5 : 0"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-result-pull",
+			"type": "Result",
+			"x": 800,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Pull"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-formula-cycle",
+			"type": "Formula",
+			"x": 420,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Cycle"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-result-cycle",
+			"type": "Result",
+			"x": 800,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cycle"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-formula-reach",
+			"type": "Formula",
+			"x": 420,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Reach"
+				}
+			]
+		},
+		{
+			"id": "aboard-suit-result-reach",
+			"type": "Result",
+			"x": 800,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Reach"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "aboard-suit-link-0",
+			"p1": "aboard-suit-input-boost-out-Value",
+			"p2": "aboard-suit-formula-push-in-Boost",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-1",
+			"p1": "aboard-suit-parameter-boostthrust-out-Value",
+			"p2": "aboard-suit-formula-push-in-BoostThrust",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-2",
+			"p1": "aboard-suit-parameter-thrust-out-Value",
+			"p2": "aboard-suit-formula-push-in-Thrust",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-3",
+			"p1": "aboard-suit-formula-push-out-Value",
+			"p2": "aboard-suit-result-push-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-4",
+			"p1": "aboard-suit-input-boost-out-Value",
+			"p2": "aboard-suit-formula-top-in-Boost",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-5",
+			"p1": "aboard-suit-parameter-boosttop-out-Value",
+			"p2": "aboard-suit-formula-top-in-BoostTop",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-6",
+			"p1": "aboard-suit-parameter-top-out-Value",
+			"p2": "aboard-suit-formula-top-in-Top",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-7",
+			"p1": "aboard-suit-formula-top-out-Value",
+			"p2": "aboard-suit-result-top-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-8",
+			"p1": "aboard-suit-parameter-assist-out-Value",
+			"p2": "aboard-suit-formula-damp-in-Assist",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-9",
+			"p1": "aboard-suit-formula-damp-out-Value",
+			"p2": "aboard-suit-result-damp-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-10",
+			"p1": "aboard-suit-input-apart-out-Value",
+			"p2": "aboard-suit-formula-pull-in-Apart",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-11",
+			"p1": "aboard-suit-parameter-tether-out-Value",
+			"p2": "aboard-suit-formula-pull-in-Tether",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-12",
+			"p1": "aboard-suit-formula-pull-out-Value",
+			"p2": "aboard-suit-result-pull-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-13",
+			"p1": "aboard-suit-parameter-cycle-out-Value",
+			"p2": "aboard-suit-formula-cycle-in-Cycle",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-14",
+			"p1": "aboard-suit-formula-cycle-out-Value",
+			"p2": "aboard-suit-result-cycle-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-15",
+			"p1": "aboard-suit-parameter-reach-out-Value",
+			"p2": "aboard-suit-formula-reach-in-Reach",
+			"kind": "value"
+		},
+		{
+			"id": "aboard-suit-link-16",
+			"p1": "aboard-suit-formula-reach-out-Value",
+			"p2": "aboard-suit-result-reach-in-Value",
+			"kind": "value"
+		}
+	]
+}

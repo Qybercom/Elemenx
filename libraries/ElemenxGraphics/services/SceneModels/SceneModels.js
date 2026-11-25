@@ -23,10 +23,16 @@
  *   a file it is made by that function, (error, asset) as Gltf gives one (SceneMannequin: the model mannequin), or a list
  *   of assets, one for each of its Variants (SceneFlora: a tree, each variant another). Make of one not come yet is null. Apart,
  *   a word of the name of a material or a node, cuts what a file keeps as one piece at its wide gaps: four wheels in one mesh.
+ *   Bones ({role: the name of a node}) names the bones of the roles of a skeleton whose names tell nothing (Hips, Spine, Spine1,
+ *   Spine2, Neck, Head, ShoulderL, ArmL, ForeL, HandL, ThighL, CalfL, FootL, ToeL and the same of R): the clips of other
+ *   skeletons (Motions, Retarget) and its hips are found by it first, by the names of the bones else.
  *   Merge: true makes its pieces one for each material when it is made; a Scene draws what moves together of a model
  *   that plays no clips as one for each material anyway (each wheel, each opening), but for Merge: false.
- *   Bake(model) makes the moves of its skeletons an array of frames, for a shader that reads them. Soft (0 to 1, or
- *   {material: value}) lets light under its surface, as in skin. Surfaces(model) is its geometry material by material.
+ *   Bake(model) makes the moves of its skeletons an array of frames, for a shader that reads them; BakeStep(model, ms)
+ *   makes them a little at a time, the clips of standing and going (idle, walk, run, sprint) first: Partial holds the clips
+ *   made so far (each of those at once, the others a few times a second) and Partly(model, clip) tells whether a clip
+ *   can be seen before the rest are made. Soft (0 to 1, or {material: value}) lets light under its surface, as in skin.
+ *   Surfaces(model) is its geometry material by material.
  * - The Lamps of a model of a file are what shines in it (BuiltLamps): a Scene lights its world with them. A model built of
  *   parts tells its own: recipe Lamps [{Place [x, y, z] (in its units: its height is 1), Color, Power, Radius (in its
  *   units), Spot (degrees of its cone; none: all round), Aim, Night (true: lit only at night)}].
@@ -53,7 +59,7 @@
 Elemenx.Service('SceneModels', {
 	$Meta: {
 		Description: 'The models of a game made of graphs and code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Edits(name)', 'SetEdits(name, edits)', 'Edit(name, edit)', 'PieceList(name)', 'Extract(name, ids, newName)', 'Combine(newName, parts, options)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Extent(name)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)', 'KindOf(type)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Remake(name)', 'Edits(name)', 'SetEdits(name, edits)', 'Edit(name, edit)', 'PieceList(name)', 'Extract(name, ids, newName)', 'Combine(newName, parts, options)', 'Assemble(recipe, tools, random, variant)', 'Tagged(name, tag)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Want(model, clip)', 'Feet(model, line)', 'Graphed(asset, names, options)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Extent(name)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)', 'KindOf(type)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['model']}},
@@ -218,6 +224,13 @@ Elemenx.Service('SceneModels', {
 					each(error, error ? null : self.Make(name));
 				});
 			}
+
+			/* The bones of its roles as the recipe names them (Bones), for the clips of other skeletons (Retarget). */
+			if (!error && recipe.Bones)
+				(Array.isArray(asset) ? asset : [asset]).forEach(function (one) {
+					if (one)
+						one.Bones = recipe.Bones;
+				});
 
 			if (error || !left) {
 				ready();
@@ -976,6 +989,14 @@ Elemenx.Service('SceneModels', {
 			return {T: node.Translation, R: node.Rotation, S: node.Scale};
 		});
 
+		/* A clip of the graphs laid on it only now (Graphed, Lazy). */
+		if (animation && animation.Lazy && !animation.Made) {
+			var laid = this.Retarget(asset, this.$Service('SceneMannequin').Source(animation.Lazy), animation.Lazy, {});
+
+			animation.Made = true;
+			animation.Channels = laid ? laid.Channels : [];
+		}
+
 		if (animation) {
 			animation.Channels.forEach(function (channel) {
 				var size = channel.Size;
@@ -1410,9 +1431,19 @@ Elemenx.Service('SceneModels', {
 		return new RegExp('(^|[ _.-])' + side + '[ _.-]*(' + word + ')([ _.-]|\\d|$)|(^|[ _.-])(' + word + ')[ _.-]*' + side + '([ _.-]|\\d|$)', 'i');
 	},
 
-	/* The bone of the hips of a skeleton, by its name: -1 with none. */
+	/* The bone of the hips of a skeleton, the one its recipe names (Bones.Hips) or by its name: -1 with none. */
 	HipsOf: function (asset) {
 		var found = -1;
+		var named = asset.Bones && asset.Bones.Hips;
+
+		asset.Skins.forEach(function (skin) {
+			skin.Joints.forEach(function (joint) {
+				if (found === -1 && named && asset.Nodes[joint].Name === named)
+					found = joint;
+			});
+		});
+
+		if (found !== -1) return found;
 
 		asset.Skins.forEach(function (skin) {
 			skin.Joints.forEach(function (joint) {
@@ -1562,7 +1593,7 @@ Elemenx.Service('SceneModels', {
 		var look = {idle: /idle|stand|breath/i, walk: /walk/i, run: /run|sprint/i, attack: /attack|shoot|slash|punch/i, die: /die|death|dead/i, work: /work|gather|build/i};
 
 		function add (name, animation) {
-			clips[name] = {Length: animation.Length || 1, Loop: !/^(attack|die|cast|jump)$/.test(name), Hold: name === 'die', Stride: recipe.Stride || 1, Animation: animation};
+			clips[name] = {Length: animation.Length || 1, Loop: animation.Loop !== undefined ? !!animation.Loop : !/^(attack|die|cast|jump|jump-forward)$/.test(name), Hold: animation.Hold !== undefined ? !!animation.Hold : name === 'die', Upper: animation.Upper !== undefined ? !!animation.Upper : (recipe.Upper || ['attack', 'cast', 'reload']).indexOf(name) !== -1, Stride: recipe.Stride || 1, Animation: animation};
 		}
 
 		asset.Animations.forEach(function (animation) {
@@ -1596,18 +1627,28 @@ Elemenx.Service('SceneModels', {
 			clips[clip].Stride = asset.Motions[clip].Stride;
 		});
 
-		/* A skeleton that came with no way of walking gets one, made from its bones. */
-		gait = (!clips.walk || !clips.idle) && recipe.Gait !== false ? this.Gait(asset) : null;
+		/*
+		 * A skeleton gets every clip of the graphs it has none of (SceneMannequin: its gaits, poses and actions; Graphed of the recipe:
+		 * false none, or the names), laid on it by the roles of its bones; run is its jog when it has no run. Regression: one
+		 * that came with no clips could only walk and stand.
+		 */
+		var mannequin = this.$Service('SceneMannequin');
+		var wanted = recipe.Gait === false || recipe.Graphed === false ? [] : Array.isArray(recipe.Graphed) ? recipe.Graphed : mannequin.Gaits.concat(mannequin.Poses, mannequin.Actions);
+		var missing = wanted.filter(function (name) {
+			return !clips[name];
+		});
+
+		gait = missing.length ? this.Graphed(asset, missing, {Lazy: true}) : null;
 
 		if (gait) {
-			if (!clips.walk) {
-				add('walk', gait.Walk);
+			Object.keys(gait.Clips).forEach(function (name) {
+				add(name, gait.Clips[name]);
 
-				clips.walk.Stride = recipe.Stride || gait.Stride || 1.3;
-			}
+				clips[name].Stride = name === 'walk' ? recipe.Stride || gait.Strides.walk || 1.3 : gait.Strides[name] || clips[name].Stride;
+			});
 
-			if (!clips.idle)
-				add('idle', gait.Idle);
+			if (!clips.run && clips.jog)
+				clips.run = clips.jog;
 		}
 
 		return clips;
@@ -1740,9 +1781,16 @@ Elemenx.Service('SceneModels', {
 			var bones = Object.keys(joints).filter(function (index) {
 				return !/(^|_)IK|Target|Twst|Ndl|_end|sfx/i.test(asset.Nodes[index].Name);
 			});
-			var to = bones.filter(function (index) {
-				return role[2].test(asset.Nodes[index].Name.replace(/-/g, ' '));
-			})[0];
+			/* The bone the recipe names for the role (Bones), else the one its name tells. */
+			var named = asset.Bones && asset.Bones[role[0]];
+			var to = named ? bones.filter(function (index) {
+				return asset.Nodes[index].Name === named;
+			})[0] : undefined;
+			if (to === undefined)
+				to = bones.filter(function (index) {
+					return role[2].test(asset.Nodes[index].Name.replace(/-/g, ' '));
+				})[0];
+
 			var other = self.BoneWord(role[0]);
 			if (to === undefined && other)
 				to = bones.filter(function (index) {
@@ -2080,9 +2128,23 @@ Elemenx.Service('SceneModels', {
 	 * in a cycle, over its height}; null with no hips, thighs or feet.
 	 */
 	Gait: function (asset) {
+		var made = this.Graphed(asset, ['walk', 'idle']);
+
+		return made ? {Walk: made.Clips.walk, Idle: made.Clips.idle, Stride: made.Strides.walk} : null;
+	},
+
+	/*
+	 * Clips of the graphs of the mannequin (SceneMannequin.Source of blueprints/animation/<name>: its gaits and its poses) laid
+	 * on a skeleton by Retarget, by the roles of its bones: {Clips: {name: clip}, Strides: {name: what its feet travel in a
+	 * cycle, over its height}}; null with no hips, thighs or feet. Names: those of SceneMannequin.Gaits, Poses and Actions. Options:
+	 * Lazy (true: all but the walk and the idle are laid on it when first sampled, Sample: a model loads at once, its clips
+	 * made as they are baked, a little a frame).
+	 */
+	Graphed: function (asset, names, options) {
+		var self = this;
 		var mannequin = this.$Service('SceneMannequin');
-		var source = mannequin.Source('walk');
-		var walk = this.Retarget(asset, source, 'walk', {});
+		var walk = this.Retarget(asset, mannequin.Source('walk'), 'walk', {});
+		var made = {Clips: {}, Strides: {}};
 		var rest;
 		var low = Infinity;
 		var high = -Infinity;
@@ -2100,7 +2162,24 @@ Elemenx.Service('SceneModels', {
 			});
 		});
 
-		return {Walk: walk, Idle: this.Retarget(asset, mannequin.Source('idle'), 'idle', {}), Stride: source.Stride * walk.Scale / Math.max(1e-6, high - low)};
+		(names || []).forEach(function (name) {
+			var source = mannequin.Source(name);
+			var lazy = options && options.Lazy && name !== 'walk' && name !== 'idle';
+			var clip = name === 'walk' ? walk : lazy ? {Name: name, Length: source.Length, Channels: [], Lazy: name, Scale: walk.Scale} : self.Retarget(asset, source, name, {});
+			if (!clip) return;
+
+			/* Played once, or round; held at its end: as its graph says. */
+			clip.Loop = source.Loop;
+			clip.Hold = source.Hold;
+			clip.Upper = source.Upper;
+
+			made.Clips[name] = clip;
+
+			if (source.Stride)
+				made.Strides[name] = source.Stride * clip.Scale / Math.max(1e-6, high - low);
+		});
+
+		return made;
 	},
 
 	/* The pieces of a model with many, as one for each material: a location of thousands of meshes is a few draws. */
@@ -2151,34 +2230,229 @@ Elemenx.Service('SceneModels', {
 
 		if (model.Baked) return true;
 
+		/*
+		 * The clips of standing and going first (Partial: they are seen as soon as they are made, the rest after them).
+		 * Regression: a skeleton of hundreds of bones (Nyx: 291) stood in its first pose for half a minute while all its clips
+		 * were made, its idle and its walk among the last.
+		 */
+		var first = ['idle', 'walk', 'run', 'sprint'];
+
+		/* The clips in the order they are made: Names, those left (Want puts one played before the others). */
 		function plan () {
-			var done = [];
-			var plain = {Frames: [], Starts: {}, Queue: [{Animation: null, Time: 0}]};
+			return {Frames: [], Starts: {}, Queue: [{Animation: null, Time: 0}], Ends: [], Done: [], Names: Object.keys(model.Clips).sort(function (a, b) {
+				var x = first.indexOf(a);
+				var y = first.indexOf(b);
 
-			Object.keys(model.Clips).forEach(function (name) {
-				var clip = model.Clips[name];
-				var count = Math.max(1, Math.ceil(clip.Length * rate));
-				var same = done.filter(function (each) {
-					return each.Animation === clip.Animation;
-				})[0];
-				var i;
+				return (x === -1 ? first.length : x) - (y === -1 ? first.length : y);
+			})};
+		}
 
-				/* One animation under two names (idle and its own) is the same lines of the texture. */
-				if (same) {
-					plain.Starts[name] = same.Place;
+		/* The frames of the next clip into the queue. */
+		function next () {
+			var name = work.Names.shift();
+			var clip = model.Clips[name];
+			var count = Math.max(1, Math.ceil(clip.Length * rate));
+			var same = work.Done.filter(function (each) {
+				return each.Animation === clip.Animation;
+			})[0];
+			var i;
 
-					return;
-				}
+			/* One animation under two names (idle and its own) is the same lines of the texture. */
+			if (same) {
+				work.Starts[name] = same.Place;
 
-				plain.Starts[name] = {Start: plain.Queue.length, Count: count, Rate: rate};
+				return;
+			}
 
-				done.push({Animation: clip.Animation, Place: plain.Starts[name]});
+			work.Starts[name] = {Start: work.Queue.length, Count: count, Rate: rate};
 
-				for (i = 0; i <= count; i++)
-					plain.Queue.push({Animation: clip.Animation, Time: Math.min(clip.Length, i / rate)});
+			work.Done.push({Animation: clip.Animation, Place: work.Starts[name]});
+
+			/* Its other names are made with it. */
+			work.Names = work.Names.filter(function (other) {
+				if (model.Clips[other].Animation !== clip.Animation) return true;
+
+				work.Starts[other] = work.Starts[name];
+
+				return false;
 			});
 
-			return plain;
+			for (i = 0; i <= count; i++)
+				work.Queue.push({Animation: clip.Animation, Time: Math.min(clip.Length, i / rate)});
+
+			work.Ends.push({At: work.Queue.length, First: first.indexOf(name) !== -1});
+		}
+
+		/* The last line is where each joint stands at rest: a fade turns round it, so what it moves keeps its size. */
+		function binds () {
+			var line = [];
+
+			asset.Skins.forEach(function (skin) {
+				skin.Joints.forEach(function (joint, index) {
+					var bound = math.Invert(self.InverseOf(skin, index));
+
+					line.push(bound[12], bound[13], bound[14], 0, 0, 0, 0, 0, 0, 0, 0, 0);
+				});
+			});
+
+			return line;
+		}
+
+		/*
+		 * The line of the upper body and the legs, before the line of rest. Of each joint: 1 when it is above the waist (what
+		 * hangs on the child of the hips with the most under it: the spine) and the index of that child in its skin; the leg
+		 * it is of (1, 2: the legs, the other children of the hips with a knee and an ankle under them, by where they stand
+		 * across the body; 0 none), 1 for the thigh, 2 for what hangs on its knee, 3 for its ankle and its foot; the thigh, knee and ankle of that leg in its
+		 * skin. A clip of the arms (a reload, a blow) is laid on it over the legs that go (a layer: the shader hangs its upper
+		 * body on the spine of the legs); the feet are set on the ground under them (the shader bends the leg to them).
+		 */
+		function upper () {
+			var line = [];
+			var hips = self.HipsOf(asset);
+			var root = -1;
+			var most = -1;
+			var inside = {};
+			var legs = [];
+			var leg = {};
+			var rest = hips >= 0 ? self.NodeWorld(asset, self.Sample(asset, null, 0), model.Fit) : null;
+
+			function under (node) {
+				return asset.Nodes[node].Children.reduce(function (sum, child) {
+					return sum + 1 + under(child);
+				}, 0);
+			}
+
+			function mark (node) {
+				inside[node] = true;
+
+				asset.Nodes[node].Children.forEach(mark);
+			}
+
+			/* The child of a bone that goes on: the one with the most under it. */
+			function onward (node) {
+				var best = -1;
+				var deepest = -1;
+
+				(node >= 0 ? asset.Nodes[node].Children : []).forEach(function (child) {
+					var count = under(child);
+
+					if (count > deepest) {
+						deepest = count;
+						best = child;
+					}
+				});
+
+				return best;
+			}
+
+			/* A joint of a leg: its thigh (1), what hangs on its knee (2), its ankle and what hangs on it (3: the foot keeps its turn). */
+			function markLeg (node, side, part, ankle) {
+				var now = node === ankle ? 3 : part;
+
+				leg[node] = {Side: side, Part: now};
+
+				asset.Nodes[node].Children.forEach(function (child) {
+					markLeg(child, side, now === 1 ? 2 : now, ankle);
+				});
+			}
+
+			if (hips >= 0)
+				asset.Nodes[hips].Children.forEach(function (child) {
+					var count = under(child);
+
+					if (count > most) {
+						most = count;
+						root = child;
+					}
+				});
+
+			if (root >= 0)
+				mark(root);
+
+			/*
+			 * The legs: the thighs by their names (Bones of the recipe, Mixamo, Biped, Blender: a Biped hangs them on its spine),
+			 * else the other children of the hips; a thigh with a knee and an ankle under it, by where each stands across the body.
+			 */
+			var joints = {};
+
+			asset.Skins.forEach(function (skin) {
+				skin.Joints.forEach(function (joint) {
+					joints[joint] = true;
+				});
+			});
+
+			['L', 'R'].forEach(function (side) {
+				var named = asset.Bones && asset.Bones['Thigh' + side];
+				var word = self.BoneWord('Thigh' + side);
+				var mixamo = side === 'L' ? /left[ _.]*up[ _.]*leg/i : /right[ _.]*up[ _.]*leg/i;
+				var biped = side === 'L' ? /\bL[ _.]*Thigh/i : /\bR[ _.]*Thigh/i;
+				var thigh = -1;
+
+				asset.Nodes.forEach(function (node, index) {
+					if (thigh === -1 && joints[index] && (named ? node.Name === named : mixamo.test(node.Name) || biped.test(node.Name) || word && word.test(node.Name)))
+						thigh = index;
+				});
+
+				var knee = onward(thigh);
+				var ankle = onward(knee);
+				if (thigh >= 0 && knee >= 0 && ankle >= 0)
+					legs.push({Thigh: thigh, Knee: knee, Ankle: ankle, Across: rest ? rest[thigh][12] : 0});
+			});
+
+			if (legs.length < 2 && hips >= 0) {
+				legs = [];
+
+				asset.Nodes[hips].Children.forEach(function (child) {
+					var knee = onward(child);
+					var ankle = onward(knee);
+					if (child !== root && knee >= 0 && ankle >= 0)
+						legs.push({Thigh: child, Knee: knee, Ankle: ankle, Across: rest[child][12]});
+				});
+			}
+
+			legs = legs.sort(function (a, b) {
+				return a.Across - b.Across;
+			}).slice(0, 2);
+
+			legs.forEach(function (one, index) {
+				markLeg(one.Thigh, index + 1, 1, one.Ankle);
+			});
+
+			/* A leg is never of the upper body (a Biped hangs its thighs on its spine). */
+			Object.keys(leg).forEach(function (node) {
+				delete inside[node];
+			});
+
+			model.Legs = legs;
+
+			asset.Skins.forEach(function (skin) {
+				var at = skin.Joints.indexOf(root);
+
+				skin.Joints.forEach(function (joint) {
+					var of = leg[joint];
+					var chain = of ? legs[of.Side - 1] : null;
+
+					line.push(at >= 0 && inside[joint] ? 1 : 0, at, 0, 0, of ? of.Side : 0, of ? of.Part : 0, 0, 0, chain ? skin.Joints.indexOf(chain.Thigh) : -1, chain ? skin.Joints.indexOf(chain.Knee) : -1, chain ? skin.Joints.indexOf(chain.Ankle) : -1, 0);
+				});
+			});
+
+			return line;
+		}
+
+		/* The frames made so far, the line of the upper body and the line of rest after them, the clips whole among them. */
+		function lines (count, starts) {
+			var data = new Float32Array((count + 2) * model.Joints * 12);
+
+			work.Frames.slice(0, count).forEach(function (line, index) {
+				data.set(line, index * model.Joints * 12);
+			});
+
+			model.Upper = model.Upper || upper();
+
+			data.set(model.Upper, count * model.Joints * 12);
+			data.set(binds(), (count + 1) * model.Joints * 12);
+
+			return {Data: data, Width: Math.max(1, model.Joints * 3), Height: count + 2, Clips: starts};
 		}
 
 		function frame (step) {
@@ -2198,40 +2472,107 @@ Elemenx.Service('SceneModels', {
 
 		work = model.Baking = work || plan();
 
-		while (work.Frames.length < work.Queue.length) {
+		while (work.Frames.length < work.Queue.length || work.Names.length) {
+			if (work.Frames.length >= work.Queue.length) {
+				next();
+
+				continue;
+			}
+
 			frame(work.Queue[work.Frames.length]);
+
+			/*
+			 * A clip made (and more to come): seen at once, of what is made so far; those of standing and going each, the
+			 * others a few times a second at most. Regression: a clip played while the rest were made (die, a pose) stood in
+			 * the first pose until all were.
+			 */
+			if ((work.Frames.length < work.Queue.length || work.Names.length) && work.Ends.some(function (end) {
+				return end.At === work.Frames.length && (end.First || !model.PartialAt || performance.now() - model.PartialAt > 300);
+			})) {
+				model.PartialAt = performance.now();
+				made = {};
+
+				Object.keys(work.Starts).forEach(function (name) {
+					if (work.Starts[name].Start + work.Starts[name].Count < work.Frames.length)
+						made[name] = work.Starts[name];
+				});
+
+				model.Partial = lines(work.Frames.length, made);
+			}
 
 			if (performance.now() - started > budget) return false;
 		}
 
-		/* The last line is where each joint stands at rest: a fade turns round it, so what it moves keeps its size. */
-		var binds = [];
-
-		asset.Skins.forEach(function (skin) {
-			skin.Joints.forEach(function (joint, index) {
-				var bound = math.Invert(self.InverseOf(skin, index));
-
-				binds.push(bound[12], bound[13], bound[14], 0, 0, 0, 0, 0, 0, 0, 0, 0);
-			});
-		});
-
-		made = new Float32Array((work.Frames.length + 1) * model.Joints * 12);
-
-		work.Frames.forEach(function (line, index) {
-			made.set(line, index * model.Joints * 12);
-		});
-
-		made.set(binds, work.Frames.length * model.Joints * 12);
-
-		model.Baked = {Data: made, Width: Math.max(1, model.Joints * 3), Height: work.Frames.length + 1, Clips: work.Starts};
+		model.Baked = lines(work.Frames.length, work.Starts);
 		model.Baking = null;
+		model.Partial = null;
 
 		return true;
 	},
 
+	/*
+	 * Whether the frames of a clip of a model can be seen before all of them are made (Partial: its clips of standing and
+	 * going, made first): Frame and Between read them, a Scene draws them meanwhile.
+	 */
+	Partly: function (model, clip) {
+		return !!(model.Baked || model.Partial && model.Partial.Clips[clip]);
+	},
+
+	/*
+	 * A clip of a model wanted now, while its frames are made (BakeStep): made next, before the clips not begun yet. A Scene
+	 * asks it for the clip an object plays. Regression: a clip played on a skeleton of hundreds of bones stood in its first
+	 * pose until every clip before it was made.
+	 */
+	Want: function (model, clip) {
+		var work = model && model.Baking;
+		var at = work ? work.Names.indexOf(clip) : -1;
+
+		if (at > 0) {
+			work.Names.splice(at, 1);
+			work.Names.unshift(clip);
+		}
+	},
+
+	/*
+	 * Where the ankles of a model of legs stand at a line of its frames (Frame), in its model: [[x, y, z] of each leg, by
+	 * where they stand across the body], [] with none or no frames yet. A Scene sets them on the ground under them.
+	 */
+	Feet: function (model, line) {
+		var baked = model.Baked || model.Partial;
+		var legs = model.Legs || [];
+		var asset = model.Asset;
+		if (!baked || !legs.length || !asset || !asset.Skins.length) return [];
+
+		var height = baked.Height;
+		var row = Math.max(0, Math.min(height - 3, Math.round(line || 0)));
+		var data = baked.Data;
+		var joints = model.Joints;
+		var offset = 0;
+		var found = [];
+
+		asset.Skins.forEach(function (skin) {
+			legs.forEach(function (leg, side) {
+				var at = skin.Joints.indexOf(leg.Ankle);
+				var m;
+				var b;
+
+				if (at < 0 || found[side]) return;
+
+				m = (row * joints + offset + at) * 12;
+				b = ((height - 1) * joints + offset + at) * 12;
+
+				found[side] = [data[m] * data[b] + data[m + 1] * data[b + 1] + data[m + 2] * data[b + 2] + data[m + 3], data[m + 4] * data[b] + data[m + 5] * data[b + 1] + data[m + 6] * data[b + 2] + data[m + 7], data[m + 8] * data[b] + data[m + 9] * data[b + 1] + data[m + 10] * data[b + 2] + data[m + 11]];
+			});
+
+			offset += skin.Joints.length;
+		});
+
+		return found.length === legs.length ? found : [];
+	},
+
 	/* The line of a clip at a second of it, and the fraction of the way to the next. */
 	Frame: function (model, clip, time) {
-		var baked = this.Bake(model);
+		var baked = !model.Baked && model.Partial && model.Partial.Clips[clip] ? model.Partial : this.Bake(model);
 		var made = model.Clips[clip];
 		var place = baked.Clips[clip];
 		var at;
@@ -2332,7 +2673,8 @@ Elemenx.Service('SceneModels', {
 	/* How far a second of a clip is from its line to the next one: the frames are baked thirty a second, a screen shows more. */
 	Between: function (model, clip, time) {
 		var made = model.Clips[clip];
-		var place = model.Baked && model.Baked.Clips[clip];
+		var baked = model.Baked || model.Partial;
+		var place = baked && baked.Clips[clip];
 		var at;
 
 		if (!made || !place) return 0;

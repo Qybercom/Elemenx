@@ -15,8 +15,8 @@ Elemenx.Component('GaitsDemo', {
 	GaitsClips: function () {
 		var mannequin = this.$Service('SceneMannequin');
 
-		/* The gaits, then the poses (no clip of Mixamo beside these: X Bot stands). */
-		return mannequin.Gaits.concat(mannequin.Poses).map(function (name) {
+		/* The gaits, the poses, then the actions (no clip of Mixamo beside these: X Bot plays the graph laid on it). */
+		return mannequin.Gaits.concat(mannequin.Poses, mannequin.Actions).map(function (name) {
 			return {Value: name, Label: name};
 		});
 	},
@@ -39,6 +39,23 @@ Elemenx.Component('GaitsDemo', {
 	},
 	GaitsViews: [{Value: 'side', Label: 'Side'}, {Value: 'front', Label: 'Front'}, {Value: 'back', Label: 'Back'}],
 	GaitsView: 'side',
+	/* On the spot at a speed (Walking of each): 0, the clip as chosen; else the gaits of that speed, blended (BlendGraph), a clip of the arms a layer over the legs. */
+	GaitsSpeed: 0,
+	GaitsSpeeded: function (value) {
+		var scene = this.GaitsScene ? this.GaitsScene() : null;
+		var speed = Number(value && value.detail !== undefined ? value.detail : value) || 0;
+
+		this.GaitsSpeed = speed;
+
+		if (!scene) return;
+
+		['man', 'file', 'xbot'].forEach(function (id) {
+			if (scene.Get(id))
+				scene.Change(id, {Walking: speed});
+		});
+
+		this.GaitsPlay();
+	},
 	GaitsReady: function (scene) {
 		var self = this;
 		var models = this.$Service('SceneModels');
@@ -138,6 +155,7 @@ Elemenx.Component('GaitsDemo', {
 	},
 	/* Both play the clip in place; its numbers told. */
 	GaitsPlay: function () {
+		var self = this;
 		var scene = this.GaitsScene ? this.GaitsScene() : null;
 		var mannequin = this.$Service('SceneMannequin');
 		var clip;
@@ -146,22 +164,33 @@ Elemenx.Component('GaitsDemo', {
 
 		clip = mannequin.Gait(mannequin.Skeleton({}), this.GaitsClip);
 
-		/* Its own clip from now on (what it plays when nothing else is asked), begun at once. */
-		scene.Change('man', {Clip: this.GaitsClip});
-		scene.Play('man', this.GaitsClip);
+		/* Its own clip from now on (what it plays when nothing else is asked), begun at once; the model of a file has every clip of the graphs too. */
+		['man', 'file', 'xbot'].forEach(function (id) {
+			if (!scene.Get(id)) return;
 
-		/* The model of a file has the walk and the idle of the graphs: it walks with them, else it stands. */
-		if (scene.Get('file')) {
-			scene.Change('file', {Clip: this.GaitsClip === 'walk' ? 'walk' : 'idle'});
-			scene.Play('file', this.GaitsClip === 'walk' ? 'walk' : 'idle');
-		}
+			scene.Change(id, {Clip: clip.Loop || clip.Hold ? self.GaitsClip : 'idle'});
+			scene.Play(id, self.GaitsClip);
+		});
 
-		if (scene.Get('xbot')) {
-			scene.Change('xbot', {Clip: this.GaitsClip});
-			scene.Play('xbot', this.GaitsClip);
-		}
+		/* An action played once is played again after a pause, to be seen more than once. */
+		window.clearTimeout(this.GaitsAgain);
 
-		this.GaitsNote = clip.Name + ': a cycle of ' + clip.Length.toFixed(2) + ' s' + (clip.Stride ? ', a stride of ' + (clip.Stride * 1.78).toFixed(2) + ' m, ' + (clip.Stride * 1.78 / clip.Length).toFixed(2) + ' m/s' : '') + (scene.Get('xbot') ? ' · X Bot: the clip of Mixamo' : '');
+		if (!clip.Loop)
+			this.GaitsAgain = window.setTimeout(function again () {
+				var now = self.GaitsScene ? self.GaitsScene() : null;
+				if (!now || !now.$Element().isConnected || self.GaitsClip !== clip.Name) return;
+
+				['man', 'file', 'xbot'].forEach(function (id) {
+					if (now.Get(id))
+						now.Play(id, clip.Name);
+				});
+
+				self.GaitsAgain = window.setTimeout(again, (clip.Length + 1.2) * 1000);
+			}, (clip.Length + 1.2) * 1000);
+
+		this.GaitsNote = this.GaitsSpeed > 0 ? 'On the spot at ' + this.GaitsSpeed.toFixed(1) + ' m/s: the gaits of that speed, blended' + (clip.Upper ? '; ' + clip.Name + ' of the arms over the legs (a layer)' : '') + ' · ' : '';
+
+		this.GaitsNote += clip.Name + (clip.Loop ? ': a cycle of ' : clip.Hold ? ': once, held at its end, ' : ': once, ') + clip.Length.toFixed(2) + ' s' + (clip.Stride ? ', a stride of ' + (clip.Stride * 1.78).toFixed(2) + ' m, ' + (clip.Stride * 1.78 / clip.Length).toFixed(2) + ' m/s' : '') + (scene.Get('xbot') ? ' · X Bot: the clip of Mixamo' : '');
 	},
 	GaitsGraphOpened: function () {
 		this.GaitsGraph = JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/animation/' + this.GaitsClip)));
@@ -191,5 +220,9 @@ Elemenx.Component('GaitsDemo', {
 
 			self.GaitsPlay();
 		});
+	},
+
+	$OnDestroy: function () {
+		window.clearTimeout(this.GaitsAgain);
 	}
 });

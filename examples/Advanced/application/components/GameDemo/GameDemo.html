@@ -1,0 +1,114 @@
+<div class="scene-demo">
+	<Ribbon class="ui-kit-place-ribbon" Label="Game" [tab]="GameTab" (tab)="GameTab = $event.ID">
+		<RibbonTab ID="flight" Title="Flight">
+			<RibbonGroup Title="Ship" Icon="send" Keep="true">
+				<Select Label="Ship" Size="small" [options]="GameShips" [value]="GameShip" [disabled]="GameLevel !== 'orbit'" (change)="GameShipChosen" />
+				<Select Label="Warp to" Size="small" [options]="GamePlaces" [value]="GamePlace" [disabled]="GameEntered !== GameHome" (change)="GamePlaced" />
+				<Select Label="Warp step" Size="small" [options]="GameSteps" [value]="GameStep" (change)="GameStepChosen" />
+				<Button Label="Warp (H)" Icon="send" Variant="ghost" Size="small" (click)="GameWarp" />
+				<Toggle Label="Cockpit" [checked]="GameCockpit" (change)="GameCockpitToggled" />
+				<Button Label="Forces graph" Icon="code" Variant="ghost" Size="small" [pressed]="GameGraphOpen === 'aboard/forces'" [title]="'What is felt aboard as the ship flies: how much its artificial gravity takes away, how far a walker is carried and the view shaken'" (click)="GameGraphOpened('aboard/forces')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Autopilot" Icon="compass" Keep="true">
+				<Button Label="Hold" Icon="pause" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'The ship goes on as it goes, turning nowhere (a key of flight takes it back)'" (click)="GameAutopilot('hold')" />
+				<Button Label="Approach" Icon="target" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'To what it aims at (Warp to, or T), stopping 50 km short of it'" (click)="GameAutopilot('approach')" />
+				<Button Label="Off" Icon="close" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" (click)="GameAutopilot('off')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Wing" Icon="users" Keep="true">
+				<Button Label="Attack" Icon="target" Variant="ghost" Size="small" [pressed]="GameWingOrder === 'attack'" [title]="'The wing at what the ship aims at (a raider), else at what it sees'" (click)="GameWingOrdered('attack')" />
+				<Button Label="Form" Icon="users" Variant="ghost" Size="small" [pressed]="GameWingOrder === 'form'" [title]="'Back to their places by the ship'" (click)="GameWingOrdered('form')" />
+				<Button Label="Hold" Icon="pause" Variant="ghost" Size="small" [pressed]="GameWingOrder === 'hold'" (click)="GameWingOrdered('hold')" />
+				<Button Label="Retreat" Icon="arrow-left" Variant="ghost" Size="small" [pressed]="GameWingOrder === 'retreat'" (click)="GameWingOrdered('retreat')" />
+				<Button Label="Free" Icon="refresh" Variant="ghost" Size="small" [pressed]="GameWingOrder === ''" [title]="'No order: each as its mind says'" (click)="GameWingOrdered('')" />
+				<Button Label="AI graph" Icon="code" Variant="ghost" Size="small" [pressed]="GameGraphOpen === 'ai/fighter'" [title]="'The mind of the fighters: a tree of behaviour, a Utility of its tasks (retreat, evade, attack, follow, patrol, hold), each scored of what it knows; a change goes to them at once'" (click)="GameGraphOpened('ai/fighter')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Arms" Icon="crosshair" Keep="true">
+				<Button Label="Launch" Icon="fire" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'A salvo of missiles (M) at what the ship locked: a raider held before its nose a moment, or its target (T, the radar); they steer themselves, flares and point defence against them'" (click)="GameLaunch" />
+				<Button Label="Heavy" Icon="fire" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'A salvo of heavy missiles (Y): 25 km/s, more harm; point defence and flares can take them'" (click)="GameHunters" />
+				<Button Label="Torpedo" Icon="fire" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'A torpedo (K) at what the ship locked: slow and heavy, its blast wide; point defence can bring it down'" (click)="GameTorpedo" />
+				<Button Label="Mass driver" Icon="crosshair" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'A slug of 20 km/s (U) at the target of the ship, where it meets it as it goes: the ring on the view shows where'" (click)="GameDrive" />
+				<Button Label="Lance" Icon="target" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'The lance (I): a beam of 500 km at the target of the ship, 3 seconds charging, then 1.5 seconds on it'" (click)="GameLance" />
+				<Button Label="Railgun" Icon="send" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'The railgun faster than light of the ship (O): 4 s charging, then a tunnel of warp only for its slug to the target (no warning to it)'" (click)="GameRailgun('ship')" />
+				<Button Label="Platform" Icon="send" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'The railgun platform over Terra at the target of the ship: 10 s charging, a slug of 6000'" (click)="GameRailgun('platform')" />
+				<Toggle Label="Into the target" [checked]="GameRailDirect" (change)="GameRailDirect = $event" />
+				<Button Label="Flares" Icon="flame" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'Flares out (N): a missile that sees one may go to it'" (click)="GameFlares" />
+				<Toggle Label="Point defence" [checked]="GameDefenceOn" [disabled]="GameLevel !== 'orbit'" (change)="GameDefence" />
+			</RibbonGroup>
+			<RibbonGroup Title="EVA" Icon="user" Keep="true">
+				<Button Label="Airlock" Icon="user" Variant="ghost" Size="small" [disabled]="GameLevel !== 'orbit'" [title]="'The pilot up out of the seat and at the airlock of the ship: G lets one out into space (WASD, Space up, C down, Shift faster), G by it again in'" (click)="GameAirlock" />
+				<Button Label="Suit graph" Icon="code" Variant="ghost" Size="small" [pressed]="GameGraphOpen === 'aboard/suit'" [title]="'How the suit flies one out there: its jets, how fast, how it stops one, the line to the airlock, how long the airlock takes'" (click)="GameGraphOpened('aboard/suit')" />
+			</RibbonGroup>
+			<RibbonGroup Title="Landing" Icon="download" Keep="true">
+				<Select Label="Land at" Size="small" [options]="GameSites" [value]="GameSite" [disabled]="GameLevel !== 'orbit' || GameEntered !== GameHome" (change)="GameSite = $event && $event.detail !== undefined ? $event.detail : $event" />
+				<Button *if="GameLevel === 'orbit'" Label="Land" Icon="download" Variant="ghost" Size="small" [title]="'Down onto the ground at the place chosen, the crew in it: G takes the pilot out of the seat to walk in it as it flies'" (click)="GameLand" />
+				<Button *if="GameLevel === 'orbit'" Label="To orbit" Icon="refresh" Variant="ghost" Size="small" [title]="'Round the body the ship is near, in its parking orbit'" (click)="GameToOrbit" />
+				<Button *if="GameLevel !== 'orbit'" Label="Take off" Icon="upload" Variant="ghost" Size="small" [title]="'Up to the orbit again, whoever is in the ship walking in it'" (click)="GameTakeOff" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="galaxy" Title="Galaxy">
+			<RibbonGroup Title="Galaxy" Icon="map" Keep="true">
+				<Button Label="Galaxy map" Icon="map" Variant="ghost" Size="small" [disabled]="!GameEntered || GameLevel !== 'orbit'" [title]="'Out of the system to the map of the galaxy: a star pressed is picked'" (click)="GameMap" />
+				<Button Label="Enter the system" Icon="arrow-right" Variant="ghost" Size="small" [disabled]="!!GameEntered || !GamePicked" (click)="GameEnter" />
+				<Button Label="Home" Icon="home" Variant="ghost" Size="small" [disabled]="!GameHome || GameEntered === GameHome || GameLevel !== 'orbit'" [title]="'Back to the system of Terra'" (click)="GameGoHome" />
+			</RibbonGroup>
+			<RibbonGroup Title="Bodies" Icon="code" Keep="true">
+				<Button Label="Envelope graph" Icon="code" Variant="ghost" Size="small" [pressed]="GameGraphOpen === 'planet/envelope'" [title]="'What lies over and under the surface of the bodies as blocks: pressure, temperature, the deck and the light at a height; their skies, clouds, light and lands, and the inside of the giants, come of it'" (click)="GameGraphOpened('planet/envelope')" />
+				<Button Label="Planet graph" Icon="code" Variant="ghost" Size="small" [pressed]="GameGraphOpen === 'shader/planet'" [title]="'The globes as blocks: their picture lit, the tops of the clouds of a giant near, their air at the edge'" (click)="GameGraphOpened('shader/planet')" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="character" Title="Character">
+			<RibbonGroup Title="Character" Icon="user" Keep="true">
+				<Select Label="Character" Size="small" [options]="GameCharacters" [value]="GameCharacter" (change)="GameCharacterChosen" />
+			</RibbonGroup>
+			<RibbonGroup Title="Gaits" Icon="code" Keep="true">
+				<Select Label="Gait" Size="small" [options]="GameGaits()" [value]="GameGait" (change)="GameGaitChosen" />
+				<Button Label="Gait graph" Icon="code" Variant="ghost" Size="small" [pressed]="!!GameGaitGraph" [title]="'The graph of the gait of the mannequin (Character: Mannequin), a change of it on the walker at once'" (click)="GameGaitOpened" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="combat" Title="Combat">
+			<RibbonGroup Title="Combat" Icon="target" Keep="true">
+				<Select Label="Weapon" Size="small" [options]="GameWeapons" [value]="GameWeapon" (change)="GameWeaponChosen" />
+				<Button Label="Range" Icon="target" Variant="ghost" Size="small" [disabled]="GameLevel !== 'ground'" [title]="'The targets of Combat before the walker, on the evenest ground near where the view looks: wood, steel, glass, stone, robots'" (click)="GameRange" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="racing" Title="Racing">
+			<RibbonGroup Title="Car" Icon="racing:sports-car" Keep="true">
+				<Select Label="Car" Size="small" [options]="GameCars" [value]="GameCar" (change)="GameCarChosen" />
+				<Button Label="Car" Icon="racing:sports-car" Variant="ghost" Size="small" [disabled]="GameLevel !== 'ground'" [title]="'The car chosen by the walker, its door to it: G gets in, G again out'" (click)="GameCarPut" />
+				<Button Label="Track" Icon="racing:circuit" Variant="ghost" Size="small" [disabled]="GameLevel !== 'ground'" [title]="'A track of a seed from where the walker stands, away from the ship, the car on its line: laps counted'" (click)="GameTrack" />
+			</RibbonGroup>
+		</RibbonTab>
+		<RibbonTab ID="strategy" Title="Strategy">
+			<RibbonGroup Title="Command" Icon="users" Keep="true">
+				<Button Label="Squads" Icon="users" Variant="ghost" Size="small" [disabled]="GameLevel !== 'ground'" [title]="'A squad of yours by the walker and robots of the red team across from it, away from the ship'" (click)="GameSquads" />
+				<Toggle Label="Command" [checked]="GameCommanding" [disabled]="GameLevel !== 'ground'" (change)="GameCommanded" />
+				<Toggle Label="Fog of war" [checked]="GameFog" (change)="GameFog = $event" />
+			</RibbonGroup>
+		</RibbonTab>
+		<span slot="end" class="elemenx-caption" role="status">{{GameLevelLabel(GameLevel)}}{{GameTravel ? ' · ' + GameTravel : GamePhase ? ' · ' + GamePhase : ''}}{{GameAim ? ' · ' + GameAim : ''}}{{GameAgents ? ' · ' + GameAgents : ''}}{{GameNote ? ' · ' + GameNote : ''}}</span>
+	</Ribbon>
+	<div class="scene-demo-scene" *if="GameGraphOpen">
+		<DemoGraph [name]="GameGraphOpen" (change)="GameGraphChanged" />
+	</div>
+	<div class="scene-demo-scene" *if="GameGaitGraph">
+		<Blueprint [value]="GameGaitGraph" (change)="GameGaitChanged" />
+	</div>
+	<div class="scene-demo-scene">
+		<Scene [graphs]="GameGraphs" ShipButtons="false" Setting="galaxy" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [galaxy]="GameGalaxy" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="GameReady" (galaxy)="GamePick" (enter)="GameIn" (leave)="GameOut" (travel)="GameTravelled" (landing)="GameLanding" (hit)="GameHit" (context)="GameContext" (eva)="GameEva" (agent)="GameAgent" (missile)="GameMissile"><DemoLoading slot="loading" Title="Game" />
+			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Play" />
+			<GameTargets slot="hud" *if="GameEntered" />
+			<div slot="hud" *if="GameEntered" class="scene-demo-tactics"><GameTactics /><GameRadar Shape="bubble" Size="220" Range="400" Zoomable="true" /></div>
+			<GameHud slot="hud" *if="GameEntered" Label="Flight">
+				<div slot="top" *if="GameLevel === 'ground' && !GameDriving && !GameCommanding" class="elemenx-game-hotbar" role="group" aria-label="Weapons">
+					<GameSlot *for="weapon of GameWeapons" *key="weapon.Value" Size="small" Draggable="false" [accept]="[]" [icon]="weapon.Icon" [label]="weapon.Label" [key]="weapon.Key" [active]="weapon.Value === GameWeapon" (use)="GameWeaponChosen(weapon.Value)" />
+				</div>
+				<GameFlight slot="bottom" Engineer="true" Commands="true" Arms="true" Size="small" />
+				<GameDash slot="bottom" *if="GameLevel === 'ground'" Size="small" Label="Speed" />
+			</GameHud>
+			<GameCombat Bars="hurt" />
+			<GameRace Road="game-track" Countdown="0" [laps]="3" (lap)="GameLapped" />
+			<GameStrategy *if="GameCommanding" Team="blue" [fog]="GameFog" (select)="GameSelected" (order)="GameOrdered" />
+			<div slot="screens" data-screen="console" class="scene-demo-console"><GameConsole /></div><div slot="screens" data-screen="console:pilot" class="scene-demo-console"><GameConsole Role="pilot" Radar="true" /></div><div slot="screens" data-screen="console:engineer" class="scene-demo-console"><GameConsole Role="engineer" /></div><div slot="screens" data-screen="console:gunner" class="scene-demo-console"><GameConsole Role="gunner" Radar="true" /></div>
+		</Scene>
+	</div>
+</div>

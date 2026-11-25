@@ -1,0 +1,581 @@
+{
+	"version": 1,
+	"type": "behaviour",
+	"name": "ai-fighter",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "ai-fighter-input-health",
+			"type": "Input",
+			"x": -700,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Health"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-shield",
+			"type": "Input",
+			"x": -700,
+			"y": 90,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shield"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-threat",
+			"type": "Input",
+			"x": -700,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Threat"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-hurt",
+			"type": "Input",
+			"x": -700,
+			"y": 270,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hurt"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-enemynear",
+			"type": "Input",
+			"x": -700,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "EnemyNear"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-hasleader",
+			"type": "Input",
+			"x": -700,
+			"y": 450,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HasLeader"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-haspatrol",
+			"type": "Input",
+			"x": -700,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "HasPatrol"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-orderattack",
+			"type": "Input",
+			"x": -700,
+			"y": 630,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "OrderAttack"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-orderform",
+			"type": "Input",
+			"x": -700,
+			"y": 720,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "OrderForm"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-orderhold",
+			"type": "Input",
+			"x": -700,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "OrderHold"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-orderretreat",
+			"type": "Input",
+			"x": -700,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "OrderRetreat"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-input-incoming",
+			"type": "Input",
+			"x": -700,
+			"y": 990,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Incoming"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-root",
+			"type": "Root",
+			"x": 0,
+			"y": 0,
+			"properties": []
+		},
+		{
+			"id": "ai-fighter-utility",
+			"type": "Utility",
+			"x": 200,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Commit",
+					"value": 1.5
+				},
+				{
+					"key": "Switch",
+					"value": 1.25
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-response-threat",
+			"type": "Response",
+			"x": -350,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Shape",
+					"value": "logistic"
+				},
+				{
+					"key": "Shift",
+					"value": 0.35
+				},
+				{
+					"key": "Steep",
+					"value": 9
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-task-defend",
+			"type": "Task",
+			"x": 600,
+			"y": -120,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "defend"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-score-defend",
+			"type": "Formula",
+			"x": 350,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Incoming * 1 * (1 - OrderHold)"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-task-retreat",
+			"type": "Task",
+			"x": 600,
+			"y": 0,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "retreat"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-score-retreat",
+			"type": "Formula",
+			"x": 350,
+			"y": 300,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(OrderRetreat, (1 - smoothstep(0.2, 0.45, Health)) * EnemyNear)"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-task-evade",
+			"type": "Task",
+			"x": 600,
+			"y": 120,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "evade"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-score-evade",
+			"type": "Formula",
+			"x": 350,
+			"y": 420,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Hurt * 0.9 * EnemyNear * (1 - OrderHold) * (1 - OrderRetreat)"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-task-attack",
+			"type": "Task",
+			"x": 600,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "attack"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-score-attack",
+			"type": "Formula",
+			"x": 350,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "max(R, OrderAttack * EnemyNear) * (1 - OrderForm) * (1 - OrderRetreat) * (1 - OrderHold)"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-task-follow",
+			"type": "Task",
+			"x": 600,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "follow"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-score-follow",
+			"type": "Formula",
+			"x": 350,
+			"y": 660,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HasLeader * max(0.3, OrderForm)"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-task-patrol",
+			"type": "Task",
+			"x": 600,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "patrol"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-score-patrol",
+			"type": "Formula",
+			"x": 350,
+			"y": 780,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "HasPatrol * 0.2 * (1 - OrderHold)"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-task-hold",
+			"type": "Task",
+			"x": 600,
+			"y": 600,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "hold"
+				}
+			]
+		},
+		{
+			"id": "ai-fighter-score-hold",
+			"type": "Formula",
+			"x": 350,
+			"y": 900,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.05 + OrderHold"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "ai-fighter-link-0",
+			"p1": "ai-fighter-root-out-Children",
+			"p2": "ai-fighter-utility-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-1",
+			"p1": "ai-fighter-input-threat-out-Value",
+			"p2": "ai-fighter-response-threat-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-2",
+			"p1": "ai-fighter-utility-out-Children",
+			"p2": "ai-fighter-task-retreat-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-3",
+			"p1": "ai-fighter-score-retreat-out-Value",
+			"p2": "ai-fighter-task-retreat-in-Score",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-4",
+			"p1": "ai-fighter-input-orderretreat-out-Value",
+			"p2": "ai-fighter-score-retreat-in-OrderRetreat",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-5",
+			"p1": "ai-fighter-input-health-out-Value",
+			"p2": "ai-fighter-score-retreat-in-Health",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-6",
+			"p1": "ai-fighter-input-enemynear-out-Value",
+			"p2": "ai-fighter-score-retreat-in-EnemyNear",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-7",
+			"p1": "ai-fighter-utility-out-Children",
+			"p2": "ai-fighter-task-evade-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-8",
+			"p1": "ai-fighter-score-evade-out-Value",
+			"p2": "ai-fighter-task-evade-in-Score",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-9",
+			"p1": "ai-fighter-input-hurt-out-Value",
+			"p2": "ai-fighter-score-evade-in-Hurt",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-10",
+			"p1": "ai-fighter-input-enemynear-out-Value",
+			"p2": "ai-fighter-score-evade-in-EnemyNear",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-11",
+			"p1": "ai-fighter-input-orderhold-out-Value",
+			"p2": "ai-fighter-score-evade-in-OrderHold",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-12",
+			"p1": "ai-fighter-input-orderretreat-out-Value",
+			"p2": "ai-fighter-score-evade-in-OrderRetreat",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-13",
+			"p1": "ai-fighter-utility-out-Children",
+			"p2": "ai-fighter-task-attack-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-14",
+			"p1": "ai-fighter-score-attack-out-Value",
+			"p2": "ai-fighter-task-attack-in-Score",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-15",
+			"p1": "ai-fighter-response-threat-out-Out",
+			"p2": "ai-fighter-score-attack-in-R",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-16",
+			"p1": "ai-fighter-input-orderattack-out-Value",
+			"p2": "ai-fighter-score-attack-in-OrderAttack",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-17",
+			"p1": "ai-fighter-input-enemynear-out-Value",
+			"p2": "ai-fighter-score-attack-in-EnemyNear",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-18",
+			"p1": "ai-fighter-input-orderform-out-Value",
+			"p2": "ai-fighter-score-attack-in-OrderForm",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-19",
+			"p1": "ai-fighter-input-orderretreat-out-Value",
+			"p2": "ai-fighter-score-attack-in-OrderRetreat",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-20",
+			"p1": "ai-fighter-input-orderhold-out-Value",
+			"p2": "ai-fighter-score-attack-in-OrderHold",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-21",
+			"p1": "ai-fighter-utility-out-Children",
+			"p2": "ai-fighter-task-follow-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-22",
+			"p1": "ai-fighter-score-follow-out-Value",
+			"p2": "ai-fighter-task-follow-in-Score",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-23",
+			"p1": "ai-fighter-input-hasleader-out-Value",
+			"p2": "ai-fighter-score-follow-in-HasLeader",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-24",
+			"p1": "ai-fighter-input-orderform-out-Value",
+			"p2": "ai-fighter-score-follow-in-OrderForm",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-25",
+			"p1": "ai-fighter-utility-out-Children",
+			"p2": "ai-fighter-task-patrol-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-26",
+			"p1": "ai-fighter-score-patrol-out-Value",
+			"p2": "ai-fighter-task-patrol-in-Score",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-27",
+			"p1": "ai-fighter-input-haspatrol-out-Value",
+			"p2": "ai-fighter-score-patrol-in-HasPatrol",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-28",
+			"p1": "ai-fighter-input-orderhold-out-Value",
+			"p2": "ai-fighter-score-patrol-in-OrderHold",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-29",
+			"p1": "ai-fighter-utility-out-Children",
+			"p2": "ai-fighter-task-hold-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-30",
+			"p1": "ai-fighter-score-hold-out-Value",
+			"p2": "ai-fighter-task-hold-in-Score",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-31",
+			"p1": "ai-fighter-input-orderhold-out-Value",
+			"p2": "ai-fighter-score-hold-in-OrderHold",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-32",
+			"p1": "ai-fighter-utility-out-Children",
+			"p2": "ai-fighter-task-defend-in-In",
+			"kind": "flow"
+		},
+		{
+			"id": "ai-fighter-link-33",
+			"p1": "ai-fighter-score-defend-out-Value",
+			"p2": "ai-fighter-task-defend-in-Score",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-34",
+			"p1": "ai-fighter-input-incoming-out-Value",
+			"p2": "ai-fighter-score-defend-in-Incoming",
+			"kind": "value"
+		},
+		{
+			"id": "ai-fighter-link-35",
+			"p1": "ai-fighter-input-orderhold-out-Value",
+			"p2": "ai-fighter-score-defend-in-OrderHold",
+			"kind": "value"
+		}
+	]
+}

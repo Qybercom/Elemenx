@@ -496,6 +496,20 @@ Elemenx.Service('Vitals', {
 
 		ledger.Scene = scene;
 
+		/* Hurt and alive: it flinches (its clip hit, of a model that has one), not again while it still does. */
+		ledger.On('damage', function (event) {
+			var object = objectOf(event.ID);
+			var inner = space();
+			var now = inner ? inner.Seconds || 0 : 0;
+
+			if (!object || !(event.Amount > 0) || !(event.Value > 0) || typeof scene.Play !== 'function') return;
+
+			if (object.Flinched !== undefined && now - object.Flinched < 0.5) return;
+
+			if (scene.Play(event.ID, 'hit'))
+				object.Flinched = now;
+		});
+
 		/* At death: gone, broken, its last clip, or kept as it is. */
 		ledger.On('death', function (event) {
 			var state = ledger.Get(event.ID);

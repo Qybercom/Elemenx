@@ -83,6 +83,45 @@
 	--elemenx-game-marker: var(--elemenx-game-good);
 }
 
+/* A missile: small (one at the vehicle red, larger, pulsing); a flare: a spark. */
+.elemenx-game-marker.missile,
+.elemenx-game-marker.incoming,
+.elemenx-game-marker.flare {
+	width: 7px;
+	height: 7px;
+	border-radius: 1px;
+	--elemenx-game-marker: var(--elemenx-game-legendary);
+}
+
+.elemenx-game-marker.incoming {
+	width: 9px;
+	height: 9px;
+	--elemenx-game-marker: var(--elemenx-game-bad);
+	animation: elemenx-game-marker-pulse 0.5s ease-in-out infinite alternate;
+}
+
+.elemenx-game-marker.flare {
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+}
+
+@keyframes elemenx-game-marker-pulse {
+	from {
+		opacity: 1;
+	}
+
+	to {
+		opacity: 0.5;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-game-marker.incoming {
+		animation: none;
+	}
+}
+
 /* A marker off the map waits on the edge, with a point toward it. */
 .elemenx-game-marker.edge::after {
 	position: absolute;

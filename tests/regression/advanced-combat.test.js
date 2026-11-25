@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import combatSource from '../../examples/Advanced/application/components/CombatDemo/CombatDemo.js?raw';
+import dataSource from '../../examples/Advanced/application/services/DemoData.js?raw';
 
 /* The definition of the demo as its source gives it (Elemenx.Component caught). */
 function definition () {
@@ -9,6 +10,18 @@ function definition () {
 	}};
 
 	new Function('Elemenx', combatSource)(stub);
+
+	return caught;
+}
+
+/* The data the demos share (DemoData), as its source gives it: the weapons of Combat and of Game are there. */
+function data () {
+	var caught = null;
+	var stub = {Service: function (name, made) {
+		caught = made;
+	}};
+
+	new Function('Elemenx', dataSource)(stub);
 
 	return caught;
 }
@@ -43,7 +56,14 @@ describe('Regression: the Combat demo of Gaming', function () {
 	});
 
 	it('lets a weapon and a spell be chosen by the slots over the scene', function () {
-		var demo = definition();
+		var demo = Object.assign({}, definition());
+		var shared = data();
+
+		demo.$Service = function () {
+			return shared;
+		};
+
+		demo.$OnCreate();
 
 		expect(demo.CombatWeapons.length).toBe(10);
 		expect(demo.CombatWeapons.every(function (weapon) {

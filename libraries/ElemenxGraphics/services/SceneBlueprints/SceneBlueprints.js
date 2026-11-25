@@ -1951,6 +1951,16 @@ Elemenx.Service('SceneBlueprints', {
 			line('\tif (dot(' + name + 'r, ' + u + ') < 0.0) ' + name + 'r = ' + name + 'r - ' + u + ' * 2.0 * dot(' + name + 'r, ' + u + ');');
 			line('\tfloat ' + name + 'toward = max(dot(' + name + 'r, uSun), 0.0);');
 			line('\tvec3 ' + name + 'mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), pow(max(dot(' + name + 'r, ' + u + '), 0.0), 0.6)) * ' + inputs.Light + ' + vec3(1.0, 0.5, 0.2) * ' + inputs.Dusk + ' * exp(-max(dot(' + name + 'r, ' + u + '), 0.0) * 5.0) * 0.8;');
+			/*
+			 * Round a location (uMirror.a over 0): the sky of the location mirrored as its sea mirrors it (skyLight, of a way and a
+			 * sun up the local vertical). Regression: the sea round a location was dark and calm past a sharp edge, its own sea bright.
+			 */
+			line('\tif (uMirror.a > 0.0) {');
+			line('\t\tvec3 ' + name + 'side = ' + name + 'r - ' + u + ' * dot(' + name + 'r, ' + u + ');');
+			line('\t\t' + name + 'side = dot(' + name + 'side, ' + name + 'side) > 1e-8 ? normalize(' + name + 'side) : normalize(cross(' + u + ', vec3(0.31, 0.47, 0.83)));');
+			line('\t\tvec3 ' + name + 'across = cross(' + name + 'side, ' + u + ');');
+			line('\t\t' + name + 'mirrored = skyLight(vec3(dot(' + name + 'r, ' + name + 'side), dot(' + name + 'r, ' + u + '), 0.0), 0.0, uMirror.rgb, uMirror.rgb * 0.3, vec3(dot(uSun, ' + name + 'side), dot(uSun, ' + u + '), dot(uSun, ' + name + 'across)), 1.0) * uMirror.a + vec3(0.012, 0.016, 0.03);');
+			line('\t}');
 			line('\tfloat ' + name + 'shine = (pow(' + name + 'toward, mix(90.0, 1400.0, ' + name + 'seen)) * mix(' + value('Spread') + ', ' + value('Glints') + ', ' + name + 'seen) + pow(' + name + 'toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, ' + rise + ');');
 			line('\t' + name + 'color = mix(' + name + 'color, mix(' + name + 'color, ' + name + 'mirrored, ' + name + 'fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, ' + rise + ')) * ' + name + 'shine, ' + inputs.Water + ');');
 			line('}');

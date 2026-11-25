@@ -15,7 +15,10 @@
  * air of a location: made once in its own frame and carried with it (turned as it lies, a metre Unit units of the scene), no
  * ramp; G in the seat of its pilot stands the hero up there (Afoot of the scene), walking in its frame as the ship flies on
  * by itself, the view up its up. What is felt of how it moves (blueprints/aboard/forces, its coefficients the parameters of
- * the graph and the Forces of the Vehicle over them) carries a walker along the deck and shakes the view. Interior(id) is
+ * the graph and the Forces of the Vehicle over them) carries a walker along the deck and shakes the view. In space G by its
+ * airlock (the hatch in its floor, else over the seat of its pilot) lets one out of it (EVA): one floats in a suit by it, its
+ * jets, its line and its stop of the graph of the suit (blueprints/aboard/suit), G by the airlock lets one in (event eva).
+ * Interior(id) is
  * {Plan, Inside, Ramp, At, Yaw, Flying, Unit} of a ship standing or in flight, null else.
  */
 Elemenx.Trait('SceneAboard', {
@@ -253,7 +256,7 @@ Elemenx.Trait('SceneAboard', {
 				 * Lifted to where the ship stands (a ship come down may stand over the ground under it: a pad, its legs), turned as it
 				 * is (Facing). Regression: turned by a Yaw, which a thing on a ground does not read, it stood across a ship landed.
 				 */
-				self.Add('thing', {ID: id, Name: '', Model: pair[1], Size: 1, X: x, Y: z, Facing: yaw, Aboard: object.ID, Lift: Math.max(0, record.At[1] - Math.max(0, field.Height(x, z)))});
+				self.Add('thing', {ID: id, Name: '', Parent: null, Model: pair[1], Size: 1, X: x, Y: z, Facing: yaw, Aboard: object.ID, Lift: Math.max(0, record.At[1] - Math.max(0, field.Height(x, z)))});
 			});
 
 			lamps(record);
@@ -327,7 +330,7 @@ Elemenx.Trait('SceneAboard', {
 					self.Remove(id);
 
 				if (pair[1])
-					self.Add('thing', {ID: id, Name: '', Model: pair[1], Size: 1, Aboard: object.ID});
+					self.Add('thing', {ID: id, Name: '', Parent: null, Model: pair[1], Size: 1, Aboard: object.ID});
 			});
 
 			lamps(record);
@@ -345,7 +348,7 @@ Elemenx.Trait('SceneAboard', {
 		function parts (record, object) {
 			[['inside', record.Inside], ['ceiling', record.Ceiling]].forEach(function (pair) {
 				if (pair[1] && !scene.Objects[object.ID + ':' + pair[0]])
-					self.Add('thing', {ID: object.ID + ':' + pair[0], Name: '', Model: pair[1], Size: 1, Aboard: object.ID});
+					self.Add('thing', {ID: object.ID + ':' + pair[0], Name: '', Parent: null, Model: pair[1], Size: 1, Aboard: object.ID});
 			});
 
 			if ((record.Lamps || []).some(function (id) {
@@ -420,7 +423,7 @@ Elemenx.Trait('SceneAboard', {
 				var at = worldOf(record, lamp.At);
 				var id = record.ID + ':lamp:' + index;
 
-				self.Add('light', {ID: id, Name: '', Follow: record.ID, X: at[0] - ship.World[0], Y: at[2] - ship.World[2], Height: at[1] - ship.World[1], Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius, Aboard: record.ID});
+				self.Add('light', {ID: id, Name: '', Parent: null, Follow: record.ID, X: at[0] - ship.World[0], Y: at[2] - ship.World[2], Height: at[1] - ship.World[1], Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius, Aboard: record.ID});
 
 				return id;
 			});
@@ -458,7 +461,7 @@ Elemenx.Trait('SceneAboard', {
 				if (!names[index]) return;
 
 				/* Turned to the seat (back from the nose), on the face of the screen of the console. */
-				self.Add('screen', {ID: record.ID + ':screen:' + seat.ID, Name: '', X: at[0], Y: at[2], Z: at[1], Yaw: record.Yaw + 180, Width: 0.9, Height: 0.5, Element: names[index], Interactive: true, Aboard: record.ID});
+				self.Add('screen', {ID: record.ID + ':screen:' + seat.ID, Name: '', Parent: null, X: at[0], Y: at[2], Z: at[1], Yaw: record.Yaw + 180, Width: 0.9, Height: 0.5, Element: names[index], Interactive: true, Aboard: record.ID});
 			});
 		}
 
@@ -585,7 +588,7 @@ Elemenx.Trait('SceneAboard', {
 			/* Within reach of the seat from behind it, past the back of its chair. */
 			var far = 2.3;
 
-			if (!actor || !actor.World || actor.Aboard) return null;
+			if (!actor || !actor.World || actor.Aboard || afoot[id] && (afoot[id].Out || afoot[id].Cycle)) return null;
 
 			/* In the frame of each inside (its metres): a ship in flight lies any way. */
 			Object.keys(placed).forEach(function (ship) {
@@ -679,8 +682,7 @@ Elemenx.Trait('SceneAboard', {
 			var motion = record.Motion;
 			var unit = record.Unit || 1;
 			var travel = !!ship.Travel;
-			var graph = self.Graphs && typeof self.Graphs === 'object' && self.Graphs['aboard/forces'] || Elemenx.Resources('Blueprints', 'ElemenxGraphics/aboard/forces');
-			var made = scene.ForcesCode;
+			var code = engine.GraphCode('', 'aboard/forces');
 			var ahead = vectors.Normalize(math.Apply(record.Turn, [0, 0, 1]));
 			var velocity;
 			var accel;
@@ -689,7 +691,7 @@ Elemenx.Trait('SceneAboard', {
 			var hit;
 			var way;
 
-			if (!(elapsed > 0) || !graph) return null;
+			if (!(elapsed > 0) || !code) return null;
 
 			velocity = motion ? vectors.Scale(vectors.Subtract(record.At, motion.At), 1 / (elapsed * unit)) : [0, 0, 0];
 			accel = motion && !travel && !motion.Travel ? vectors.Scale(vectors.Subtract(velocity, motion.Velocity), 1 / elapsed) : [0, 0, 0];
@@ -713,11 +715,8 @@ Elemenx.Trait('SceneAboard', {
 			record.Hit = hit * Math.exp(-elapsed * 5);
 			record.Motion = {At: record.At.slice(), Velocity: velocity, Ahead: ahead, Accel: accel, Held: held, Travel: travel};
 
-			if (!made || made.Graph !== graph)
-				made = scene.ForcesCode = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
-
 			/* Its coefficients: those of the graph, the Forces of the ship over them. */
-			return made.Code.Run(ship.Values.Vehicle.Forces || {}, {Time: scene.Seconds, Elapsed: elapsed, Ax: local[0], Ay: local[1], Az: local[2], Turn: turn, Hit: hit, HitX: way[0], HitZ: way[2], Warp: travel ? 1 : 0});
+			return code.Run(ship.Values.Vehicle.Forces || {}, {Time: scene.Seconds, Elapsed: elapsed, Ax: local[0], Ay: local[1], Az: local[2], Turn: turn, Hit: hit, HitX: way[0], HitZ: way[2], Warp: travel ? 1 : 0});
 		}
 
 		/* A hit on a ship in flight: felt in it (forces), as strong as its damage (a full one of 30), the way it went in its frame. */
@@ -764,7 +763,194 @@ Elemenx.Trait('SceneAboard', {
 
 			afoot[actor.ID] = {Vehicle: vehicle.ID, At: (seat && (seat.Exit || seat.At) || [0, 0, 0]).slice(), Rise: 0, Grounded: true};
 			actor.Air = undefined;
+
+			/* The ship goes on as it went (its autopilot holds it), till one flies it again or asks its autopilot for more. */
+			if (!vehicle.Autopilot && engine.AutopilotSet)
+				engine.AutopilotSet(vehicle, 'hold');
 		};
+
+		/*
+		 * Out of a ship in space (EVA): G by its airlock lets one out, the airlock cycled first (Cycle seconds, hidden in it); out
+		 * there one floats in a suit by the ship, in its frame: WASD along the view, Space up, C down, Shift faster; its jets
+		 * speed one up, the suit stops one by the ship when none is asked for (Assist), a line holds one to the airlock (Tether);
+		 * the hull stops one; one is carried in the frame of the ship as it goes. G by the airlock again lets one in. How,
+		 * of the graph of the suit (blueprints/aboard/suit; Graphs['aboard/suit'] of the scene in its place; the Suit of who goes
+		 * out over its parameters). The airlock of a ship: the hatch in its floor (out under its belly), else over the seat of
+		 * its pilot (out over its canopy). Each step is told (event eva {Actor, Vehicle, Step: cycle, out, in; Out}).
+		 */
+		function airlockOf (record, tall) {
+			var plan = record.Plan;
+			var hull = record.Hull;
+			var hatch = plan.Ramp && plan.Ramp.Hatch;
+			var seat = plan.Seats.filter(function (one) {
+				return one.Controls;
+			})[0] || plan.Seats[0];
+			var x;
+			var z;
+			var column;
+			var inside;
+
+			if (hatch) {
+				x = (hatch.Low[0] + hatch.High[0]) / 2;
+				z = (hatch.Low[2] + hatch.High[2]) / 2;
+				column = hull ? interiors.columnOf(hull, x, z) : -1;
+
+				return {Inside: [x, hatch.High[1], z], Outside: [x, (column >= 0 ? hull.Bottom[column] : hatch.Low[1]) - tall - 0.6, z], Way: 'down'};
+			}
+
+			if (!seat)
+				return null;
+
+			inside = seat.Exit || seat.At;
+			column = hull ? interiors.columnOf(hull, seat.At[0], seat.At[2]) : -1;
+
+			return {Inside: inside.slice(), Outside: [seat.At[0], (column >= 0 ? hull.Top[column] : seat.At[1] + 2) + 0.6, seat.At[2]], Way: 'up'};
+		}
+
+		function suitOf (hero, inputs) {
+			var code = engine.GraphCode('', 'aboard/suit');
+			if (!code)
+				return {Push: 1.2, Top: 3, Damp: 0.9, Pull: 0, Cycle: 1.5, Reach: 2.5};
+
+			return code.Run(hero.Values.Suit || {}, inputs);
+		}
+
+		function tellEva (hero, state, step) {
+			self.$Emit('eva', {Actor: hero.ID, Vehicle: state.Vehicle, Step: step, Out: !!state.Out});
+		}
+
+		/* The airlock within reach of who is on foot in a ship in space, or floats by it: {Vehicle, Out (going out)}; null for none. */
+		engine.AirlockNear = function (id) {
+			var hero = scene.Objects[id];
+			var state = hero ? afoot[id] : null;
+			var record = state ? placed[state.Vehicle] : null;
+			var lock;
+			var reach;
+
+			if (!record || !record.Local || state.Cycle || scene.Ground || scene.Surface) return null;
+
+			lock = airlockOf(record, tallOf(hero));
+			reach = suitOf(hero, {Boost: 0, Apart: 0}).Reach;
+
+			if (!lock)
+				return null;
+
+			if (state.Out)
+				return vectors.Length(vectors.Subtract(state.At, lock.Outside)) < reach + tallOf(hero) ? {Vehicle: state.Vehicle, Out: false} : null;
+
+			return Math.hypot(state.At[0] - lock.Inside[0], state.At[2] - lock.Inside[2]) < reach && Math.abs(state.At[1] - lock.Inside[1]) < 1.5 ? {Vehicle: state.Vehicle, Out: true} : null;
+		};
+
+		/* Through the airlock (out, or in when one floats by it): false where none is within reach. */
+		engine.Spacewalk = function (id) {
+			var hero = scene.Objects[id];
+			var near = engine.AirlockNear(id);
+			var state = near ? afoot[id] : null;
+			if (!state)
+				return false;
+
+			state.Cycle = {Out: near.Out, Left: suitOf(hero, {Boost: 0, Apart: 0}).Cycle};
+			hero.Hidden = true;
+			hero.Walking = 0;
+
+			tellEva(hero, state, 'cycle');
+
+			return true;
+		};
+
+		/* The airlock cycled: out under the belly (over the canopy), or in on its floor. */
+		function cycle (hero, state, record, elapsed) {
+			var lock = airlockOf(record, tallOf(hero));
+
+			state.Cycle.Left -= elapsed;
+
+			if (state.Cycle.Left > 0 || !lock) return;
+
+			state.Out = state.Cycle.Out;
+			state.At = (state.Out ? lock.Outside : lock.Inside).slice();
+			state.Velocity = [0, 0, 0];
+			state.Rise = 0;
+			state.Grounded = !state.Out;
+			hero.Hidden = false;
+
+			delete state.Cycle;
+
+			tellEva(hero, state, state.Out ? 'out' : 'in');
+		}
+
+		/* In its hull from outside (its hatch shut in flight: not the way down its ramp, as Solid has it): of its skin, else of its rooms. */
+		function hullAt (record, point, radius) {
+			var hull = record.Hull;
+			var plan = record.Plan;
+
+			/* Of no hull: its rooms within their walls, floors and ceilings. */
+			if (!hull) {
+				return plan.Rooms.some(function (room) {
+					return point[0] > room.Low[0] - radius && point[0] < room.High[0] + radius && point[1] > room.Low[1] - plan.Deck.Slab - radius && point[1] < room.High[1] + plan.Deck.Slab + radius && point[2] > room.Low[2] - radius && point[2] < room.High[2] + radius;
+				});
+			}
+
+			return [[0, 0], [radius, 0], [-radius, 0], [0, radius], [0, -radius]].some(function (off) {
+				var column = interiors.columnOf(hull, point[0] + off[0], point[2] + off[1]);
+
+				return column >= 0 && point[1] >= hull.Bottom[column] - radius && point[1] <= hull.Top[column] + radius;
+			});
+		}
+
+		/* Out of the ship: the jets of the suit, the line to the airlock, the hull in the way; its pose the float of its model. */
+		function drift (hero, state, record, keys, elapsed) {
+			var tall = tallOf(hero);
+			var lock = airlockOf(record, tall);
+			var yaw = scene.Drag && scene.Drag.Button === 2 ? scene.Drag.Yaw : scene.Yaw;
+			var pitch = scene.Pitch;
+			var forward = [-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)];
+			var right = [Math.cos(yaw), 0, -Math.sin(yaw)];
+			var lean = engine.Leaning(keys);
+			var lift = (keys.Space ? 1 : 0) - (keys.KeyC ? 1 : 0);
+			var way = vectors.Add(vectors.Add(vectors.Scale(forward, lean[0]), vectors.Scale(right, lean[1])), [0, lift, 0]);
+			var home = lock ? vectors.Subtract(lock.Outside, state.At) : [0, 0, 0];
+			var suit = suitOf(hero, {Boost: keys.ShiftLeft || keys.ShiftRight ? 1 : 0, Apart: vectors.Length(home)});
+			var velocity = state.Velocity || [0, 0, 0];
+			var speed;
+			var next;
+
+			if (vectors.Length(way) > 1e-4) velocity = vectors.Add(velocity, vectors.Scale(vectors.Normalize(way), suit.Push * elapsed));
+			else velocity = vectors.Scale(velocity, Math.max(0, 1 - suit.Damp * elapsed));
+
+			/* The line: past its length it pulls one back. */
+			if (suit.Pull > 0 && vectors.Length(home))
+				velocity = vectors.Add(velocity, vectors.Scale(vectors.Normalize(home), suit.Pull * elapsed));
+
+			speed = vectors.Length(velocity);
+
+			if (speed > suit.Top && vectors.Length(way) > 1e-4)
+				velocity = vectors.Scale(velocity, suit.Top / speed);
+
+			next = vectors.Add(state.At, vectors.Scale(velocity, elapsed));
+
+			/* The hull stops one, a little back off it. */
+			if (hullAt(record, [next[0], next[1] + tall * 0.5, next[2]], tall * 0.3)) velocity = vectors.Scale(velocity, -0.2);
+			else state.At = next;
+
+			state.Velocity = velocity;
+			state.Grounded = false;
+
+			hero.Walking = 0;
+			hero.Grounded = false;
+			hero.Pace = 'float';
+
+			engine.FaceView(hero, yaw, vectors.Length(way) > 1e-4, elapsed);
+
+			/* It floats whether it goes or not: the clip of its pose, not of its walking (it walks none). */
+			hero.Pose = 'float';
+		}
+
+		/* Who is on foot in a ship in flight walks; out of it (EVA) floats; in its airlock waits. */
+		function move (hero, state, record, keys, elapsed, felt) {
+			if (state.Cycle) cycle(hero, state, record, elapsed);
+			else if (state.Out) drift(hero, state, record, keys, elapsed);
+			else walk(hero, state, record, keys, elapsed, felt);
+		}
 
 		/* The walk of who is on foot in a ship in flight: as on a ground (walkHero), on the floors of its inside, its down the ship's. */
 		function walk (hero, state, record, keys, elapsed, felt) {
@@ -1021,11 +1207,11 @@ Elemenx.Trait('SceneAboard', {
 
 				scene.Pitch = Math.max(-1.3, Math.min(1.5, scene.Pitch));
 
-				walk(hero, state, record, keys, elapsed, felt);
+				move(hero, state, record, keys, elapsed, felt);
 
 				stand(hero, state, record);
 
-				view(hero, state, record, elapsed, felt);
+				view(hero, state, record, elapsed, state.Out ? null : felt);
 			}
 			else {
 				desk(hero, record, elapsed, felt);
@@ -1107,11 +1293,11 @@ Elemenx.Trait('SceneAboard', {
 
 			scene.Pitch = Math.max(-1.3, Math.min(1.5, scene.Pitch));
 
-			walk(hero, state, record, keys, elapsed, felt);
+			move(hero, state, record, keys, elapsed, felt);
 
 			stand(hero, state, record);
 
-			view(hero, state, record, elapsed, felt);
+			view(hero, state, record, elapsed, state.Out ? null : felt);
 
 			return true;
 		};
@@ -1173,7 +1359,7 @@ Elemenx.Trait('SceneAboard', {
 
 			/* The ship the hero is in: in its seat, or within its rooms (its middle). */
 			if (hero && hero.Aboard) inside = hero.Aboard.Vehicle;
-			else if (hero && afoot[hero.ID]) inside = afoot[hero.ID].Vehicle;
+			else if (hero && afoot[hero.ID]) inside = afoot[hero.ID].Out ? '' : afoot[hero.ID].Vehicle;
 			else if (hero && hero.World && !hero.Values.Vehicle) inside = engine.InsideOf([hero.World[0], hero.World[1] + 1, hero.World[2]]);
 
 			scene.InsideShip = inside;

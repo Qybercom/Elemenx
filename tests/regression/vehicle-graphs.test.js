@@ -27,7 +27,8 @@ function states (count) {
 			SpinPitch: next() * 4 - 2, SpinYaw: next() * 4 - 2, SpinRoll: next() * 4 - 2, Turn: 0.5 + next() * 2, Ship: next() < 0.5 ? 1 : 0, Throttle: next(), Landed: next() < 0.5 ? 1 : 0,
 			AimYaw: next() * 90 - 45, AimPitch: next() * 40 - 20, Fired: next() < 0.5 ? 1 : 0, FiredAge: next() * 2, Gust: next() * 0.5, Hour: next() * 24,
 			Lights: next() < 0.5 ? 1 : 0, Hazard: next() < 0.2 ? 1 : 0, Side: next() < 0.5 ? -1 : 1, Blink: next() * 5, Gear: [-1, 0, 1, 2, 3][Math.floor(next() * 5)], GearKnown: next() < 0.8 ? 1 : 0,
-			WasGas: next() < 0.5 ? 1 : 0, Pace: next() * 30, On: next() * 2 - 1, Boost: next() < 0.5 ? 1 : 0
+			WasGas: next() < 0.5 ? 1 : 0, Pace: next() * 30, On: next() * 2 - 1, Boost: next() < 0.5 ? 1 : 0,
+			Height: next() * 200, Airspeed: next() * 300
 		});
 
 	return list;
@@ -46,7 +47,9 @@ function before (s) {
 		stroke: s.Stroke / s.Size / s.Length, 'wheel-steer': s.Front ? s.Steer * 0.5 : 0, roll: s.Spin / (Math.PI * 2),
 		speed: Math.min(1, Math.abs(s.Forward) / Math.max(1, s.Top)), rpm: Math.min(1, s.Rpm / Math.max(1, s.Redline)),
 		pitch: Math.max(-1, Math.min(1, s.SpinPitch / s.Turn)), yaw: Math.max(-1, Math.min(1, s.SpinYaw / s.Turn)), 'roll-air': Math.max(-1, Math.min(1, s.SpinRoll / s.Turn)),
-		throttle: s.Throttle, flaps: s.Ship && s.Throttle < 0.3 ? 1 : 0, airborne: s.Ship && !s.Landed ? 1 : 0,
+		throttle: s.Throttle, flaps: s.Ship && s.Throttle < 0.3 ? 1 : 0,
+		/* New: the gear stays up only high or fast (GearHeight 60 m, GearSpeed 120 m/s); it came down only as a ship landed. */
+		airborne: s.Ship && !s.Landed && (s.Height > 60 || s.Airspeed > 120) ? 1 : 0,
 		'aim-yaw': s.AimYaw, 'aim-pitch': s.AimPitch, fire: s.Fired ? Math.exp(-Math.max(0, s.FiredAge) * 12) : 0,
 		wind: Math.max(0.1, s.Gust), 'clock-hour': (s.Hour % 12) / 12, 'clock-minute': (s.Hour * 60 % 60) / 60,
 		'lamp-head': s.Lights ? 1 : 0, 'lamp-rear': braking ? 1 : s.Lights ? 0.3 : 0, 'lamp-brake': braking ? 1 : 0,
@@ -193,6 +196,45 @@ describe('Regression: the look of a landing and the shake of a view, graphs of t
 		expect(Math.abs(engine.TraumaPitch)).toBeLessThan(Math.abs(blast.TraumaPitch));
 		expect(blast.BlastLeft).toBeCloseTo(0.65, 12);
 		expect(cameraSource).not.toContain('function wander');
+
+		/* A way far at once (Warp): the view behind the ship shakes as the code did. Regression: sines of its own in the code. */
+		states(50).forEach(function (s) {
+			var time = s.Swept * 3;
+			var made = run('camera/shake', {Time: time, Size: s.Size, Warp: s.Throttle, Elapsed: 0.016, Blast: 0, Rpm: 0, Jolt: 0});
+
+			expect(made.WarpRight).toBeCloseTo((Math.sin(time * 61) + Math.sin(time * 37) * 0.5) * s.Size * 0.012 * s.Throttle, 12);
+			expect(made.WarpUp).toBeCloseTo((Math.sin(time * 53 + 1) + Math.sin(time * 29) * 0.5) * s.Size * 0.012 * s.Throttle, 12);
+		});
+
+		expect(vehiclesSource).not.toContain('Math.sin(time * 61)');
+	});
+
+	/*
+	 * A ship in the air banks as the code did (SceneLanding: its turn by its speed up to 40 m/s, 0.9 of it, 0.6 at most, a
+	 * third of the way a second); in space less of it (SpaceBank). A car leans on its springs: 1.2 degrees a g it speeds up
+	 * or brakes, 2.5 a g it turns, out of it, less as it is stiffer, none off the ground.
+	 */
+	it('banks a ship as the code did in the air, and leans the body of a car on its springs', function () {
+		states(100).forEach(function (s) {
+			var turn = s.SpinYaw;
+			var flat = s.Pace * 3;
+			var air = run('vehicles/bank', {Turn: turn, Speed: flat, Air: 1, Landed: 0});
+			var space = run('vehicles/bank', {Turn: turn, Speed: flat, Air: 0, Landed: 0});
+			var accel = s.Forward / 4 - 10;
+			var lateral = s.Steer * 15;
+			var body = run('vehicles/body', {Accel: accel, Lateral: lateral, Stiff: 1, Grounded: 1});
+
+			expect(air.Roll).toBeCloseTo(Math.max(-0.6, Math.min(0.6, turn * Math.min(1, flat / 40) * 0.9)), 12);
+			expect(air.Rate).toBe(3);
+			expect(Math.abs(space.Roll)).toBeCloseTo(Math.min(0.6, Math.abs(turn * 0.4 * 0.9)), 12);
+			expect(body.Pitch).toBeCloseTo(Math.max(-4, Math.min(4, accel / 9.81 * 1.2)) * Math.PI / 180, 12);
+			expect(body.Roll).toBeCloseTo(Math.max(-6, Math.min(6, lateral / 9.81 * 2.5)) * Math.PI / 180, 12);
+		});
+
+		expect(run('vehicles/bank', {Turn: 1, Speed: 100, Air: 1, Landed: 1}).Roll).toBe(0);
+		expect(run('vehicles/body', {Accel: 9.81, Lateral: 0, Stiff: 2, Grounded: 1}).Pitch).toBeCloseTo(0.6 * Math.PI / 180, 12);
+		expect(run('vehicles/body', {Accel: 9.81, Lateral: 9.81, Stiff: 1, Grounded: 0}).Roll).toBe(0);
+		expect(landingSource).not.toContain('clamp(yawRate * Math.min(1, flat / 40) * 0.9, -0.6, 0.6)');
 	});
 });
 
@@ -208,14 +250,14 @@ describe('Contract: the effects that come with a ship, of the graphs of its look
 		Use(['service:Blueprints']);
 	});
 
-	function run (name, inputs) {
-		return Elemenx.Service('Blueprints').Code(JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/' + name)))).Run({}, Object.assign({Thick: 0, Speed: 0, Over: 0, Going: 0, Throttle: 0, Manual: 0, T: 0, Landed: 0, Pull: 0, Flat: 0, Top: 1, Height: 0, Size: 1, Push: 0}, inputs));
+	function run (name, inputs, parameters) {
+		return Elemenx.Service('Blueprints').Code(JSON.parse(JSON.stringify(Elemenx.Resources('Blueprints', 'ElemenxGraphics/' + name)))).Run(parameters || {}, Object.assign({Thick: 0, Speed: 0, Over: 0, Going: 0, Throttle: 0, Manual: 0, T: 0, Landed: 0, Pull: 0, Flat: 0, Top: 1, Height: 0, Size: 1, Push: 0}, inputs));
 	}
 
 	it('burns a cocoon coming in hot, leaves a trail high up, blows dust low, knows the speed of sound', function () {
 		var hot = run('landing/look', {Thick: 0.9, Speed: 6, Over: 65});
 		var cool = run('landing/look', {Thick: 0.9, Speed: 2, Over: 100});
-		var trail = run('landing/look', {Thick: 0.9, Speed: 0.4, Over: 11});
+		var trail = run('landing/look', {Thick: 0.9, Speed: 0.4, Over: 11}, {Contrail: 1});
 		var low = run('landing/look', {Height: 5, Size: 40, Push: 1});
 		var high = run('landing/look', {Height: 400, Size: 40, Push: 1});
 
@@ -224,7 +266,10 @@ describe('Contract: the effects that come with a ship, of the graphs of its look
 		expect(run('landing/look', {Thick: 1.6, Speed: 6, Over: 65}).CocoonHot).toBe(1);
 		expect(cool.Cocoon).toBeLessThan(0.05);
 		expect(trail.Contrail).toBe(1);
-		expect(run('landing/look', {Thick: 0.9, Speed: 0.4, Over: 30}).Contrail).toBe(0);
+		expect(run('landing/look', {Thick: 0.9, Speed: 0.4, Over: 30}, {Contrail: 1}).Contrail).toBe(0);
+
+		/* None by default (the parameter Contrail of the graph): it hung over the place a ship landed at as a wall of smoke. */
+		expect(run('landing/look', {Thick: 0.9, Speed: 0.4, Over: 11}).Contrail).toBe(0);
 		expect(low.Dust).toBe(1);
 		expect(high.Dust).toBe(0);
 		expect(run('landing/look', {Speed: 0.343}).Mach).toBeCloseTo(1, 12);

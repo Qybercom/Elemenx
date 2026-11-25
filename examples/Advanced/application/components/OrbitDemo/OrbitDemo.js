@@ -53,15 +53,13 @@ Elemenx.Component('OrbitDemo', {
 			return one.Name + ' ' + (one.Seconds < 100 ? one.Seconds.toFixed(1) : Math.round(one.Seconds)) + ' s, ' + Math.round(one.Pass).toLocaleString() + ' km';
 		}).join(' · ') : '';
 	},
-	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), its scene made again as one changes. */
+	/* The shader graph open (DemoGraph: '' none), those its scene is drawn with (Graphs of Scene), given to the scene as one changes (it makes its shaders again itself, its view kept). */
 	OrbitGraphOpen: '',
 	OrbitGraphs: null,
-	OrbitFresh: true,
 	OrbitGraphOpened: function (name) {
 		this.OrbitGraphOpen = this.OrbitGraphOpen === name ? '' : name;
 	},
 	OrbitGraphChanged: function (event) {
-		var self = this;
 		var given = event && event.detail ? event.detail : event;
 		var graphs = Object.assign({}, this.OrbitGraphs || {});
 
@@ -69,15 +67,6 @@ Elemenx.Component('OrbitDemo', {
 		else delete graphs[given.Name];
 
 		this.OrbitGraphs = Object.keys(graphs).length ? graphs : null;
-
-		/* What is felt aboard (aboard/forces) is read each frame: the scene goes on as it is. A shader is made with the scene. */
-		if (given.Name.indexOf('shader/') !== 0) return;
-
-		this.OrbitFresh = false;
-
-		setTimeout(function () {
-			self.OrbitFresh = true;
-		}, 0);
 	},
 	OrbitReady: function (scene) {
 		var self = this;

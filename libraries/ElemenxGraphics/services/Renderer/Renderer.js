@@ -17,8 +17,8 @@
  *   (sunShadow(position, normal): 0 in the shadow, 1 in the light; uniforms uShadowMap, uShadowMatrix, uShadowBias,
  *   uShadowOn). Chunks.SkyLight is the light of the sky along a way (skyLight(way, spread, sky, ground, sun, gain): 0 a
  *   mirror, 1 what is lit all round), of ground and sky only as it is: a renderer's Replaces ({text: what goes in its
- *   place}, set before its programs) puts other texts in place of theirs in each shader it compiles (a Scene its graph of
- *   the light of the sky, shader/sky-light).
+ *   place}) puts other texts in place of theirs in each shader it compiles (a Scene its graph of the light of the sky,
+ *   shader/sky-light); a program is kept by its text with them in place, so another one put in makes another program.
  *
  * Create(canvas, options) returns a renderer, or null where there is no WebGL2 (options: Alpha, Antialias, Ratio); its
  * Destroy lets go of all it made, its context kept with those let go and given back the oldest first only when the page
@@ -85,7 +85,7 @@ Elemenx.Service('Renderer', {
 	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
-	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11, aMaterials: 12, aMaterials2: 13, aMaterials3: 14},
+	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11, aMaterials: 12, aMaterials2: 13, aMaterials3: 14, aLayer: 15},
 
 	Camera: function (options) {
 		var math = this.$Service('Math');
@@ -1256,7 +1256,8 @@ Elemenx.Service('Renderer', {
 			Replaces: {},
 
 			Program: function (vertex, fragment, behind) {
-				var key = vertex + '\n--\n' + fragment;
+				/* By the text it is made of, what Replaces put in it too: another light of the sky (a graph given anew) is another program. */
+				var key = replaced(vertex) + '\n--\n' + replaced(fragment);
 				var program = programs[key];
 				var handle;
 

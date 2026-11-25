@@ -243,6 +243,32 @@
 									"Anomaly": 190
 								}
 							}
+						},
+						{
+							"ID": "railgun-platform",
+							"Kind": "craft",
+							"Values": {
+								"Name": "Railgun platform",
+								"Model": "station-b",
+								"Length": 300,
+								"Team": "blue",
+								"Railgun": "platform-ftl"
+							},
+							"Traits": {
+								"Model": {
+									"Size": 0.2
+								},
+								"Orbit": {
+									"Distance": 1.45,
+									"Period": 80,
+									"Inclination": 2,
+									"Anomaly": 40
+								},
+								"NavPoint": {
+									"Kind": "station",
+									"Name": "Railgun platform"
+								}
+							}
 						}
 					]
 				},

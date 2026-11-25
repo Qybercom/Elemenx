@@ -1,0 +1,15 @@
+{
+	"gaming": {
+		"commands": {
+			"label": "Ship commands",
+			"site": "Land at",
+			"under": "Under the ship",
+			"day": "day",
+			"night": "night",
+			"land": "Land",
+			"takeoff": "Take off",
+			"orbit": "To orbit",
+			"hint": "Under 2000 km: go round it first"
+		}
+	}
+}

@@ -18,7 +18,7 @@
 		<DemoGraph [name]="UniverseGraphOpen" (change)="UniverseGraphChanged" />
 	</div>
 	<div class="scene-demo-scene">
-		<Scene *if="UniverseFresh" [graphs]="UniverseGraphs" Setting="galaxy" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [galaxy]="UniverseGalaxy" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="UniverseReady" (galaxy)="UniversePick" (enter)="UniverseIn" (leave)="UniverseOut" (travel)="UniverseTravelled"><DemoLoading slot="loading" Title="Universe" />
+		<Scene [graphs]="UniverseGraphs" Setting="galaxy" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [galaxy]="UniverseGalaxy" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="UniverseReady" (galaxy)="UniversePick" (enter)="UniverseIn" (leave)="UniverseOut" (travel)="UniverseTravelled"><DemoLoading slot="loading" Title="Universe" />
 			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Fly" />
 			<GameHud slot="hud" Label="Flight"><GameFlight slot="bottom" Engineer="true" Size="small" /></GameHud>
 		</Scene>

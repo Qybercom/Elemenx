@@ -83,7 +83,9 @@
  * the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
  *
  * The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays
- * clips of its pieces (Clip: the one it plays when idle): walk on a way by itself, Play(id, clip, callback) the others
+ * clips of its pieces (Clip: the one it plays when idle; a change of clip fades as TransitionGraph says, a gait into a gait
+ * in time with its steps; going, the gaits of its speed blended, BlendGraph; Walking: on the spot at that speed; a clip of
+ * the arms played while it goes is a layer over its legs): walk on a way by itself, Play(id, clip, callback) the others
  * (attack, cast, work, die); the wind bends what grows. View top or isometric sees a ground in parallel rays, as a game
  * of two dimensions.
  *
@@ -120,7 +122,7 @@
 Elemenx.Component('Scene', {
 	$TemplateURL: 'Scene.html',
 	$StyleURL: 'Scene.css',
-	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneGiants', 'SceneVehicles', 'SceneShipSystems', 'SceneAboard', 'SceneTactics', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneNebula', 'SceneGalaxy'],
+	$Traits: ['SceneScatter', 'SceneLighting', 'SceneProbes', 'SceneEffects', 'SceneCosmos', 'SceneGiants', 'SceneVehicles', 'SceneShipSystems', 'SceneAboard', 'SceneTactics', 'SceneTriggers', 'ScenePhysics', 'SceneRoadNetwork', 'SceneFootings', 'SceneLanding', 'SceneCamera', 'SceneScreens', 'SceneCinema', 'SceneWeapons', 'SceneAgents', 'SceneMissiles', 'SceneDebris', 'SceneFracture', 'ScenePiping', 'SceneDeepSpace', 'SceneNebula', 'SceneGalaxy'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -139,6 +141,10 @@ Elemenx.Component('Scene', {
 			shield: 'A layer of the shield of an object took a hit (SceneShipSystems): {ID, Layer, Value, Capacity, Taken, Broken, Hit}.',
 			discover: 'A place came within the sensors of a vehicle and is known now (SceneShipSystems, NavPoint): {ID, By, Kind, Name}.',
 			context: 'An actor (the character of the player) sat in a seat of a vehicle or left it (SceneVehicles Board, Leave, BoardKey: G): {Actor, Kind (walk or seat), Vehicle, Seat, Role, Controls}.',
+			agent: 'An agent (SceneAgents: Values.Agent, a tree of behaviour) began a task: {ID, Task, Enemy}.',
+			autopilot: 'The autopilot of a ship took it, brought it there, or let it go (SceneVehicles Autopilot): {ID, Mode (hold, approach, follow), Phase (on, arrived, off), Reason (hand, asked, target)}.',
+			eva: 'A step of going out of a ship in space and in again (SceneAboard: G by its airlock): {Actor, Vehicle, Step (cycle, out, in), Out}.',
+			boarding: 'A step of getting in or out of a vehicle step by step (Board and Leave with Animate, G by a car): {Actor, Vehicle, Seat, Step (approach, open, enter, sit, exit, close, done), Out}.',
 			ground: 'A ground came, its field made (a ground of the scene, of a location, of a planet landed on): {Key (its shape: location:<id>:<model> for a location), ID (the object it is of), Location (true for a location)}.',
 			shoulder: 'B took the view over another shoulder: right or left.',
 			arrive: 'An object reached where it was sent: {ID, At}.',
@@ -151,8 +157,12 @@ Elemenx.Component('Scene', {
 			dig: 'A hole was dug in the ground (Dig): {At, Radius}.',
 			fire: 'An object shot its weapon (SceneWeapons): {ID, Weapon, From, Way}.',
 			hit: 'A shot hit something or the ground (SceneWeapons): {ID, Weapon, Type, Source, Team, Target, Part, Point, Normal, Material, Amount, Distance}.',
-			lock: 'The hero locked a target under its aim (Lock of its weapon): {ID, Weapon}.',
+			lock: 'The hero locked a target under its aim (Lock of its weapon), or its ship with its missiles (SceneMissiles): {ID, Weapon, By}.',
 			unlock: 'A lock was lost: {ID}.',
+			missile: 'A missile (SceneMissiles) was launched, taken by a flare, lost its target, was brought down, hit or flew its range: {ID, Weapon, Source, Target, State (launch, decoyed, reacquired, lost, intercepted, hit, spent), By}.',
+			flares: 'A ship released flares: {ID, Count, Left}.',
+			charge: 'A weapon that charges (Charge: the lance) began to: {ID, Weapon, Seconds}.',
+			tunnel: 'A railgun faster than light opened a tunnel of warp for its slug (no warning to the target): {ID, Weapon, Source, Target, Mode (predict, direct), Blocked}.',
 			break: 'A thing broke into pieces (Break, SceneDebris): {ID, Pieces, Point}.',
 			teleport: 'A thing is beamed away or comes (Teleport): {ID, Phase (out or in), From, To}.',
 			through: 'A ship flew into the mouth of a wormhole (SceneDeepSpace): {ID, Wormhole, Leads, To (the mouth it comes out of, empty: none)}.',
@@ -169,7 +179,7 @@ Elemenx.Component('Scene', {
 			shader: 'A graph (or GLSL written by hand) made into a shader did not compile, and what the library has is drawn in its place: {Kind (material, vertex, land, water, wind, grass, effect, pass), Owner (the material, object or prop of the graph), Errors ([{Block, Line, Message}]: each on the block of GLSL it is in), Message}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}).'
 		},
-		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryNebula()', 'LibraryLand()', 'LibraryBake()', 'LibraryWeather()', 'LibraryAir()', 'LibraryClouds()', 'LibraryForecast()', 'LibraryCosmos()', 'LibraryRing()', 'LibraryPlanet()', 'LibraryGround()', 'LibraryEnvelope()', 'Probe(id, name)', 'Unprobe(id)', 'Environment(id)', 'WeatherOver(id, direction)', 'BoltShape()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'TravelStop(id)', 'TravelStep(id, step)', 'Aim(id)', 'AimAlign(on)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback, options)', 'GalaxyNear(radius, limit)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)'],
+		Methods: ['Trigger(id)', 'TriggerActions(actions)', 'ZonesAt(x, z)', 'SurfaceAt(x, z)', 'Roads()', 'Junctions()', 'Interchanges()', 'Push(id, impulse, at)', 'CastRay(from, direction, max)', 'Colliders()', 'RigidWorld()', 'Burst(type, place, options)', 'AddBehaviour(behaviour)', 'PipelineGraph()', 'LibraryWind()', 'LibraryGrass()', 'LibrarySky()', 'LibraryStar()', 'LibraryNebula()', 'LibraryLand()', 'LibraryBake()', 'LibraryWeather()', 'LibraryAir()', 'LibraryClouds()', 'LibraryForecast()', 'LibraryCosmos()', 'LibraryRing()', 'LibraryPlanet()', 'LibraryGround()', 'LibraryEnvelope()', 'Probe(id, name)', 'Unprobe(id)', 'Environment(id)', 'WeatherOver(id, direction)', 'BoltShape()', 'LibraryWater()', 'EffectGraph(name)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'TravelStop(id)', 'TravelStep(id, step)', 'Aim(id)', 'AimAlign(on)', 'OpenPart(id, name, amount)', 'Parts(id)', 'Part(id, role)', 'CosmosKinds()', 'GalaxyData()', 'GalaxyView()', 'SetGalaxyView(view)', 'GalaxyStars()', 'GalaxyPicked()', 'GalaxyFocus(id)', 'EnterSystem(id, callback, options)', 'GalaxyNear(radius, limit)', 'LeaveSystem(callback)', 'GalaxyEntered()', 'Add(kind, props)', 'Change(id, changes)', 'UseCamera(id, options)', 'Cameras()', 'Fire(id, options)', 'Weapons(types)', 'HitRules(rules)', 'Locked()', 'Trace(from, way, range)', 'Marks()', 'Killed(id)', 'Break(id, options)', 'Debris()', 'Pipes()', 'Fluids()', 'Damage(id, amount, hit)', 'Integrity(id)', 'Fractures(materials)', 'Teleport(id, place, options, callback)', 'CastOn(type, at, options)', 'Dispel(id, seconds)', 'Lightning(kind)', 'Visibility()', 'SightOf(range)', 'SeasonState()', 'Visible(from, to, range)', 'PlayCutscene(cutscene, callback)', 'StopCutscene()', 'PauseCutscene(on)', 'SeekCutscene(seconds)', 'Cutscene()', 'Cinema(layer)', 'Record(options, callback)', 'ScreenAt(clientX, clientY)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'Drawn()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY, all)', 'Viewpoint()', 'SetViewpoint(view)', 'Phone()', 'Device()', 'Project(point)', 'Ray(clientX, clientY)', 'GroundAt(clientX, clientY)', 'OrbitAt(id, clientX, clientY)', 'Unlink(id)', 'Socket(id, name)', 'ChangeSown(key, changes)', 'UnlinkSown(key)', 'Save(options)', 'Load(saved)', 'Dig(at, radius)', 'FootingsOf()', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Preload(list, callback)', 'ToOrbit(id)', 'ShipCommands(id)', 'ShipCommand(id, command, options)', 'Autopilot(id, mode, options)', 'AutopilotOf(id)', 'AgentOrder(ids, order, target)', 'AgentOf(id)', 'Launch(id, options)', 'Driver(id, target)', 'Lance(id, target)', 'Railgun(id, target, options)', 'Flares(id)', 'Defence(id, on)', 'Incoming(id)', 'ArmsOf(id)'],
 		Props: {
 			Setting: {Options: ['space', 'terrain', 'galaxy'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy).'},
 			Galaxy: 'The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms}).',
@@ -212,7 +222,7 @@ Elemenx.Component('Scene', {
 			WindWay: 'Where the wind blows to: an azimuth in degrees.',
 			WaterGraph: 'What water looks like: a water graph of the Blueprints Service (or its JSON, or its GLSL) of its waves, the sky and the sun it mirrors, its depth, its foam and the fog over it; the one of the library (LibraryWater) when empty.',
 			LandGraph: 'What the land is, its light and its wet and snow too: a land graph of the Blueprints Service (or its JSON, or GLSL with blueprintLand); empty, the one of the library (LibraryLand()). Its Blueprint (a material graph) still paints it, in LandPaint.',
-			Graphs: 'The shader graphs of a world of its own by their names, read as the scene is made: shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph), shader/ground (GroundGraph), planet/envelope (EnvelopeGraph), star (the stars with no Blueprint of their own: their surface, crown, beams and numbers); its props of them come first.',
+			Graphs: 'The shader graphs of a world of its own by their names, the scene made again in place when one is given anew (its objects, its view and its time kept; behind a soft veil while its programs are made): shader/bake (BakeGraph), shader/weather (WeatherGraph), shader/bolt (BoltGraph), shader/air (AirGraph), shader/clouds (CloudsGraph), shader/forecast (ForecastGraph), shader/galaxy (GalaxyGraph), shader/cosmos (CosmosGraph), shader/ring (RingGraph), shader/planet (PlanetGraph), shader/ground (GroundGraph), planet/envelope (EnvelopeGraph), star (the stars with no Blueprint of their own: their surface, crown, beams and numbers); its props of them come first.',
 			BoltGraph: 'The shape of its lightnings, of a storm and of its effects: a generator of the Blueprints Service of the jag of each step (its results X and Z; or its JSON); empty, the one of the library (SceneBlueprints.LibraryBolt()).',
 			PlanetGraph: 'Its globes seen from far: a planet graph of the Blueprints Service of their picture lit, their clouds and the shadows of them and of a ring, their towns at night, their air at the edge (or its JSON, or GLSL with blueprintPlanet); empty, the one of the library (LibraryPlanet()).',
 			EnvelopeGraph: 'What lies over and under the surface of its bodies (their air, decks of clouds, seas, the depths of a giant): a generator of numbers of the Blueprints Service of the blocks EnvelopeState and EnvelopeLight of the Envelope Service (its results Pressure, Temperature, Zone and Light; or its JSON); empty, the one of the library (LibraryEnvelope()).',
@@ -225,12 +235,21 @@ Elemenx.Component('Scene', {
 			ReactorGraph: 'A step of a reactor of the systems of an object (SceneShipSystems): Heat, Tripped, Supply of Heat, Load, Rise, Cool, Elapsed, On, Tripped, Trip, Resume, Output; empty, the one of the library (blueprints/vehicles/reactor); of the Power of an object wins.',
 			PowerGraph: 'What the power of the reactors gives each system (SceneShipSystems): Engines, Shields, Weapons, Load of Supply, the needs and the shares of each; empty, the one of the library (blueprints/vehicles/power).',
 			ShieldGraph: 'A step of a layer of a shield (SceneShipSystems): Value of Value, Capacity, Regen, Power, Since, Delay, Elapsed; empty, the one of the library (blueprints/vehicles/shield).',
+			ShipButtons: 'Its own buttons of the commands of a ship (Landing, Take off, To orbit) over the view; false: none, the commands given by a game (ShipCommands, ShipCommand: on its consoles, its panels).',
+			MassLock: 'Ships near ships of another team go no faster than a fight goes, by the frame of their fight (the soft mass lock: MassLockGraph); off by default.',
+			MassLockGraph: 'How fast a ship may go near ships of another team (Distance, Top -> Top, Lock): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/masslock).',
+			BoardGraph: 'How one gets into a vehicle and out of it step by step (Kind, Height, Door -> Open, Enter, Sit, Close: seconds; Clip, Duck): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/board).',
 			ReadoutGraph: 'What the instruments of a vehicle or of a character on foot read (Speed, TopSpeed, SpeedPart, RpmPart, Gear, Left, Right, Lights, HealthPart of Forward, Top, Rpm, Redline, Gear, Indicate, Hazard, Blink, Lights, Health, MaxHealth): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/readout); ReadoutGraph of a vehicle wins.',
 			DrivesGraph: 'What each moving part, lamp, emitter and pop of a vehicle is driven to of its state (steer, gas, wipers, stroke, lamp-brake... of Steer, Gas, Swept, Stroke...): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/drives); DrivesGraph of a vehicle wins.',
 			WheelGraph: 'How each wheel of a car turns of its state (SpinAngle, SteerAngle, Drop, Camber of Spin, Steer, Stroke, Size, Front, Held, Side): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/wheel); WheelGraph of a vehicle wins.',
 			ThrustGraph: 'How what burns on an engine looks of its thrust (Length, Intensity, Inside of Thrust): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/thrust); ThrustGraph of a vehicle wins.',
 			LandingLookGraph: 'How a landing looks as it goes (Heat, Fov, Thrust, Raise, TransferThrust, OrbitThrust, HoverThrust of Thick, Speed, Over, Going, Throttle, Manual, T, Landed, Pull, Flat, Top): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/landing/look).',
-			ShakeGraph: 'How a view shakes (X, Y, Z, Pitch, Yaw, Roll of a rig; HeatRight, HeatUp; KickTaken; TraumaPitch, TraumaYaw, TraumaRoll, BlastLeft of Time, Seed, Shake, Hover, Walked, Stride, Heat, Size, Kick, Elapsed, Blast, Rpm, Jolt): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/camera/shake).',
+			FeetGraph: 'How the feet of one of legs keep to the ground (DownLeft, DownRight: metres the ground under each foot is above its own, Size, Speed, Grounded -> Drop: its hips down, Left, Right: each foot up or down, Rate): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/animation/feet).',
+			BlendGraph: 'Which gaits a model goes in at a speed (Speed, Walk, Jog, Sprint: the speeds of its walk, jog and sprint at their own pace -> Low, High: 0 walk, 1 jog, 2 sprint; Weight of the high one, blended as one cycle): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/animation/blend). An object of Blend false keeps the gait it is given.',
+			BodyGraph: 'How the body of a car leans on its springs (Accel, Lateral: m/s², Stiff, Grounded -> Pitch, Roll radians, Spring, Damp): a generator graph of the Blueprints Service (or its JSON); empty, BodyGraph of the vehicle, else the one of the library (blueprints/vehicles/body).',
+			BankGraph: 'How a ship banks into a turn (Turn: rad/s, Speed, Top, Air, Landed -> Roll radians, View: the share of it every view banks with, Spring, Damp): a generator graph of the Blueprints Service (or its JSON); empty, BankGraph of the vehicle, else the one of the library (blueprints/vehicles/bank).',
+			TransitionGraph: 'How a clip of a model gives way to the next (FromKnown, FromGait, ToGait, FromOnce, ToOnce, ToHold -> Fade: seconds, Ease: 1 eased, Sync: 1 the next goes on from the phase of the last, its steps in time): a generator graph of the Blueprints Service (or its JSON); empty, Transition of the recipe of the model, else the one of the library (blueprints/animation/transition).',
+			ShakeGraph: 'How a view shakes (X, Y, Z, Pitch, Yaw, Roll of a rig; HeatRight, HeatUp; KickTaken; TraumaPitch, TraumaYaw, TraumaRoll, BlastLeft; WarpRight, WarpUp of Time, Seed, Shake, Hover, Walked, Stride, Heat, Size, Kick, Elapsed, Blast, Rpm, Jolt, Warp): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/camera/shake).',
 			TravelLookGraph: 'How a warp and a jump look in each of their phases (Stretch, Tunnel, Flash, Shake, Wide, Lag, Pace of the Phase: 0 into it, 1 in it, 2 out of it; Warp: 1 a warp, 0 a jump; T of the phase; Time in it): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/travel-look).',
 			SeasonGraph: 'The season of the sun and what it does to plants and the land (Warmth, Rising, Bare, Turn, Blossom, Dry, Snow of its Fixed season, Latitude, YearDays and DayOfYear): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/weather/season).',
 			ForecastGraph: 'The weather of a planet, its clouds, cirrus and rain over its body as its days go: a graph of numbers of the Blueprints Service of the blocks of SceneForecast (or its JSON), read by its shader and the page alike; empty, the one of the library (LibraryForecast()).',
@@ -315,6 +334,10 @@ Elemenx.Component('Scene', {
 	SeasonGraph: null,
 	DrivesGraph: null,
 	ReadoutGraph: null,
+	BoardGraph: null,
+	MassLock: false,
+	MassLockGraph: null,
+	ShipButtons: true,
 	ReactorGraph: null,
 	PowerGraph: null,
 	ShieldGraph: null,
@@ -322,6 +345,11 @@ Elemenx.Component('Scene', {
 	ThrustGraph: null,
 	LandingLookGraph: null,
 	ShakeGraph: null,
+	TransitionGraph: null,
+	BodyGraph: null,
+	BankGraph: null,
+	BlendGraph: null,
+	FeetGraph: null,
 	TravelLookGraph: null,
 	GalaxyGraph: null,
 	CosmosGraph: null,
@@ -1025,6 +1053,13 @@ Elemenx.Component('Scene', {
 		}
 
 		/* Every object, of the seed, the system, the template, a saved game and the methods; the later over the earlier. */
+		/* The layer of the marks of aiming (SceneVehicles) shown or not. */
+		function sighted (shown) {
+			var sight = element.querySelector('.elemenx-scene-sight');
+			if (sight)
+				sight.hidden = !shown;
+		}
+
 		function compose () {
 			composeObjects();
 		}
@@ -1248,9 +1283,10 @@ Elemenx.Component('Scene', {
 			else if (model) {
 				/*
 				 * What walks in a location of a system, and the inside of a ship standing there (SceneAboard): of the location, its
-				 * size in metres. Regression: a pilot out of its ship was 3.6 cm tall, the inside of the ship a fiftieth of it.
+				 * size in metres, and so what was added in it (of its ground: Include). Regression: a pilot out of its ship was 3.6 cm
+				 * tall, the inside of the ship a fiftieth of it; a crate set on the ground there 2.4 cm.
 				 */
-				var located = !!scene.Location && !object.Owner && (!!object.Values.Aboard || !!trait(object, 'Walker'));
+				var located = !!scene.Location && !object.Owner && (!!object.Values.Aboard || !!trait(object, 'Walker') || object.Parent === scene.Location.Ground);
 
 				object.Size = object.Owner ? object.Owner.Size * number(model.Size, 1) : number(model.Size, 0.1) * (model.Relative && parent ? parent.Size : 1) * (model.Relative || located ? 1 : between(1, 0.02, how));
 
@@ -1845,13 +1881,16 @@ Elemenx.Component('Scene', {
 				return renderer.Program(shaders.GroundVertex, shaders.Ground);
 			});
 
-			/* The land of the materials of a ground (names), with the Blueprint of the ground (own) or none: each made once. */
+			/*
+			 * The land of the materials of a ground (names), with the Blueprint of the ground (own) or none: each made once; behind,
+			 * not waited for by the veil (the land of a location come in a flight: Renderer.Program behind).
+			 */
 			gpu.LandPrograms = {};
-			gpu.LandOf = function (own, names) {
+			gpu.LandOf = function (own, names, behind) {
 				var key = (names || []).join(',');
 				var kept = own ? own.Programs : gpu.LandPrograms;
 
-				kept['Land:' + key] = kept['Land:' + key] || renderer.Program(shaders.LandVertex, engine.Leveled(gpu.LandText(own ? own.Fragments.Land : shaders.Land, names)));
+				kept['Land:' + key] = kept['Land:' + key] || renderer.Program(shaders.LandVertex, engine.Leveled(gpu.LandText(own ? own.Fragments.Land : shaders.Land, names)), behind);
 
 				return kept['Land:' + key];
 			};
@@ -5257,8 +5296,10 @@ Elemenx.Component('Scene', {
 			var size = list.Count * 4;
 			var data = {aInstance: {Size: 4, Data: list.Places.subarray(0, size)}, aInstance2: {Size: 4, Data: list.X.subarray(0, size)}, aInstance3: {Size: 4, Data: list.Y.subarray(0, size)}, aInstance4: {Size: 4, Data: list.Z.subarray(0, size)}, aInstance5: {Size: 4, Data: list.Tints.subarray(0, size)}};
 
-			if (list.Skinned)
+			if (list.Skinned) {
 				data.aFrames = {Size: 4, Data: list.Frames.subarray(0, size)};
+				data.aLayer = {Size: 4, Data: list.Layers.subarray(0, size)};
+			}
 
 			shape(name, list.Geometry).Instance(data, list.Count);
 
@@ -5894,6 +5935,19 @@ Elemenx.Component('Scene', {
 			gpu.Palettes[model.Key] = gpu.Palettes[model.Key] || {};
 			textures = gpu.Palettes[model.Key];
 
+			/* The frames of standing and going made before the rest (SceneModels Partial): drawn of them till all are. */
+			if (!baked && model.Partial) {
+				if (textures.PartialOf !== model.Partial) {
+					if (textures.Partial)
+						textures.Partial.Destroy();
+
+					textures.Partial = renderer.Texture({Width: model.Partial.Width, Height: model.Partial.Height, Data: model.Partial.Data}, {Float: true, Nearest: true});
+					textures.PartialOf = model.Partial;
+				}
+
+				return textures.Partial;
+			}
+
 			/* While its frames are being made a model stands in the first of them. */
 			if (!baked) {
 				if (!textures.Standing)
@@ -5902,10 +5956,115 @@ Elemenx.Component('Scene', {
 				return textures.Standing;
 			}
 
-			if (!textures.Palette)
+			if (!textures.Palette) {
 				textures.Palette = renderer.Texture({Width: baked.Width, Height: baked.Height, Data: baked.Data}, {Float: true, Nearest: true});
 
+				if (textures.Partial) {
+					textures.Partial.Destroy();
+
+					textures.Partial = textures.PartialOf = null;
+				}
+			}
+
 			return textures.Palette;
+		}
+
+		/* The floor under a place: the ground, a pipe, a floor of an interior, as one on its feet stands on it. */
+		function floorAt (x, z, y) {
+			var field = scene.Ground.Field;
+
+			return Math.max(0, field.Height(x, z, y), engine.PipeFloor ? engine.PipeFloor(x, z, y) : -Infinity, engine.InteriorFloor ? engine.InteriorFloor(x, z, y) : -Infinity);
+		}
+
+		/*
+		 * The feet of one of legs set on the ground under them (the graph of the feet: blueprints/animation/feet, FeetGraph of
+		 * the scene or Graphs['animation/feet']): how far the ground under each ankle of its clip (SceneModels.Feet) is above
+		 * or below the ground it stands on; its hips go down (FootDrop) for the lower to reach, each foot goes to its ground
+		 * (LayerFrame z, w: in its model, the shader bends the leg to it). None in a vehicle, in the air, far from the eye.
+		 * Regression: on a slope or a step one foot hung in the air and the other went into the ground.
+		 */
+		function footing (object, made, base, scale) {
+			var kept = object.Footing = object.Footing || {Left: 0, Right: 0, Drop: 0};
+			var want = {Left: 0, Right: 0, Drop: 0, Rate: 14};
+			var near = object.World && scene.Eye && vectors.Distance(object.World, scene.Eye) < 80;
+			var feet = near && scene.Ground && made.Legs && made.Legs.length === 2 && object.Frames && !object.Values.Vehicle && !object.Aboard && object.Grounded !== false ? library.Feet(made, object.Frames[0]) : [];
+			var ahead = object.Turn ? math.Apply(object.Turn, [0, 0, 1]) : [0, 0, 1];
+			var flat = Math.hypot(ahead[0], ahead[2]) || 1;
+			var reach = (object.Size || 1) * 0.07;
+			var code;
+			var step;
+			var downs;
+			var tilts = [0, 0];
+			var lowest;
+
+			if (feet.length === 2 && (code = engine.GraphCode('FeetGraph', 'animation/feet'))) {
+				downs = feet.map(function (foot) {
+					var at = vectors.Add(object.World, math.Apply(base, foot));
+
+					return floorAt(at[0], at[2], object.World[1] + object.Size * 0.5) - object.World[1];
+				});
+
+				want = code.Run({}, {DownLeft: downs[0], DownRight: downs[1], Size: object.Size || 1, Speed: Math.abs(walkingOf(object)), Grounded: 1});
+
+				/* Each foot near the ground in its clip turned to the slope of its ground along the way it faces (25 degrees at most). */
+				lowest = Math.min(feet[0][1], feet[1][1]);
+				tilts = feet.map(function (foot) {
+					var at = vectors.Add(object.World, math.Apply(base, foot));
+					var top = object.World[1] + object.Size * 0.5;
+					var rise = floorAt(at[0] + ahead[0] / flat * reach, at[2] + ahead[2] / flat * reach, top) - floorAt(at[0] - ahead[0] / flat * reach, at[2] - ahead[2] / flat * reach, top);
+					var low = 1 - Math.min(1, Math.max(0, (foot[1] - lowest) * (scale[1] || 1) / (object.Size * 0.06)));
+
+					return Math.max(-0.436, Math.min(0.436, Math.atan2(rise, reach * 2))) * low;
+				});
+			}
+
+			step = Math.min(1, (scene.FrameElapsed || 0) * (Number(want.Rate) || 14));
+
+			kept.Left += ((Number(want.Left) || 0) - kept.Left) * step;
+			kept.Right += ((Number(want.Right) || 0) - kept.Right) * step;
+			kept.Drop += ((Number(want.Drop) || 0) - kept.Drop) * step;
+			kept.TiltLeft = (kept.TiltLeft || 0) + (tilts[0] - (kept.TiltLeft || 0)) * step;
+			object.Stairs = feet.length === 2 ? stairsAhead(object, ahead, flat) : 0;
+			kept.TiltRight = (kept.TiltRight || 0) + (tilts[1] - (kept.TiltRight || 0)) * step;
+
+			object.FootDrop = Math.abs(kept.Drop) > 1e-5 ? kept.Drop : 0;
+
+			if (Math.abs(kept.Left) < 1e-5 && Math.abs(kept.Right) < 1e-5 && Math.abs(kept.TiltLeft) < 1e-3 && Math.abs(kept.TiltRight) < 1e-3) return;
+
+			object.LayerFrame = object.LayerFrame || [0, 0, 0, 0];
+			object.LayerFrame[2] = kept.Left / (scale[1] || 1);
+			object.LayerFrame[3] = kept.Right / (scale[1] || 1);
+
+			/* The turns of the feet in the parts of the lines past their whole (the shader reads lines whole): see tiltOf. */
+			object.LayerFrame[0] = Math.round(object.LayerFrame[0]) + (Math.abs(kept.TiltLeft) < 1e-3 ? 0 : 0.225 + kept.TiltLeft * 0.45);
+			object.Frames = object.Frames.slice();
+			object.Frames[1] = Math.round(object.Frames[1]) + (Math.abs(kept.TiltRight) < 1e-3 ? 0 : 0.225 + kept.TiltRight * 0.45);
+		}
+
+		/*
+		 * Stairs ahead of one that goes: 1 up, -1 down, 0 none. The floor along its way in steps of a fifth of a metre: stairs
+		 * where it rises or falls by steps (the floor bends sharply along it), not a slope (it rises evenly).
+		 */
+		function stairsAhead (object, ahead, flat) {
+			var size = (object.Size || 1) / 1.78;
+			var top = object.World[1] + object.Size * 0.6;
+			var heights = [0, 1, 2, 3, 4, 5].map(function (k) {
+				var along = (k * 0.2 - 0.2) * size;
+
+				return floorAt(object.World[0] + ahead[0] / flat * along, object.World[2] + ahead[2] / flat * along, top);
+			});
+			var sharp = 0;
+			var rise = heights[5] - heights[1];
+			var k;
+
+			for (k = 1; k < 5; k++)
+				sharp = Math.max(sharp, Math.abs(heights[k + 1] - 2 * heights[k] + heights[k - 1]));
+
+			if (!walkingOf(object) && !scene.Ways[object.ID]) return 0;
+
+			if (sharp < 0.06 * size || Math.abs(rise) < 0.08 * size || Math.abs(rise) > 0.8 * size) return 0;
+
+			return rise > 0 ? 1 : -1;
 		}
 
 		/* An object as copies of its pieces, each in its pose; a piece of a team takes its color. */
@@ -5958,6 +6117,11 @@ Elemenx.Component('Scene', {
 			pose = (made.Pieces.length > 1 || made.Moves) && !still ? poseOf(object, made, settings) : null;
 			object.Worn = made.Asset;
 
+			if (pose && made.Joints)
+				footing(object, made, base, scale);
+
+			var standing = object.FootDrop ? [object.World[0], object.World[1] + object.FootDrop, object.World[2]] : object.World;
+
 			if (object.ID === scene.Hero && scene.Inside > 0.01 && pose && object.Clip && !object.Values.Vehicle) {
 				var headBone = library.BoneMatrix(made, 'Head', object.Clip.Name, clipMoment(object.Clip));
 
@@ -5984,7 +6148,7 @@ Elemenx.Component('Scene', {
 					/* The glass of a mirror of the car that is driven shows its picture (MirrorKey): its own list, of that car alone. */
 					var reflecting = piece.Mirror !== undefined && object.ID === scene.Hero ? 'car:' + object.ID + ':' + piece.Mirror : '';
 
-					batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting, Dissolve: dissolve, Hole: hole, Fade: fade, Merged: shadow && !reflecting && shadow.Shadow.IDs.indexOf(piece.ID) >= 0 ? shadow : null});
+					batch(models, (still ? 'still:' : '') + dissolving + made.Key + '/' + piece.ID + (reflecting ? '@' + object.ID : ''), piece.Skin !== -1 ? standing : object.World, piece.Skin !== -1 ? whole : math.Multiply(whole, wheel ? math.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Layer: piece.Skin !== -1 ? object.LayerFrame || null : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops, MirrorKey: reflecting, Dissolve: dissolve, Hole: hole, Fade: fade, Merged: shadow && !reflecting && shadow.Shadow.IDs.indexOf(piece.ID) >= 0 ? shadow : null});
 
 					return;
 				}
@@ -6272,11 +6436,30 @@ Elemenx.Component('Scene', {
 		function poseOf (object, made, settings) {
 			var way = scene.Ways[object.ID];
 			var state = object.Clip;
-			var pace = object.Pace && made.Clips[object.Pace] ? object.Pace : 'walk';
-			var wanted = way ? 'walk' : object.Walking ? pace : object.Pose && made.Clips[object.Pose] ? object.Pose : object.Loop || object.Values.Clip || settings.Clip || 'idle';
+			var walking = walkingOf(object);
+			var pace = object.Pace && made.Clips[object.Pace] ? object.Pace : object.Pace === 'fall' && made.Clips.jump ? 'jump' : 'walk';
+			var wanted = way ? 'walk' : walking ? pace : object.Pose && made.Clips[object.Pose] ? object.Pose : object.Loop || object.Values.Clip || settings.Clip || 'idle';
 			var clip = made.Clips[wanted];
 			var seconds = scene.Seconds;
-			var rate = wanted === 'jump' ? 1.8 : wanted === pace && clip && (way || object.Walking) ? (object.Back && !way ? -1 : 1) * (way ? way.Speed : object.Walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
+			var rate = wanted === 'jump' ? 1.8 : wanted === 'fall' ? 1 : wanted === pace && clip && (way || walking) ? (object.Back && !way ? -1 : 1) * (way ? way.Speed : walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
+			var blend = wanted === pace && clip && (way || walking) && /^(walk|jog|run|sprint)$/.test(wanted) && object.Values.Blend !== false ? blendOf(made, object, Math.abs(way ? way.Speed : walking)) : null;
+
+			/* Going: the gait of its speed, the next one blended in (walk, jog, sprint), their steps as one. */
+			if (blend) {
+				wanted = blend.Main;
+				clip = made.Clips[wanted];
+				rate = (object.Back && !way ? -1 : 1) * Math.abs(way ? way.Speed : walking) * (clip.Length || 1) / Math.max(0.01, object.Size * blend.Stride);
+			}
+
+			/* Up or down stairs ahead (Stairs, of its feet): its gait of stairs, its feet set on the steps by the ground under them. */
+			var stairs = object.Stairs > 0 ? 'stairs-up' : object.Stairs < 0 ? 'stairs-down' : '';
+
+			if (stairs && made.Clips[stairs] && (way || walking) && /^(walk|jog|run)$/.test(wanted) && !object.Back) {
+				blend = null;
+				wanted = stairs;
+				clip = made.Clips[wanted];
+				rate = Math.abs(way ? way.Speed : walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1));
+			}
 
 			if (state && state.Once) {
 				if ((seconds - state.Start) * state.Rate < library.Length(made, state.Name)) {
@@ -6301,8 +6484,17 @@ Elemenx.Component('Scene', {
 			}
 
 			if (!state || state.Name !== wanted) {
-				state = object.Clip = {Name: wanted, Start: seconds, Rate: rate, From: state ? state.Name : '', FromTime: state ? clipMoment(state) : 0, FromRate: state ? state.Rate : 0, Once: false};
+				state = object.Clip = changeClip(made, state, wanted, rate, seconds);
+
+				/* From one of the two it blends to the other: the same pose, no fade. */
+				if (blend && state.From && (state.From === blend.Low || state.From === blend.High)) {
+					state.From = '';
+					state.Fade = 0;
+				}
 			}
+
+			state.Partner = blend ? blend.Partner : '';
+			state.Share = blend ? blend.Share : 0;
 
 			/* Its time adds up by the rate of each moment: a rate that changes goes on from where it was. */
 			state.At = (state.At || 0) + (seconds - (state.Seen === undefined ? state.Start : state.Seen)) * rate;
@@ -6312,20 +6504,175 @@ Elemenx.Component('Scene', {
 			/* A loop starts at a place of its own for each copy: a crowd does not dance as one. */
 			state.Phase = clip && clip.Loop ? (object.Seed || 0) * 7.13 % 1 * (clip.Length || 1) : 0;
 
+			/* In time with the step it came from: its moment the same part of its cycle (once, as it begins). */
+			if (state.Synced !== undefined && clip) {
+				state.At = state.Synced * (clip.Length || 1) - state.Phase;
+
+				delete state.Synced;
+			}
+
 			var past = state.FromTime + (seconds - state.Start) * (state.FromRate || 0);
 
 			if (made.Joints) {
 				var moment = clipMoment(state);
 
-				object.Frames = library.BakeStep(made, 4) ? [library.Frame(made, state.Name, moment), state.From ? library.Frame(made, state.From, past) : 0, state.From ? Math.max(0, 1 - (seconds - state.Start) / 0.2) : 0, library.Between(made, state.Name, moment)] : [0, 0, 0, 0];
+				/* All its frames made, or those of the clip it plays (Partly: standing and going are made first, then what is played: Want); a clip faded from not made yet: from rest. */
+				if (!made.Baked)
+					library.Want(made, state.Name);
+
+				object.Frames = library.BakeStep(made, 4) || library.Partly(made, state.Name) ? [library.Frame(made, state.Name, moment), state.From && library.Partly(made, state.From) ? library.Frame(made, state.From, past) : 0, fadeOf(state), library.Between(made, state.Name, moment)] : [0, 0, 0, 0];
+
+				object.LayerFrame = layerOf(object, made, seconds);
+
+				/* No fade on: the second frame is of the gait blended in, at the same part of its cycle. */
+				if (state.Partner && state.Share > 0 && !fadeOf(state) && library.Partly(made, state.Partner) && library.Partly(made, state.Name)) {
+					var cycle = made.Clips[state.Name].Length || 1;
+
+					object.Frames[1] = library.Frame(made, state.Partner, ((moment % cycle + cycle) % cycle) / cycle * (made.Clips[state.Partner].Length || 1));
+					object.Frames[2] = state.Share;
+				}
 			}
 
-			return library.Pose(made, state.Name, clipMoment(state), {From: state.From, FromTime: past, Fade: (seconds - state.Start) / 0.2});
+			return library.Pose(made, state.Name, clipMoment(state), {From: state.From, FromTime: past, Fade: 1 - fadeOf(state)});
+		}
+
+		/*
+		 * The frame of a layer of an object (a clip of the arms over its legs: Layer) and its share, faded in and out ([line,
+		 * share, 0, 0]); null with none. It calls back as it ends, as a clip played once does.
+		 */
+		function layerOf (object, made, seconds) {
+			var layer = object.Layer;
+			var length;
+			var t;
+			var share;
+
+			if (!layer)
+				return null;
+
+			length = library.Length(made, layer.Name);
+			t = seconds - layer.Start;
+
+			if (t >= length) {
+				if (layer.Callback)
+					window.setTimeout(layer.Callback.bind(null, null, {ID: object.ID, Clip: layer.Name}), 0);
+
+				object.Layer = null;
+
+				return null;
+			}
+
+			if (!library.Partly(made, layer.Name)) {
+				library.Want(made, layer.Name);
+
+				return null;
+			}
+
+			share = Math.min(1, t / 0.12, (length - t) / 0.2);
+
+			return [library.Frame(made, layer.Name, t), share * share * (3 - 2 * share), 0, 0];
+		}
+
+		/* How fast an object goes on its feet (metres a second): as it is moved, or on the spot (its value Walking). */
+		function walkingOf (object) {
+			return object.Walking || Number(object.Values.Walking) || 0;
 		}
 
 		/* The second of its clip an object is at. */
 		function clipMoment (state) {
 			return (state.At || 0) + (state.Phase || 0);
+		}
+
+		/* A clip of steps: its feet go on in time with those of another (walk, jog, sprint, back, aside). */
+		function stepping (made, name) {
+			var clip = made.Clips[name];
+
+			return !!clip && clip.Loop !== false && /^(walk|jog|run|sprint|walk-back|run-back|strafe-(left|right)(-run)?|crouch-walk|stairs-(up|down))$/.test(name);
+		}
+
+		/*
+		 * How a clip gives way to the next, of the graph of transitions (TransitionGraph of the scene, Graphs['animation/
+		 * transition'], Transition of the recipe of the model, else blueprints/animation/transition): {Fade (seconds), Ease
+		 * (1: smoothstep), Sync (1: the next goes on from the phase of the last)}. Regression: every change faded evenly in
+		 * 0.2 s, and a walk that became a run began its cycle again: its feet jumped.
+		 */
+		function transitionOf (made, from, to) {
+			var own = library.Recipes && library.Recipes[made.Name] ? library.Recipes[made.Name].Transition : null;
+			var code;
+			var once = function (name) {
+				return !!made.Clips[name] && made.Clips[name].Loop === false;
+			};
+
+			if (own && !self.GraphOf('TransitionGraph', 'animation/transition')) {
+				if (!made.TransitionCode || made.TransitionCode.Given !== own)
+					made.TransitionCode = {Given: own, Code: self.$Service('Blueprints').Code(typeof own === 'string' ? (own.charAt(0) === '{' ? JSON.parse(own) : Elemenx.Resources('Blueprints', own)) : JSON.parse(JSON.stringify(own)))};
+
+				code = made.TransitionCode.Code;
+			}
+			else {
+				code = engine.GraphCode('TransitionGraph', 'animation/transition');
+			}
+
+			if (!code)
+				return {Fade: from ? 0.2 : 0, Ease: 0, Sync: 0};
+
+			return code.Run({}, {FromKnown: from ? 1 : 0, FromGait: stepping(made, from) ? 1 : 0, ToGait: stepping(made, to) ? 1 : 0, FromOnce: once(from) ? 1 : 0, ToOnce: once(to) ? 1 : 0, ToHold: made.Clips[to] && made.Clips[to].Hold ? 1 : 0});
+		}
+
+		/* The state of the next clip of an object: faded from the last as its transition says, in time with it when it steps. */
+		function changeClip (made, state, wanted, rate, seconds) {
+			var from = state ? state.Name : '';
+			var turn = transitionOf(made, from, wanted);
+			var next = {Name: wanted, Start: seconds, Rate: rate, From: from, FromTime: state ? clipMoment(state) : 0, FromRate: state ? state.Rate : 0, Once: false, Fade: Math.max(0, Number(turn.Fade) || 0), Ease: Number(turn.Ease) || 0};
+			var length;
+
+			/* Of the same step: the part of the cycle of the last (its Phase taken off when the next one has its own). */
+			if (turn.Sync > 0.5 && state && made.Clips[from] && made.Clips[wanted]) {
+				length = made.Clips[from].Length || 1;
+				next.Synced = ((clipMoment(state) % length + length) % length) / length;
+			}
+
+			return next;
+		}
+
+		/*
+		 * The gaits of a speed, of the graph of blends (BlendGraph of the scene, Graphs['animation/blend'], else
+		 * blueprints/animation/blend; Speed and the speeds of its walk, jog and sprint at their own pace -> Low, High: 0 walk,
+		 * 1 jog, 2 sprint; Weight of the high one): {Low, High, Main (the more of the two), Partner (the other, '' with none),
+		 * Share (of the partner, 0 to 0.5), Stride (of the two, by the weight)}. Null with only a walk. Regression: one that
+		 * went at the speed of a run walked, its legs swinging fast.
+		 */
+		function blendOf (made, object, speed) {
+			var names = ['walk', made.Clips.jog ? 'jog' : 'run', 'sprint'];
+			var code = engine.GraphCode('BlendGraph', 'animation/blend');
+			var natural = names.map(function (name) {
+				var clip = made.Clips[name];
+
+				return clip ? object.Size * (clip.Stride || 1) / (clip.Length || 1) : 0;
+			});
+			var given;
+			var low;
+			var high;
+			var weight;
+
+			if (!code || !made.Clips.walk || !natural[1]) return null;
+
+			given = code.Run({}, {Speed: speed, Walk: natural[0], Jog: natural[1], Sprint: natural[2]});
+			low = names[Math.max(0, Math.min(2, Math.round(given.Low) || 0))];
+			high = names[Math.max(0, Math.min(2, Math.round(given.High) || 0))];
+			weight = made.Clips[high] ? Math.max(0, Math.min(1, Number(given.Weight) || 0)) : 0;
+
+			return {Low: low, High: high, Main: weight < 0.5 ? low : high, Partner: weight > 0.001 && weight < 0.999 ? (weight < 0.5 ? high : low) : '', Share: Math.min(weight, 1 - weight), Stride: (made.Clips[low].Stride || 1) * (1 - weight) + (made.Clips[high] ? made.Clips[high].Stride || 1 : 1) * weight};
+		}
+
+		/* How much of the last clip is still seen (0 to 1) as an object changes to the next one. */
+		function fadeOf (state) {
+			var s;
+
+			if (!state || !state.From) return 0;
+
+			s = state.Fade > 0 ? Math.max(0, Math.min(1, (scene.Seconds - state.Start) / state.Fade)) : 1;
+
+			return 1 - (state.Ease ? s * s * (3 - 2 * s) : s);
 		}
 
 		/*
@@ -6365,7 +6712,7 @@ Elemenx.Component('Scene', {
 			var turn = hold.Turn || [0, 0, 0];
 			var at = hold.At || [0, 0, 0];
 			var size = number(hold.Size, 1);
-			var fade = state.From ? Math.max(0, 1 - (scene.Seconds - state.Start) / 0.2) : 0;
+			var fade = fadeOf(state);
 			var bone;
 			var item;
 			var place;
@@ -6474,6 +6821,10 @@ Elemenx.Component('Scene', {
 			if (settings.Frames)
 				list.Frames.set(settings.Frames, i);
 
+			/* A clip of the arms over its legs: its frame and its share (none: 0). */
+			if (settings.Frames)
+				list.Layers.set(settings.Layer || [0, 0, 0, 0], i);
+
 			list.Count++;
 		}
 
@@ -6486,7 +6837,7 @@ Elemenx.Component('Scene', {
 		function grow (list) {
 			var capacity = Math.max(16, list.Capacity * 2);
 
-			['Places', 'X', 'Y', 'Z', 'Tints', 'Frames'].forEach(function (name) {
+			['Places', 'X', 'Y', 'Z', 'Tints', 'Frames', 'Layers'].forEach(function (name) {
 				var next = new Float32Array(capacity * 4);
 
 				if (list[name])
@@ -7744,6 +8095,9 @@ Elemenx.Component('Scene', {
 			 */
 			if (object.Flying && scene.Location || object.Values.Aboard) return false;
 
+			/* What was added in the location, of its ground. */
+			if (scene.Location && object.Parent === scene.Location.Ground) return false;
+
 			if (traits.Star || traits.Body || traits.Ring || traits.Belt || traits.Orbit || traits.Formation || traits.Mover) return true;
 
 			if (object.Values.Vehicle && object.Values.Vehicle.Kind === 'ship' && object.Values.Vehicle.Around) return true;
@@ -8153,6 +8507,10 @@ Elemenx.Component('Scene', {
 
 			/* A step up comes smoothly; a small one down too, and a seam of a map is no fall. Down from higher, it falls. */
 			if (rise <= 0 && (y <= floor + 0.02 || landed && !keys.Space && y - floor < hero.Size * 0.3)) {
+				/* Down from a fall, not a jump: the knees take it (land). */
+				if (!hero.Grounded && (hero.Hang || 0) > 0.75)
+					engine.Play(hero.ID, 'land');
+
 				hero.Grounded = true;
 				hero.Rise = 0;
 				hero.Hang = 0;
@@ -8170,7 +8528,7 @@ Elemenx.Component('Scene', {
 
 			/* It jumps when told; a moment over a gap of the ground is not worth the clip. */
 			if (!hero.Grounded && (hero.Rise > 0 || hero.Hang > 0.22)) {
-				hero.Pace = 'jump';
+				hero.Pace = hero.Hang > 0.75 && hero.Rise <= 0 ? 'fall' : 'jump';
 				hero.Walking = hero.Walking || pace;
 			}
 			else if (!ahead && aside) {
@@ -8253,11 +8611,7 @@ Elemenx.Component('Scene', {
 
 		/* The code of the graph of the season (SeasonGraph of the scene, else blueprints/weather/season), made once a graph. */
 		function seasonCode () {
-			var graph = self.GraphOf('SeasonGraph', 'weather/season') || Elemenx.Resources('Blueprints', 'ElemenxGraphics/weather/season');
-			if (!scene.SeasonCode || scene.SeasonCode.Graph !== graph)
-				scene.SeasonCode = {Graph: graph, Code: self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)))};
-
-			return scene.SeasonCode.Code;
+			return engine.GraphCode('SeasonGraph', 'weather/season');
 		}
 
 		/* The snow that covers things: of the weather, or of the winter. */
@@ -8391,7 +8745,9 @@ Elemenx.Component('Scene', {
 					keys = {Pad: keys.Pad};
 				}
 				else if (!engine.VehicleStep(scene.Objects[scene.Hero], keys, elapsed)) {
-					walkHero(scene.Objects[scene.Hero], keys, elapsed);
+					/* Getting in or out step by step (SceneVehicles boarding): its steps walk it, not the keys. */
+					if (!scene.Objects[scene.Hero].Boarding)
+						walkHero(scene.Objects[scene.Hero], keys, elapsed);
 
 					puddled(scene.Objects[scene.Hero], elapsed);
 				}
@@ -10553,7 +10909,8 @@ Elemenx.Component('Scene', {
 			/* One set of uniforms for all the squares, their places set for each; a ground with a Blueprint drawn by its graph. */
 			var settings = trait(scene.Objects[ground.ID], 'Terrain');
 			var own = settings && settings.Blueprint ? blueprinted(settings, 'Land', ground.ID) : null;
-			var program = gpu.LandOf(own, field.Materials);
+			/* Of a location come in a flight: made behind (gpu.LandOf), the land of no materials drawn till then (below). */
+			var program = gpu.LandOf(own, field.Materials, !!scene.Location);
 			/* The tiles of its materials of a texture, the layers of two textures (SceneTextures.Array). */
 			var tiles = self.$Service('SceneTextures').Array(renderer, self.$Service('SceneMaterials').Textured(field.Materials || []));
 			var land = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSea: field.Water ? 1 : 0, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: snowed(), uRainDrops: ground.Air.Rain, uTime2: scene.Seconds % 1000}, shade, own ? own.Made.Values(settings.Parameters || {}, {Time: scene.Seconds % 3000}) : null, self.LandValues(scene.Seconds));
@@ -10566,8 +10923,12 @@ Elemenx.Component('Scene', {
 			/*
 			 * Regression: the program of the land of a location (its materials) is made when the location comes, and drawn at
 			 * once: the page waited seconds for the card to make it, frozen, as the ship touched down. Till the card has it, the
-			 * land is not drawn (the veil waits for it, see waiting).
+			 * land is not drawn (the veil waits for it, see waiting); one made behind (a location come in a flight), the land
+			 * of no materials made at the start in its place. Regression: the veil over a ship hovering to land stood 15 s for it.
 			 */
+			if (!renderer.Ready(program) && program.Behind && renderer.Ready(gpu.LandOf(null, null)))
+				program = gpu.LandOf(null, null);
+
 			if (renderer.Ready(program)) {
 				nodes.forEach(function (node) {
 					if (!nodeSeen(node, sees)) return;
@@ -11884,7 +12245,9 @@ Elemenx.Component('Scene', {
 				uLights: lightsOf(object),
 				uLightsOn: lightsOf(object) === noLights() ? 0 : 1,
 				uSky: noLights(),
-				uCloudsOn: 0
+				uCloudsOn: 0,
+				/* Its water mirrors its own sky (uMirror of the far ground round a location: drawHorizon sets it). */
+				uMirror: [0, 0, 0, 0]
 			}, own, light, tiled(node), laid, weatherValues(object, scene.Baked[object.ID]), ringUnder(object, field.Radius)), {Cull: 'back'});
 		}
 
@@ -11978,7 +12341,9 @@ Elemenx.Component('Scene', {
 					uSunColor: sunColor,
 					uColors: [].concat(colors[0], colors[1], colors[2], colors[3]),
 					uFog: Math.max(field.Radius * 0.02, far * 0.6),
-					uHigh: Math.min(1, horizon.Altitude / 100)
+					uHigh: Math.min(1, horizon.Altitude / 100),
+					/* Its water mirrors the sky of the location as the sea of the location does (drawSea: its air, its day). */
+					uMirror: groundAir(scene.Ground).slice(0, 3).concat([Math.max(1e-4, scene.Ground.Day * (1 - scene.Ground.Cover * scene.Ground.Cover * 0.5))])
 				}, idle(), laid);
 			});
 
@@ -12613,6 +12978,7 @@ Elemenx.Component('Scene', {
 			var elapsed = Math.min(0.1, spent);
 
 			scene.Last = now;
+			scene.FrameElapsed = elapsed;
 
 			/* Behind the veil while what the view needs is made (Preparing, the loop of the scene): the game does not go on yet. */
 			if (still) {
@@ -12635,6 +13001,28 @@ Elemenx.Component('Scene', {
 				probeStep();
 
 			/* A galaxy (SceneGalaxy): what it draws is all of the frame; the system waits behind it. */
+			/*
+			 * The names over the objects of the system left and the marks of aiming of its ship (.elemenx-scene-sight) are not on
+			 * the map; back in a system they are again (the names not over a surface, nor in a location). Regression: out of a
+			 * system its names (planets, stations) and the frames of the sight round them stood over the galaxy.
+			 */
+			if (self.Setting === 'galaxy' && !scene.LabelsOff) {
+				scene.LabelsOff = true;
+				labels.hidden = true;
+
+				sighted(false);
+			}
+			else if (self.Setting !== 'galaxy' && scene.LabelsOff) {
+				scene.LabelsOff = false;
+				labels.hidden = !!(scene.Surface || scene.Location);
+
+				sighted(true);
+			}
+
+			/* Landing and To orbit are not offered on the map (SceneLanding). */
+			if (self.Setting === 'galaxy' && engine.LandingOffer)
+				engine.LandingOffer();
+
 			if (self.Setting === 'galaxy' && engine.GalaxyFrame) {
 				if (!quiet && renderer && !renderer.Lost && scene.Width && scene.Height) {
 					engine.GalaxyFrame(elapsed);
@@ -13401,6 +13789,12 @@ Elemenx.Component('Scene', {
 			if (!body)
 				return null;
 
+			/*
+			 * Nearer than this is where the ray begins, not a hit: a ten-thousandth of a unit, or of the size of the object
+			 * where it is smaller. Regression: a ship of real sizes (35 m a few billionths of a unit) was never hit.
+			 */
+			var tiny = Math.min(1e-4, vectors.Distance(body.Max, body.Min) * 1e-4);
+
 			mesh = body.Mesh;
 			inverse = math.Invert(body.Base);
 
@@ -13455,7 +13849,7 @@ Elemenx.Component('Scene', {
 
 				t = f * vectors.Dot(e2, q);
 
-				if (t > 1e-4 && t < near) {
+				if (t > tiny && t < near) {
 					near = t;
 					best = {Distance: t, Piece: mesh.Pieces[i], Local: vectors.Cross(e1, e2), Height: (origin[1] + way[1] * t - mesh.Min[1]) / Math.max(1e-6, mesh.Max[1] - mesh.Min[1])};
 				}
@@ -13472,6 +13866,48 @@ Elemenx.Component('Scene', {
 			return {Distance: best.Distance, Point: vectors.Add(ray.Origin, vectors.Scale(ray.Direction, best.Distance)), Normal: n, Piece: best.Piece, Height: best.Height};
 		};
 
+		/*
+		 * The code of a graph of the scene (its prop, or Graphs[name]), else of the library (blueprints/<name> of
+		 * ElemenxGraphics), made once: again only when the scene is given another. Null with none. Regression: each was
+		 * compared with a new copy of the library (Elemenx.Resources gives one each time) and made again at every call, up to
+		 * a millisecond each, some of them every frame (the shake of the camera, the season, the look of a warp).
+		 */
+		engine.GraphCode = function (prop, name, own) {
+			var given = own || self.GraphOf(prop, name);
+			var codes = scene.GraphCodes = scene.GraphCodes || {};
+			var owned = scene.OwnCodes = scene.OwnCodes || (typeof WeakMap === 'function' ? new WeakMap() : null);
+			var kept;
+			var graph;
+
+			/* One of an object of its own (a vehicle's WheelGraph): made once for that graph. */
+			if (own && typeof own === 'object' && owned) {
+				if (!owned.has(own))
+					owned.set(own, graphCode(own));
+
+				return owned.get(own);
+			}
+
+			if (own) {
+				kept = codes['own:' + own];
+
+				return kept ? kept.Code : (codes['own:' + own] = {Given: own, Code: graphCode(own)}).Code;
+			}
+
+			kept = codes[name];
+
+			if (kept && kept.Given === given) return kept.Code;
+
+			graph = given || Elemenx.Resources('Blueprints', 'ElemenxGraphics/' + name);
+
+			codes[name] = {Given: given, Code: graph ? graphCode(graph) : null};
+
+			return codes[name].Code;
+		};
+
+		function graphCode (graph) {
+			return self.$Service('Blueprints').Code(typeof graph === 'string' ? JSON.parse(graph) : JSON.parse(JSON.stringify(graph)));
+		}
+
 		/* A clip of an object: one that ends calls back and goes back to what the object was doing, a loop stays. */
 		engine.Play = function (id, name, callback) {
 			var object = scene.Objects[id];
@@ -13482,6 +13918,16 @@ Elemenx.Component('Scene', {
 
 			if (!clip)
 				return false;
+
+			/*
+			 * A clip of the arms (Upper: a reload, a blow) played once by one of a skeleton that goes: a layer over its legs,
+			 * they go on (Layer). Standing, it is played whole.
+			 */
+			if (clip.Upper && !clip.Loop && made.Joints && (walkingOf(object) || scene.Ways[id])) {
+				object.Layer = {Name: name, Start: scene.Seconds, Callback: callback || null};
+
+				return true;
+			}
 
 			state = object.Clip;
 
@@ -13494,7 +13940,8 @@ Elemenx.Component('Scene', {
 				return true;
 			}
 
-			object.Clip = {Name: name, Start: scene.Seconds, Rate: 1, From: state ? state.Name : '', FromTime: state ? (state.At || 0) + (state.Phase || 0) : 0, FromRate: state ? state.Rate : 0, Once: true, Callback: callback || null};
+			/* Faded in as its transition says (changeClip). */
+			object.Clip = Object.assign(changeClip(made, state, name, 1, scene.Seconds), {Once: true, Callback: callback || null});
 
 			return true;
 		};
@@ -13945,7 +14392,8 @@ Elemenx.Component('Scene', {
 				if (scene.Ground && scene.Ground.Field) {
 					terrain = trait(scene.Objects[scene.Ground.ID] || {Traits: {}}, 'Terrain');
 
-					gpu.LandOf(terrain && terrain.Blueprint ? blueprinted(terrain, 'Land', scene.Ground.ID) : null, scene.Ground.Field.Materials);
+					/* Of a location come in a flight: behind, the land of no materials till it is made (drawGround). */
+					gpu.LandOf(terrain && terrain.Blueprint ? blueprinted(terrain, 'Land', scene.Ground.ID) : null, scene.Ground.Field.Materials, !!scene.Location);
 				}
 
 				[['TopLand', shaders.LandVertex, shaders.Top], ['TopMany', shaders.Instanced, shaders.Top], ['BounceLand', shaders.LandVertex, shaders.Bounced], ['BounceMany', shaders.Instanced, shaders.Bounced], ['NormalMany', shaders.Instanced, shaders.Normal], ['NormalSkin', shaders.Skinned, shaders.Normal], ['VoxelLand', shaders.LandVertex, shaders.Voxel], ['VoxelMany', shaders.Instanced, shaders.Voxel], ['MirrorGlass', shaders.Instanced, shaders.MirrorGlass], ['MirrorGlassSkinned', shaders.Skinned, shaders.MirrorGlass], ['Mirror', shaders.PaneVertex, shaders.Mirror], ['Glass', shaders.PaneVertex, shaders.Glass], ['ScreenProgram', shaders.PaneVertex, shaders.Screen], ['Weather', graphics.Shaders.Quad, shaders.Weather], ['LandWire', shaders.LandVertex, shaders.Flat]].forEach(function (one) {
@@ -13974,6 +14422,101 @@ Elemenx.Component('Scene', {
 
 		engine.Warm = warm;
 
+		/*
+		 * The shader graphs of the scene changed (Graphs, or a prop of one: a demo edits one as it goes): made again in place,
+		 * the scene going on as it was, its objects, its view and its time; what they draw made again behind a soft veil
+		 * (engine.Prepare), each trait its own (engine.Regraphs: a function of each). The graphs of numbers (of a vehicle, of
+		 * the landing, of the shake) are read as they go and need none of it. Regression: a demo made the whole scene again
+		 * for a change of a graph, and its view and all that went on in it were lost.
+		 */
+		var shaderProps = ['WindGraph', 'GrassGraph', 'SkyGraph', 'BakeGraph', 'WeatherGraph', 'AirGraph', 'CloudsGraph', 'ForecastGraph', 'GalaxyGraph', 'CosmosGraph', 'RingGraph', 'PlanetGraph', 'GroundGraph', 'SkyLightGraph', 'BoltGraph', 'LandGraph', 'WaterGraph', 'EnvelopeGraph'];
+		var shaderMade = ['WindMade', 'GrassMade', 'SkyMade', 'BakeMade', 'WeatherMade', 'AirMade', 'CloudsMade', 'ForecastGLSL', 'RingMade', 'PlanetMade', 'GroundMade', 'BoltMade', 'LandMade', 'WaterMade', 'StarSceneMade', 'SpiralMade'];
+
+		engine.Regraphs = engine.Regraphs || [];
+
+		/* The shader graphs given (and the envelope, kept made once): the props of them, and those of Graphs by their names. */
+		function graphsGiven () {
+			var given = self.Graphs || {};
+			var names = Object.keys(given).filter(function (name) {
+				return name.indexOf('shader/') === 0 || name === 'star' || name === 'planet/envelope';
+			}).sort();
+
+			return {Names: shaderProps.concat(names), Values: shaderProps.map(function (name) {
+				return self[name] || null;
+			}).concat(names.map(function (name) {
+				return given[name];
+			}))};
+		}
+
+		/* Whether one is another than at the last frame (the first frame only notes them). */
+		function graphsMoved () {
+			var now = graphsGiven();
+			var was = scene.GraphsGiven;
+
+			scene.GraphsGiven = now;
+
+			return !!was && (now.Names.join('|') !== was.Names.join('|') || now.Values.some(function (value, index) {
+				return value !== was.Values[index];
+			}));
+		}
+
+		function dropped (made) {
+			if (made && typeof made.Destroy === 'function')
+				made.Destroy();
+		}
+
+		engine.Regraph = function () {
+			if (!renderer || renderer.Lost) return;
+
+			shaderMade.forEach(function (name) {
+				self[name] = undefined;
+			});
+
+			scene.Told = {};
+			/* The envelope of the bodies of its graph (planet/envelope), made again as it is asked for. */
+			scene.EnvelopeRun = undefined;
+			renderer.Replaces[graphics.Chunks.SkyLight] = self.SkyLit();
+			shaders = self.Globed(self.Forecasted(self.Clouded(self.Aired(self.Weathered(self.Baked(self.Landed(self.Skied(self.Watered(self.Winded(self.Shaders(graphics)))))))))));
+
+			/* What build makes again: its meshes, and what was baked of the graphs before. */
+			[gpu.Sphere, gpu.Quad, gpu.Stars].forEach(dropped);
+
+			[gpu.Shapes, gpu.ShadowShapes, scene.Lines, scene.Rings, scene.Rocks, scene.Swarms].forEach(function (kept) {
+				Object.keys(kept || {}).forEach(function (key) {
+					dropped(kept[key]);
+				});
+			});
+
+			Object.keys(scene.Baked || {}).forEach(function (id) {
+				var made = scene.Baked[id];
+
+				Object.keys(made || {}).forEach(function (key) {
+					dropped(made[key]);
+				});
+			});
+
+			/* The programs made of the shaders before, outside build (warm and as they were drawn). */
+			['TopLand', 'TopMany', 'BounceLand', 'BounceMany', 'NormalMany', 'NormalSkin', 'VoxelLand', 'VoxelMany', 'MirrorGlass', 'MirrorGlassSkinned', 'Mirror', 'Glass', 'ScreenProgram', 'Weather', 'LandWire'].forEach(function (name) {
+				gpu[name] = null;
+			});
+
+			gpu.NearGrounds = {};
+
+			build();
+
+			starGraphs.Texts = {};
+			starGraphs.Graphs = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+			engine.Regraphs.forEach(function (made) {
+				made();
+			});
+
+			/* All asked for again (the loop warms what the traits draw), the view made ready behind a soft veil. */
+			scene.Warmed = false;
+
+			engine.Prepare(true);
+		};
+
 		scene.Preparing = !!renderer;
 		scene.Cover = scene.Preparing ? 1 : 0;
 
@@ -13984,6 +14527,10 @@ Elemenx.Component('Scene', {
 
 			/* The time of the frame the screen shows, not of when its turn came: an uneven turn would shake all that moves. */
 			var now = loop.Now === null ? started : loop.Now;
+
+			/* A shader graph given anew: made again in place (engine.Regraph). */
+			if (renderer && scene.Warmed && graphsMoved())
+				engine.Regraph();
 
 			if (renderer && !scene.Warmed) {
 				scene.Warmed = true;
@@ -14098,6 +14645,8 @@ Elemenx.Component('Scene', {
 			this.ProbesStart();
 			this.EffectsStart();
 			this.WeaponsStart();
+			this.AgentsStart();
+			this.MissilesStart();
 			this.DebrisStart();
 			this.DeepSpaceStart();
 			this.NebulaStart();
@@ -14821,7 +15370,11 @@ Elemenx.Component('Scene', {
 		/* Each field to its trait, as in a declaration: Size of a unit is the size of its Model. */
 		made = this.Engine().Canonical(Object.assign({}, values, {Kind: spec.Kind}), null, true);
 
-		scene.Added.push({ID: spec.ID, Kind: spec.Kind || '', Parent: spec.Parent, Values: Object.assign({}, spec.Values || {}, made.Values), Traits: this.$Service('SceneKinds').MergeTraits(made.Traits, spec.Traits || {}), Parts: spec.Parts || []});
+		/*
+		 * What comes into a location (SceneLanding) with no parent told is of it, its ground, not of the first star of the
+		 * system, and goes with it. Regression: things added on the ground of a ship landed went round the star, away, unseen.
+		 */
+		scene.Added.push({ID: spec.ID, Kind: spec.Kind || '', Parent: spec.Parent === undefined && scene.Location ? scene.Location.Ground : spec.Parent, Values: Object.assign({}, spec.Values || {}, made.Values), Traits: this.$Service('SceneKinds').MergeTraits(made.Traits, spec.Traits || {}), Parts: spec.Parts || []});
 	},
 
 	/* Where a socket of the model of an object is (a part of the role socket, by its Name or ID): {At [x, y, z], Axis}, or null. */
@@ -16254,6 +16807,7 @@ Elemenx.Component('Scene', {
 				'in vec4 aInstance4;',
 				'in vec4 aInstance5;',
 				'in vec4 aFrames;',
+				'in vec4 aLayer;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOrigin;',
 				/* An outline: each corner pushed out along its normal, as far as a few pixels are where it is (0: none). */
@@ -16287,12 +16841,24 @@ Elemenx.Component('Scene', {
 				 * A joint at this moment. Two poses mixed as matrices shrink what they turn (half of a right angle leaves 0.7 of a limb):
 				 * a fade between clips makes it a turn again, of the size it had, round the place where the joint comes to.
 				 */
-				'mat4 posed(float index) {',
+				/*
+				 * A layer (aLayer: its frame, its share): a clip of the arms over the legs that go, the joints above the waist (the
+				 * line of the upper body, before the line of rest: 1 and the index of the spine) of it, hung on the spine of the
+				 * legs (the spine of the layer moved to it).
+				 */
+				'mat4 blended(float index) {',
 				'	mat4 m = joint(index, aFrames.x);',
 				'	if (aFrames.w > 0.001) m = m * (1.0 - aFrames.w) + joint(index, aFrames.x + 1.0) * aFrames.w;',
-				'	if (aFrames.z <= 0.001) return m;',
+				'	float layer = 0.0;',
+				'	vec4 upper = vec4(0.0);',
+				'	if (aLayer.y > 0.001) {',
+				'		upper = texelFetch(uPalette, ivec2((int(index + 0.5) + int(uJointOffset)) * 3, textureSize(uPalette, 0).y - 2), 0);',
+				'		layer = aLayer.y * upper.x;',
+				'	}',
+				'	if (aFrames.z <= 0.001 && layer <= 0.001) return m;',
 				'	float size = length(joint(index, aFrames.x)[0].xyz);',
-				'	m = m * (1.0 - aFrames.z) + joint(index, aFrames.y) * aFrames.z;',
+				'	if (aFrames.z > 0.001) m = m * (1.0 - aFrames.z) + joint(index, aFrames.y) * aFrames.z;',
+				'	if (layer > 0.001) m = m * (1.0 - layer) + joint(upper.y, aFrames.x) * inverse(joint(upper.y, aLayer.x)) * joint(index, aLayer.x) * layer;',
 				'	vec3 bound = texelFetch(uPalette, ivec2((int(index + 0.5) + int(uJointOffset)) * 3, textureSize(uPalette, 0).y - 1), 0).xyz;',
 				'	vec3 pivot = (m * vec4(bound, 1.0)).xyz;',
 				'	vec3 x = m[0].xyz;',
@@ -16303,6 +16869,70 @@ Elemenx.Component('Scene', {
 				'	vec3 ahead = normalize(cross(side, up));',
 				'	mat3 turn = mat3(side, up, sign(dot(ahead, m[2].xyz)) * ahead) * size;',
 				'	return mat4(vec4(turn[0], 0.0), vec4(turn[1], 0.0), vec4(turn[2], 0.0), vec4(pivot - turn * bound, 1.0));',
+				'}',
+				'vec3 boundOf(float index) {',
+				'	return texelFetch(uPalette, ivec2((int(index + 0.5) + int(uJointOffset)) * 3, textureSize(uPalette, 0).y - 1), 0).xyz;',
+				'}',
+				/* The turn that takes a direction to another (the shortest), round a point. */
+				'mat4 turnRound(vec3 from, vec3 to, vec3 at) {',
+				'	vec3 a = normalize(from);',
+				'	vec3 b = normalize(to);',
+				'	vec3 c = cross(a, b);',
+				'	float s = length(c);',
+				'	if (s < 1e-6) return mat4(1.0);',
+				'	vec3 k = c / s;',
+				'	mat3 cross3 = mat3(0.0, k.z, -k.y, -k.z, 0.0, k.x, k.y, -k.x, 0.0);',
+				'	mat3 r = mat3(1.0) + cross3 * s + cross3 * cross3 * (1.0 - dot(a, b));',
+				'	return mat4(vec4(r[0], 0.0), vec4(r[1], 0.0), vec4(r[2], 0.0), vec4(at - r * at, 1.0));',
+				'}',
+				/*
+				 * A joint with its foot on the ground (aLayer.z, aLayer.w: how far each ankle goes up or down, in its model; the line
+				 * of the upper body tells of each joint its leg, its part and the thigh, knee and ankle of that leg): the leg bent to
+				 * it as two bones, its knee in the plane it bent in; its foot moved there, turned as it was.
+				 */
+				/*
+				 * The turn of a foot to the slope of its ground (radians, its toes up): in the part of its line past the whole of
+				 * aLayer.x (the left) and aFrames.y (the right), lines read whole (0: none; else 0.225 + 0.45 of it).
+				 */
+				'float tiltOf(float coded) {',
+				'	float part = fract(coded);',
+				'	return part < 0.01 || part > 0.45 ? 0.0 : (part - 0.225) / 0.45;',
+				'}',
+				'mat4 posed(float index) {',
+				'	mat4 m = blended(index);',
+				'	float tilts = abs(tiltOf(aLayer.x)) + abs(tiltOf(aFrames.y));',
+				'	if (abs(aLayer.z) < 1e-5 && abs(aLayer.w) < 1e-5 && tilts < 1e-5) return m;',
+				'	ivec2 at = ivec2((int(index + 0.5) + int(uJointOffset)) * 3 + 1, textureSize(uPalette, 0).y - 2);',
+				'	vec4 leg = texelFetch(uPalette, at, 0);',
+				'	if (leg.x < 0.5) return m;',
+				'	float lift = leg.x < 1.5 ? aLayer.z : aLayer.w;',
+				'	float tilt = leg.x < 1.5 ? tiltOf(aLayer.x) : tiltOf(aFrames.y);',
+				'	if (abs(lift) < 1e-5 && abs(tilt) < 1e-5) return m;',
+				'	vec4 chain = texelFetch(uPalette, at + ivec2(1, 0), 0);',
+				'	vec3 hip = (blended(chain.x) * vec4(boundOf(chain.x), 1.0)).xyz;',
+				'	vec3 knee = (blended(chain.y) * vec4(boundOf(chain.y), 1.0)).xyz;',
+				'	vec3 ankle = (blended(chain.z) * vec4(boundOf(chain.z), 1.0)).xyz;',
+				'	vec3 goal = ankle + vec3(0.0, lift, 0.0);',
+				'	float l1 = max(length(knee - hip), 1e-5);',
+				'	float l2 = max(length(ankle - knee), 1e-5);',
+				'	vec3 toGoal = goal - hip;',
+				'	float d = clamp(length(toGoal), abs(l1 - l2) + 1e-4, l1 + l2 - 1e-4);',
+				'	vec3 dir = normalize(toGoal);',
+				'	vec3 bend = (knee - hip) - dir * dot(knee - hip, dir);',
+				'	bend = length(bend) > 1e-6 ? normalize(bend) : normalize(cross(dir, vec3(1.0, 0.0, 0.0)));',
+				'	float ca = clamp((l1 * l1 + d * d - l2 * l2) / (2.0 * l1 * d), -1.0, 1.0);',
+				'	vec3 kneeTo = hip + dir * (ca * l1) + bend * (sqrt(1.0 - ca * ca) * l1);',
+				'	vec3 reached = hip + dir * d;',
+				'	if (leg.y > 2.5) {',
+				'		float c = cos(-tilt);',
+				'		float s = sin(-tilt);',
+				'		mat3 r = mat3(1.0, 0.0, 0.0, 0.0, c, s, 0.0, -s, c);',
+				'		return mat4(vec4(r[0], 0.0), vec4(r[1], 0.0), vec4(r[2], 0.0), vec4(reached - r * ankle, 1.0)) * m;',
+				'	}',
+				'	mat4 first = turnRound(knee - hip, kneeTo - hip, hip);',
+				'	if (leg.y < 1.5) return first * m;',
+				'	vec3 moved = (first * vec4(ankle, 1.0)).xyz;',
+				'	return turnRound(moved - kneeTo, reached - kneeTo, kneeTo) * first * m;',
 				'}',
 				/* What a vertex graph of Blueprints does to a corner of a shape: nothing here; a material with a Vertex puts its own in this place. */
 				'void blueprintVertex(vec3 position, vec3 normal, vec2 uv, float sway, float phase, float size, inout vec3 world, inout vec3 bent) {}',
@@ -17260,6 +17890,9 @@ Elemenx.Component('Scene', {
 				'uniform float uRelief;',
 				'uniform samplerCube uLights;',
 				'uniform float uLightsOn;',
+				/* The far ground round a location (drawHorizon): its water mirrors the sky of the location as its sea does (uMirror: the air of the location, the light of its day; a of 0 elsewhere). */
+				'uniform vec4 uMirror;',
+				graphics.Chunks.SkyLight,
 				'uniform samplerCube uSky;',
 				'uniform float uCloudsOn;',
 				'uniform float uDrift;',

@@ -6,6 +6,7 @@
 	'DemoLoading/DemoLoading.js',
 	'DemoGraph/DemoGraph.js',
 	'GamingPage/GamingPage.js',
+	'GameDemo/GameDemo.js',
 	'HardwarePage/HardwarePage.js',
 	'OrbitDemo/OrbitDemo.js',
 	'UniverseDemo/UniverseDemo.js',

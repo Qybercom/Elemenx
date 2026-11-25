@@ -1,7 +1,7 @@
 <!-- generated -->
 # GameFlight
 
-The instruments of a ship over a Scene, declared inside it (the trait SceneBehaviour): what Readout of the scene reads of For (an ID; empty: the hero) each Every seconds (0.15): its speed, its height and the air round it (Probe of the scene), its travel (warp, jump: its phase, its step), its throttle; of its systems (SceneShipSystems) its reactors (their heat, what they give, shut down by their heat), what each system is given of the power, the layers of its shield, a blocker of warp its sensors see, and the places it knows of, the nearest first (Nav of them shown). Engineer adds the hands of an engineer (or of a pilot alone): the shares of the power, each reactor on or off, venting their heat. Size small, medium or large; Label names it for screen readers; its default slot holds buttons of its own. Regression: the demos of space each wrote their own lines of the flight.
+The instruments of a ship over a Scene, declared inside it (the trait SceneBehaviour): what Readout of the scene reads of For (an ID; empty: the hero) each Every seconds (0.15): its speed, its height and the air round it (Probe of the scene), its travel (warp, jump: its phase, its step), what its autopilot does, how much the mass lock holds it back, its throttle; of its systems (SceneShipSystems) its reactors (their heat, what they give, shut down by their heat), what each system is given of the power, the layers of its shield, a blocker of warp its sensors see, and the places it knows of, the nearest first (Nav of them shown). Engineer adds the hands of an engineer (or of a pilot alone): the shares of the power, each reactor on or off, venting their heat; Commands the commands of the ship below them (GameCommands: land, take off, to orbit), for a pilot who flies it; Arms its missiles, locks, flares and point defence (GameArms), a warning of a missile at it. Size small, medium or large; Label names it for screen readers; its default slot holds buttons of its own. Regression: the demos of space each wrote their own lines of the flight.
 
 ## Properties
 
@@ -11,6 +11,8 @@ The instruments of a ship over a Scene, declared inside it (the trait SceneBehav
 | `Every` | `0.15` |
 | `Nav` | `5` |
 | `Engineer` | `false` |
+| `Commands` | `false` |
+| `Arms` | `false` |
 | `Size` | `'medium'` |
 | `Label` | `''` |
 

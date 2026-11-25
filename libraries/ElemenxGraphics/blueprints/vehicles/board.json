@@ -1,0 +1,455 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "vehicles-board",
+	"parameters": [
+		{
+			"key": "OpenTime",
+			"type": "float",
+			"value": 0.7,
+			"comment": "Seconds a door takes to open before one gets in (or out)"
+		},
+		{
+			"key": "EnterTime",
+			"type": "float",
+			"value": 1,
+			"comment": "Seconds from the side of the vehicle to its seat"
+		},
+		{
+			"key": "SitTime",
+			"type": "float",
+			"value": 0.4,
+			"comment": "Seconds to sit down in the seat (to stand up out of it)"
+		},
+		{
+			"key": "CloseTime",
+			"type": "float",
+			"value": 0.5,
+			"comment": "Seconds a door takes to close after one is in (or out)"
+		},
+		{
+			"key": "LowRoof",
+			"type": "float",
+			"value": 1.35,
+			"comment": "A vehicle lower than this (metres) is dived into, bent down; a higher one stepped up into"
+		},
+		{
+			"key": "Ship",
+			"type": "float",
+			"value": 1.4,
+			"comment": "How much longer one climbs into a ship than into a car"
+		}
+	],
+	"blocks": [
+		{
+			"id": "vehicles-board-input-kind",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-input-height",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Height"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-input-door",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Door"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-parameter-opentime",
+			"type": "Parameter",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "OpenTime"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-parameter-entertime",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "EnterTime"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-parameter-sittime",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "SitTime"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-parameter-closetime",
+			"type": "Parameter",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "CloseTime"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-parameter-lowroof",
+			"type": "Parameter",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "LowRoof"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-parameter-ship",
+			"type": "Parameter",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Ship"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-formula-open",
+			"type": "Formula",
+			"x": 420,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Door * OpenTime"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-result-open",
+			"type": "Result",
+			"x": 800,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Open"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-formula-enter",
+			"type": "Formula",
+			"x": 420,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "EnterTime * (Kind > 0.5 ? Ship : (Height < LowRoof ? 1.2 : 1))"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-result-enter",
+			"type": "Result",
+			"x": 800,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Enter"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-formula-sit",
+			"type": "Formula",
+			"x": 420,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "SitTime"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-result-sit",
+			"type": "Result",
+			"x": 800,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Sit"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-formula-close",
+			"type": "Formula",
+			"x": 420,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Door * CloseTime"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-result-close",
+			"type": "Result",
+			"x": 800,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Close"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-formula-clip",
+			"type": "Formula",
+			"x": 420,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Kind > 0.5 ? 3 : (Height < LowRoof ? 1 : 2)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-result-clip",
+			"type": "Result",
+			"x": 800,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Clip"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-formula-duck",
+			"type": "Formula",
+			"x": 420,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Kind > 0.5 ? 0 : (Height < LowRoof ? 0.6 : 0.2)"
+				}
+			]
+		},
+		{
+			"id": "vehicles-board-result-duck",
+			"type": "Result",
+			"x": 800,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Duck"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "vehicles-board-link-0",
+			"p1": "vehicles-board-input-door-out-Value",
+			"p2": "vehicles-board-formula-open-in-Door",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-1",
+			"p1": "vehicles-board-parameter-opentime-out-Value",
+			"p2": "vehicles-board-formula-open-in-OpenTime",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-2",
+			"p1": "vehicles-board-formula-open-out-Value",
+			"p2": "vehicles-board-result-open-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-3",
+			"p1": "vehicles-board-parameter-entertime-out-Value",
+			"p2": "vehicles-board-formula-enter-in-EnterTime",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-4",
+			"p1": "vehicles-board-input-kind-out-Value",
+			"p2": "vehicles-board-formula-enter-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-5",
+			"p1": "vehicles-board-parameter-ship-out-Value",
+			"p2": "vehicles-board-formula-enter-in-Ship",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-6",
+			"p1": "vehicles-board-input-height-out-Value",
+			"p2": "vehicles-board-formula-enter-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-7",
+			"p1": "vehicles-board-parameter-lowroof-out-Value",
+			"p2": "vehicles-board-formula-enter-in-LowRoof",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-8",
+			"p1": "vehicles-board-formula-enter-out-Value",
+			"p2": "vehicles-board-result-enter-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-9",
+			"p1": "vehicles-board-parameter-sittime-out-Value",
+			"p2": "vehicles-board-formula-sit-in-SitTime",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-10",
+			"p1": "vehicles-board-formula-sit-out-Value",
+			"p2": "vehicles-board-result-sit-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-11",
+			"p1": "vehicles-board-input-door-out-Value",
+			"p2": "vehicles-board-formula-close-in-Door",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-12",
+			"p1": "vehicles-board-parameter-closetime-out-Value",
+			"p2": "vehicles-board-formula-close-in-CloseTime",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-13",
+			"p1": "vehicles-board-formula-close-out-Value",
+			"p2": "vehicles-board-result-close-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-14",
+			"p1": "vehicles-board-input-kind-out-Value",
+			"p2": "vehicles-board-formula-clip-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-15",
+			"p1": "vehicles-board-input-height-out-Value",
+			"p2": "vehicles-board-formula-clip-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-16",
+			"p1": "vehicles-board-parameter-lowroof-out-Value",
+			"p2": "vehicles-board-formula-clip-in-LowRoof",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-17",
+			"p1": "vehicles-board-formula-clip-out-Value",
+			"p2": "vehicles-board-result-clip-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-18",
+			"p1": "vehicles-board-input-kind-out-Value",
+			"p2": "vehicles-board-formula-duck-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-19",
+			"p1": "vehicles-board-input-height-out-Value",
+			"p2": "vehicles-board-formula-duck-in-Height",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-20",
+			"p1": "vehicles-board-parameter-lowroof-out-Value",
+			"p2": "vehicles-board-formula-duck-in-LowRoof",
+			"kind": "value"
+		},
+		{
+			"id": "vehicles-board-link-21",
+			"p1": "vehicles-board-formula-duck-out-Value",
+			"p2": "vehicles-board-result-duck-in-Value",
+			"kind": "value"
+		}
+	]
+}

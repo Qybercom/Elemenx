@@ -101,7 +101,7 @@
 - [VirtualGamepad: shows a cross of up, down, left and right (dpad for all four) whose buttons hold the pad](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L406) — `tests/regression/virtual-gamepad.test.js`
 - [VirtualGamepad: gives nothing within its dead zone, the right stick by its curve, lets go of a finger taken away, and floats](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/virtual-gamepad.test.js#L448) — `tests/regression/virtual-gamepad.test.js`
 - [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L130) — `tests/regression/headless.test.js`
-- [flies a ship by a pad as it leans and turns the view by its right stick, up looking up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1745) — `tests/regression/library-scene-landing.test.js`
-- [warps a ship by X of a pad and jumps it by Y, as H and J do](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2680) — `tests/regression/library-scene.test.js`
+- [flies a ship by a pad as it leans and turns the view by its right stick, up looking up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1915) — `tests/regression/library-scene-landing.test.js`
+- [warps a ship by X of a pad and jumps it by Y, as H and J do](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2872) — `tests/regression/library-scene.test.js`
 
 +2 ещё в тех же файлах

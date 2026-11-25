@@ -1,0 +1,268 @@
+{
+	"Name": "McLaren MP4-20",
+	"Model": "../../models/2005_mclaren_mp4-20 (1).glb",
+	"Size": 0.95,
+	"Apart": "Tyre|MCLARENRIM|MCLHUB|SPOKES|Brake_Disk|Caliper",
+	"Materials": {
+		"GrilleNoAlpha[89]A": {
+			"ColorMap": null,
+			"BaseColor": [
+				0.03,
+				0.03,
+				0.035,
+				1
+			]
+		}
+	},
+	"Seat": [
+		0,
+		0.72,
+		-0.1
+	],
+	"Tune": {
+		"Turn": [
+			[
+				14,
+				60
+			],
+			[
+				28,
+				70
+			],
+			[
+				56,
+				85
+			],
+			[
+				83,
+				95
+			]
+		],
+		"Build": [
+			0.3,
+			0.16
+		],
+		"Mass": 600,
+		"Top": 100,
+		"Base": 3.1,
+		"Width": 1.5,
+		"Brake": 52,
+		"Bite": 2.6,
+		"Coast": 5,
+		"Grip": 2.1,
+		"Downforce": 1.6,
+		"Power": 690000,
+		"Answer": 30,
+		"Agility": 3,
+		"Assist": 0.85,
+		"Rear": 1.1,
+		"Slide": 0.5,
+		"Ride": 0.45,
+		"Lock": 0.5,
+		"Keep": 140,
+		"AntiRoll": 90000,
+		"Balance": 0.24
+	},
+	"Pipes": [
+		[
+			0.135,
+			0.37,
+			-1.35
+		],
+		[
+			-0.135,
+			0.37,
+			-1.35
+		]
+	],
+	"Roles": [
+		{
+			"ID": "wheel-fl",
+			"Kind": "wheel",
+			"Name": "wheel FL",
+			"Corner": "FL",
+			"Parts": [
+				{
+					"Piece": "node-31-0-rf"
+				},
+				{
+					"Piece": "node-33-0-rf"
+				},
+				{
+					"Piece": "node-34-0-rf"
+				},
+				{
+					"Piece": "node-35-0-rf"
+				},
+				{
+					"Piece": "node-38-0-rf"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-fl",
+			"Kind": "caliper",
+			"Name": "caliper FL",
+			"Corner": "FL",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-32-0-rf"
+				},
+				{
+					"Piece": "node-40-0-rf"
+				},
+				{
+					"Piece": "node-42-0-rf"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-fr",
+			"Kind": "wheel",
+			"Name": "wheel FR",
+			"Corner": "FR",
+			"Parts": [
+				{
+					"Piece": "node-31-0-lf"
+				},
+				{
+					"Piece": "node-33-0-lf"
+				},
+				{
+					"Piece": "node-34-0-lf"
+				},
+				{
+					"Piece": "node-35-0-lf"
+				},
+				{
+					"Piece": "node-38-0-lf"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-fr",
+			"Kind": "caliper",
+			"Name": "caliper FR",
+			"Corner": "FR",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-32-0-lf"
+				},
+				{
+					"Piece": "node-40-0-lf"
+				},
+				{
+					"Piece": "node-42-0-lf"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-rl",
+			"Kind": "wheel",
+			"Name": "wheel RL",
+			"Corner": "RL",
+			"Parts": [
+				{
+					"Piece": "node-31-0-rb"
+				},
+				{
+					"Piece": "node-33-0-rb"
+				},
+				{
+					"Piece": "node-34-0-rb"
+				},
+				{
+					"Piece": "node-35-0-rb"
+				},
+				{
+					"Piece": "node-38-0-rb"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-rl",
+			"Kind": "caliper",
+			"Name": "caliper RL",
+			"Corner": "RL",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-32-0-rb"
+				},
+				{
+					"Piece": "node-40-0-rb"
+				},
+				{
+					"Piece": "node-42-0-rb"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "wheel-rr",
+			"Kind": "wheel",
+			"Name": "wheel RR",
+			"Corner": "RR",
+			"Parts": [
+				{
+					"Piece": "node-31-0-lb"
+				},
+				{
+					"Piece": "node-33-0-lb"
+				},
+				{
+					"Piece": "node-34-0-lb"
+				},
+				{
+					"Piece": "node-35-0-lb"
+				},
+				{
+					"Piece": "node-38-0-lb"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		},
+		{
+			"ID": "caliper-rr",
+			"Kind": "caliper",
+			"Name": "caliper RR",
+			"Corner": "RR",
+			"Held": true,
+			"Parts": [
+				{
+					"Piece": "node-32-0-lb"
+				},
+				{
+					"Piece": "node-40-0-lb"
+				},
+				{
+					"Piece": "node-42-0-lb"
+				}
+			],
+			"Motion": {
+				"Type": "none"
+			}
+		}
+	]
+}

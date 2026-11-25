@@ -6,7 +6,10 @@
  * copilot, captain, engineer, tactical, gunner, sensors, commander; empty: the one of the seat the hero sits in). It shows
  * the role and the ship, its instruments (GameFlight: the hands of an engineer at the console of one, more of the places it knows at the
  * console of sensors), its radar beside them with Radar (GameRadar, a map of RadarRange metres, RadarSize pixels wide)
- * and, while the hero sits there, the modes of its seat (GameTactics) and a button to stand up (Leave of the scene). Size
+ * and, while the hero sits there, the modes of its seat (GameTactics) and a button to stand up (Leave of the scene); at
+ * the console of a pilot, a copilot or a captain the commands of the ship (GameCommands: land, take off, to orbit); at
+ * the console of a gunner, a tactical officer, a pilot or a captain its arms (GameArms: missiles, locks, flares, point
+ * defence, the warning of a missile at it). Size
  * small, medium or large; Label names it for screen readers; its default slot holds buttons of its own.
  */
 Elemenx.Component('GameConsole', {

@@ -1,0 +1,6 @@
+{
+	"Cars": {
+		"coupe": "coupe.json",
+		"kart": {"Name": "Kart", "Model": "/assets/kart.glb", "Size": 0.8, "Pipes": [[0, 0.3, -0.9]], "Tune": {"Grip": 2}, "Roles": [{"ID": "wheel-fl", "Kind": "wheel", "Corner": "FL", "Parts": [{"Piece": "n1"}], "Motion": {"Type": "none"}}]}
+	}
+}

@@ -6,6 +6,15 @@
 Elemenx.Component('LocationsDemo', {
 	$TemplateURL: 'LocationsDemo.html',
 	$Traits: ['SceneDemo'],
+	$OnCreate: function () {
+		var self = this;
+
+		/* The walkers of the demos (data/characters, SceneCharacters), read once. */
+		this.$Service('DemoData').CharactersRead(function (error, list) {
+			if (!error)
+				self.PlaceCharacters = list;
+		});
+	},
 	PlaceReady: function (scene) {
 		this.PlaceScene = function () {
 			return scene;
@@ -166,71 +175,14 @@ Elemenx.Component('LocationsDemo', {
 		}, 300);
 	},
 	PlaceNote: '',
-	/* The walker chosen, with the clips of their files: they were made for another skeleton, and come to its own. */
-	/* What the character holds: the rifle in the hand of the one that has its clips. */
+	/* The walker chosen (DemoData.Character: data/characters), what it holds: the rifle of the one with its clips. */
 	PlaceHold: function () {
-		var chosen = this.PlaceCharacter;
-		var character = this.PlaceCharacters.filter(function (each) {
-			return each.Value === chosen;
-		})[0];
-
-		return character.Clips === 'rifle' ? {Model: 'rifle', Bone: 'HandR', Aim: 'HandL', At: [0.0914, -0.0369, 0], Turn: [0, 180, -4.9], Size: 0.145} : undefined;
+		return this.$Service('DemoData').Character(this.PlaceCharacter).Hold;
 	},
-	/* Who walks on the locations: a line for a file of data/models, and the set of clips that suits it if not the usual one. */
-	PlaceCharacters: [{Value: 'elf', Label: 'Elf', File: 'rigged_elf_woman.glb'}, {Value: 'nyx', Label: 'Nyx', File: 'nyx_common.glb'}, {Value: 'swordsman', Label: 'Swordswoman', File: 'hit2_female_swordsman.glb'}, {Value: 'killjoy', Label: 'Killjoy', File: 'killjoy__valorant.glb'}, {Value: 'warrior', Label: 'Warrior', File: 'low_poly_female_warrior_charctor.glb'}, {Value: 'chief', Label: 'Master Chief', File: 'master_chief_high_poly.glb', Clips: 'rifle'}, {Value: 'xbot', Label: 'X Bot (FBX)', File: 'elf_anim/X Bot.fbx'}, {Value: 'mannequin', Label: 'Mannequin (gaits of graphs)', Model: 'mannequin'}],
+	PlaceCharacters: [],
 	PlaceCharacter: 'elf',
 	PlaceHero: function () {
-		var models = this.$Service('SceneModels');
-		var chosen = this.PlaceCharacter;
-		var name = 'walker-' + chosen;
-		var character = this.PlaceCharacters.filter(function (each) {
-			return each.Value === chosen;
-		})[0];
-
-		/* A model of code (the mannequin: its gaits graphs of the library), not a file. */
-		if (character.Model) {
-			models.Load(character.Model);
-
-			return character.Model;
-		}
-
-		function rifle (file, stride) {
-			return {URL: '/data/models/riffle_anim/' + file + '.fbx', Stride: stride || 1, Held: true};
-		}
-
-		if (!models.Has('rifle'))
-			models.Define('rifle', {URL: '/data/models/halo_ma4b_assault_rifle.glb', Type: 'prop'});
-
-		if (!models.Has(name))
-			models.Define(name, {URL: '/data/models/' + character.File, Type: 'unit', Motions: character.Clips === 'rifle' ? {
-				idle: rifle('idle'),
-				walk: rifle('walk forward', 0.85),
-				run: rifle('run forward', 1.5),
-				sprint: rifle('sprint forward', 2),
-				jump: rifle('jump loop'),
-				'strafe-left': rifle('walk left', 0.8),
-				'strafe-right': rifle('walk right', 0.8),
-				'strafe-left-run': rifle('run left', 1.4),
-				'strafe-right-run': rifle('run right', 1.4),
-				'turn-left': rifle('turn 90 left'),
-				'turn-right': rifle('turn 90 right')
-			} : {
-				idle: '/data/models/elf_anim/idle.fbx',
-				walk: {URL: '/data/models/elf_anim/walking.fbx', Stride: 0.85},
-				run: {URL: '/data/models/elf_anim/running.fbx', Stride: 1.5},
-				sprint: {URL: '/data/models/Fast Run.fbx', Stride: 2},
-				jump: '/data/models/elf_anim/jump.fbx',
-				'strafe-left': {URL: '/data/models/elf_anim/left strafe walk.fbx', Stride: 0.8},
-				'strafe-right': {URL: '/data/models/elf_anim/right strafe walk.fbx', Stride: 0.8},
-				'strafe-left-run': {URL: '/data/models/elf_anim/left strafe.fbx', Stride: 1.4},
-				'strafe-right-run': {URL: '/data/models/elf_anim/right strafe.fbx', Stride: 1.4},
-				'turn-left': '/data/models/elf_anim/left turn.fbx',
-				'turn-right': '/data/models/elf_anim/right turn.fbx'
-			}});
-
-		models.Load(name);
-
-		return name;
+		return this.$Service('DemoData').Character(this.PlaceCharacter).Model;
 	},
 	PlaceMoonAzimuth: 180,
 	PlaceMoonElevation: 45,
@@ -516,11 +468,11 @@ Elemenx.Component('LocationsDemo', {
 			return;
 		}
 
-		request.open('HEAD', '/data/models/' + character.File);
+		request.open('HEAD', character.File);
 
 		request.onload = function () {
 			if (request.status !== 200) {
-				self.PlaceNote = character.File + ' is not in data/models of this copy';
+				self.PlaceNote = character.File + ' is not in this copy';
 
 				return;
 			}
