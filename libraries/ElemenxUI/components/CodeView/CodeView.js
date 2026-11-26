@@ -64,7 +64,7 @@ Elemenx.Component('CodeView', {
 		this.BodyText = bodyText;
 
 		function escape (text) {
-			return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			return self.$Service('Text').EscapeText(text);
 		}
 
 		/* The numbers of the marked lines: 3, or '7-9'. */

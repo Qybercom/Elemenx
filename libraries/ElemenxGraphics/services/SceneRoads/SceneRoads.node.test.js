@@ -66,6 +66,55 @@ describe('Regression: SceneRoads with large lists', function () {
 	});
 
 	/*
+	 * Regression: what is under a wheel was found among all the points of each road at each step (a car kept no hints). With
+	 * hints it looks at the points near the last.
+	 */
+	it('finds what is under a point with hints as with none, looking at the points near them only', function () {
+		var roads = create();
+		var ring = [];
+		var hints = [];
+		var looked = 0;
+		var network;
+		var road;
+		var i;
+
+		roads.$OnCreate();
+		roads.Library();
+
+		for (i = 0; i < 64; i++)
+			ring.push([Math.cos(i / 64 * Math.PI * 2) * 600, Math.sin(i / 64 * Math.PI * 2) * 600]);
+
+		network = roads.Network([{ID: 'ring', Type: 'road', Closed: true, Points: ring}], []);
+		road = network.Roads[0];
+
+		/* Round the track, a step at a time: the same as with no hint. */
+		for (i = 0; i < 200; i++) {
+			var a = i / 200 * Math.PI * 2;
+			var x = Math.cos(a) * 601;
+			var z = Math.sin(a) * 601;
+			var plain = roads.Under(network.Roads, x, z);
+			var hinted = roads.Under(network.Roads, x, z, hints);
+
+			expect(hinted.Along).toBe(plain.Along);
+			expect(hinted.Offset).toBeCloseTo(plain.Offset, 9);
+		}
+
+		/* Looked at near the hint only. */
+		Object.defineProperty(road, 'Points', {value: new Proxy(road.Points, {get: function (list, key) {
+			if (/^\d+$/.test(String(key)))
+				looked++;
+
+			return list[key];
+		}}), configurable: true});
+
+		looked = 0;
+
+		roads.Near(road, 601, 0, hints[0]);
+
+		expect(looked).toBeLessThan(road.Points.length);
+	});
+
+	/*
 	 * What the tunnels of roads cut out of the ground: one box round the box of its lining, a metre wider on each side, from a
 	 * metre under the road to 7 m over it, no crust kept. Regression: round bores side by side (one each 12 m of width) left
 	 * the ground between them inside the lining of a motorway, a crust of earth hung in it where the hill was low, and a

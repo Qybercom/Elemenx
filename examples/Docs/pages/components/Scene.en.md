@@ -183,4 +183,4 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L252) — `tests/regression/library-game-strategy.test.js`
 - [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L280) — `tests/regression/library-game-strategy.test.js`
 
-+385 more in the same files
++387 more in the same files

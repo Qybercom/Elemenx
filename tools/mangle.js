@@ -31,11 +31,13 @@ var Avoid = {};
 /* What stops the renaming: syntax a scope of var and function does not describe, and reads of a scope by name. */
 var Unsupported = {let: true, const: true, class: true, yield: true, await: true, async: true, import: true, export: true};
 
-var Word = /[A-Za-z0-9_$\u0080-￿]/;
-var Start = /[A-Za-z_$\u0080-￿]/;
+var Scanner = require('./scanner.js');
 
-/* After these, a slash starts a regular expression. */
-var RegexAfter = '(,=:[!&|?{};+-*%<>~^';
+var Word = Scanner.Word;
+var Start = Scanner.Start;
+
+/* After these, a slash starts a regular expression (its words of ES5 alone: of and yield are names there). */
+var RegexAfter = Scanner.RegexAfter;
 var RegexWords = {return: true, typeof: true, instanceof: true, in: true, new: true, delete: true, void: true, throw: true, case: true, do: true, else: true};
 
 /* Before an opening brace, these make it an object (an expression); the others, a block. */
@@ -111,46 +113,14 @@ function tokenize (source) {
 			return null;
 		}
 		else if (c === '"' || c === '\'') {
-			end = i + 1;
+			end = Scanner.String(source, i);
 
-			while (end < source.length && source.charAt(end) !== c) {
-				if (source.charAt(end) === '\\')
-					end++;
+			push('string', source.substring(i, end));
 
-				end++;
-			}
-
-			push('string', source.substring(i, end + 1));
-
-			i = end + 1;
+			i = end;
 		}
 		else if (c === '/' && regexAllowed()) {
-			end = i + 1;
-
-			(function () {
-				var klass = false;
-				var at;
-
-				while (end < source.length) {
-					at = source.charAt(end);
-
-					if (at === '/' && !klass) break;
-
-					if (at === '\n')
-						throw new Error('Unterminated regular expression at ' + i);
-
-					if (at === '[') klass = true;
-					else if (at === ']') klass = false;
-
-					end += at === '\\' ? 2 : 1;
-				}
-			})();
-
-			end++;
-
-			while (end < source.length && /[a-z]/i.test(source.charAt(end))) {
-				end++;
-			}
+			end = Scanner.Regex(source, i);
 
 			push('regex', source.substring(i, end));
 

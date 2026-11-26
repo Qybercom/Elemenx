@@ -137,11 +137,12 @@ Elemenx.Service('Suprematist', {
 		var width = Number(settings.Width) || 400;
 		var height = Number(settings.Height) || 400;
 		var ground = this.PaletteOf(settings).Ground;
+		var markup = this.$Service('Text');
 		var round = function (value) {
 			return Math.round(value * 10) / 10;
 		};
 		var escape = function (value) {
-			return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+			return markup.Escape(value);
 		};
 		var parts = this.Figures(settings).map(function (figure) {
 			var fill = ' fill="' + escape(figure.Fill) + '"';

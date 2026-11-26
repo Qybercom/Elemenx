@@ -670,7 +670,7 @@ Elemenx.Component('Drawing', {
 
 	/* Markup. An attribute value, escaped. */
 	Escape: function (value) {
-		return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		return this.$Service('Text').Escape(value);
 	},
 
 	/* A freehand stroke as quadratic curves through the middles of its points. */

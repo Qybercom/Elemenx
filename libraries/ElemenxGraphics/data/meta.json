@@ -3546,6 +3546,7 @@
 			"Methods": [
 				"Shape(geometry)",
 				"Merge(job)",
+				"MergePacked(job)",
 				"Pack(made)",
 				"Unpack(packed)",
 				"Work()"

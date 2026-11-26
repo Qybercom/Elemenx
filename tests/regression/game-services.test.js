@@ -12,6 +12,7 @@ describe('Contract: the Services of games (Random, SpatialIndex, Pathfinding, Vi
 		await loadElemenx();
 		await import('../../libraries/ElemenxCommon/services/Random/Random.js');
 		await import('../../libraries/ElemenxCommon/services/Seeded/Seeded.js');
+		await import('../../libraries/ElemenxCommon/services/Text/Text.js');
 		await import('../../libraries/ElemenxUI/services/Suprematist/Suprematist.js');
 		await import('../../libraries/ElemenxCommon/services/SpatialIndex/SpatialIndex.js');
 		await import('../../libraries/ElemenxCommon/services/Pathfinding/Pathfinding.js');

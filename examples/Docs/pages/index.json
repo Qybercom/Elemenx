@@ -3391,6 +3391,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "Text",
+					"Title": {
+						"en": "Text"
+					},
+					"Library": "ElemenxCommon"
+				},
+				{
 					"ID": "Theme",
 					"Title": {
 						"en": "Theme"

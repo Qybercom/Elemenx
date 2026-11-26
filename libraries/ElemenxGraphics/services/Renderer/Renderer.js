@@ -26,14 +26,15 @@
  * giving one back waits for the card to finish all it was given.
  * - Program(vertex, fragment, behind): the shaders compiled (each one once), their uniforms found; an error of GLSL is thrown
  *   with its log. With options Patient the card does that in the background and nothing waits for it: Ready(program) tells
- *   whether it is done (one not done after options Patience ms, 10 s, is waited for then: some cards make a program only
- *   when it is used or waited for), Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
+ *   whether it is done (one not done after options Patience ms, 10 s, is waited for then, one at a time half a second
+ *   apart, where the card has made none by itself, as some make a program only when it is used or waited for, or on a
+ *   canvas shown nowhere), Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
  *   one not done yet waits, as it must. A slow shader so holds no frame up. Check(vertex, fragment) asks the card at once
  *   whether two shaders compile: their logs, or null. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to
  *   aInstance5, one of each copy of an instanced mesh), aMaterials, aMaterials2 and aMaterials3 (the weights of 12
  *   materials of a ground, Materials of a geometry: 12 numbers a vertex, or 8 for the first two; 0 where it has none).
- * - Mesh(geometry, mode) returns a mesh (mode: triangles, lines, line-strip, line-loop or points; triangles by default): Update(geometry), Triangles(indices) (its triangles again, its points kept: a level of detail of clusters), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the
- *   copies of the mesh drawn at once), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor:
+ * - Mesh(geometry, mode) returns a mesh (mode: triangles, lines, line-strip, line-loop or points; triangles by default): Update(geometry), Triangles(indices) (its triangles again, its points kept: a level of detail of clusters), Instance(data, count, from) (data {aInstance: {Size, Data}, ...}: the
+ *   copies of the mesh drawn at once; from: another mesh given the same just now, whose buffers it reads, nothing sent again), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor:
  *   {Size, Data}}) make meshes of lines and of points.
  * - Texture(source, options) (a canvas, a picture, or {Width, Height, Data}; options Repeat, Nearest) returns a texture (Update(picture) puts another canvas or picture in it)
  *   for a uniform sampler2D; Volume(size, data) a repeating block of size^3 RGBA bytes for a sampler3D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms)
@@ -52,6 +53,9 @@
  *   (alpha; add; over: its color over what is behind, the alpha of that kept; veil: the same, that alpha gone as far as it
  *   covers it; premultiplied: its color added and what is behind dimmed by its alpha, the light and the shade of gas; or none), Depth (test, true; lequal: what is drawn again over the same surface passes), DepthWrite (true), Cull (back, front or none), Instances (the copies).
  *   The value of a uniform is a number, an array (of a vector, a matrix or a list of them), true or false, or a texture.
+ * - Shared(values): marks a set of values many draws share (the camera, the light, the shadows of a pass) and returns it;
+ *   draws given values made of it (Object.create(values) with their own) set what it holds on a program once, then only
+ *   their own. Marked again after any change of it.
  * - Counts(): what it drew since it was made, {Draws, Triangles} (the copies of an instanced mesh counted): the
  *   difference of two of them is what a frame, or a second, costs.
  * - Resize(width, height, ratio), Clear(color) ([r, g, b, a], 0 to 1), Winding(clockwise) (the front of a triangle goes round
@@ -380,11 +384,16 @@ Elemenx.Service('Renderer', {
 			'uniform vec4 uCascadeSoft;',
 			'uniform vec4 uCascadeBias;',
 			'uniform float uCascadeOn;',
+			/*
+			 * The maps of the shadows have no levels: read at level 0 (textureLod), the same, and the loops round them stay loops.
+			 * Regression: texture() in a loop (of derivatives) made the compiler of a card (ANGLE, HLSL) unroll and flatten it,
+			 * in every program of a lit surface: the load waited minutes.
+			 */
 			'float shadowIn(highp sampler2DShadow map, vec3 place, float texel) {',
 			'	float sum = 0.0;',
 			'	for (int x = -1; x <= 1; x++) {',
 			'		for (int y = -1; y <= 1; y++) {',
-			'			sum += texture(map, vec3(place.xy + vec2(float(x), float(y)) * texel * 1.2, place.z));',
+			'			sum += textureLod(map, vec3(place.xy + vec2(float(x), float(y)) * texel * 1.2, place.z), 0.0);',
 			'		}',
 			'	}',
 			'	return sum / 9.0;',
@@ -403,7 +412,7 @@ Elemenx.Service('Renderer', {
 			'	for (int i = 0; i < 6; i++) {',
 			'		float r = sqrt((float(i) + 0.5) / 6.0) * 7.0 * texel;',
 			'		float a = float(i) * 2.399963 + turn;',
-			'		float depth = texture(raw, place.xy + vec2(cos(a), sin(a)) * r).r;',
+			'		float depth = textureLod(raw, place.xy + vec2(cos(a), sin(a)) * r, 0.0).r;',
 			'		if (depth < place.z - 0.0002) {',
 			'			found += depth;',
 			'			count += 1.0;',
@@ -415,7 +424,7 @@ Elemenx.Service('Renderer', {
 			'	for (int i = 0; i < 12; i++) {',
 			'		float r = sqrt((float(i) + 0.5) / 12.0) * wide;',
 			'		float a = float(i) * 2.399963 + turn;',
-			'		sum += texture(map, vec3(place.xy + vec2(cos(a), sin(a)) * r, place.z));',
+			'		sum += textureLod(map, vec3(place.xy + vec2(cos(a), sin(a)) * r, place.z), 0.0);',
 			'	}',
 			'	return sum / 12.0;',
 			'}',
@@ -517,7 +526,7 @@ Elemenx.Service('Renderer', {
 			'	for (int x = -1; x <= 1; x += 2) {',
 			'		for (int y = -1; y <= 1; y += 2) {',
 			'			vec3 near = vec3(place.xy + vec2(float(x), float(y)) * texel, place.z - 0.0015);',
-			'			sum += index == 0 ? texture(uLampShadow0, near) : texture(uLampShadow1, near);',
+			'			sum += index == 0 ? textureLod(uLampShadow0, near, 0.0) : textureLod(uLampShadow1, near, 0.0);',
 			'		}',
 			'	}',
 			'	return sum * 0.25;',
@@ -545,7 +554,7 @@ Elemenx.Service('Renderer', {
 			'	for (int x = -1; x <= 1; x += 2) {',
 			'		for (int y = -1; y <= 1; y += 2) {',
 			'			vec3 at = vec3((cell + uv + vec2(float(x), float(y)) * texel * 0.5) / 3.0, depth - 0.0006);',
-			'			sum += index == 0 ? texture(uLampShadow0, at) : texture(uLampShadow1, at);',
+			'			sum += index == 0 ? textureLod(uLampShadow0, at, 0.0) : textureLod(uLampShadow1, at, 0.0);',
 			'		}',
 			'	}',
 			'	return sum * 0.25;',
@@ -717,6 +726,14 @@ Elemenx.Service('Renderer', {
 		/* How long a program not made is not waited for (ms): after that Ready waits for it once. */
 		var patience = settings.Patience === undefined ? 10000 : Number(settings.Patience);
 		var parallel = null;
+		/* When a program past its patience was last waited for here (one at a time, Ready), and the most of the slant of a texture. */
+		/* The sets of values Shared marked: each a number, another at each mark (see Draw). */
+		var shares = new WeakMap();
+		var shareMark = 0;
+		var forcedAt = 0;
+		var slantMost = null;
+		/* Whether the card has made a program by itself (not waited for): one that does is never waited for on a shown canvas. */
+		var selfMade = false;
 		var current = {};
 		var counts = {Draws: 0, Triangles: 0};
 		/* The arrays held till the next Hold (the common ones of a frame): given again, the very same, they are what they were. */
@@ -845,6 +862,14 @@ Elemenx.Service('Renderer', {
 		}
 
 		/* A program the card has finished, or one that is waited for here: its log read and its uniforms found. */
+		/* The most slant a texture may be read at (8 at most): asked of the card once. Regression: asked for each texture, the page waited for the card each time (2 s of a load). */
+		function slantOf (slant) {
+			if (slantMost === null)
+				slantMost = Math.min(8, gl.getParameter(slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT));
+
+			return slantMost;
+		}
+
 		function settle (program) {
 			var handle = program.Handle;
 			var count;
@@ -874,6 +899,10 @@ Elemenx.Service('Renderer', {
 
 				program.List.push(program.Uniforms[info.name.replace(/\[0\]$/, '')]);
 			}
+
+			program.Samplers = program.List.filter(function (one) {
+				return one.Sampler;
+			});
 		}
 
 		function buffer (target, data) {
@@ -908,9 +937,23 @@ Elemenx.Service('Renderer', {
 				mesh.Sizes[name] = values.byteLength;
 			}
 
+			point(mesh, name, location, mesh.Buffers[name], size, divisor);
+		}
+
+		/*
+		 * Where an attribute of a mesh reads (its array object keeps it): told again only when its buffer, its size or its
+		 * divisor is another. Regression: told again at each upload, of each copy of each list, thousands of calls a frame.
+		 */
+		function point (mesh, name, location, handle, size, divisor) {
+			var was = mesh.Points[name];
+			if (was && was.Buffer === handle && was.Size === size && was.Divisor === (divisor || 0)) return;
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, handle);
 			gl.enableVertexAttribArray(location);
 			gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
 			gl.vertexAttribDivisor(location, divisor || 0);
+
+			mesh.Points[name] = {Buffer: handle, Size: size, Divisor: divisor || 0};
 		}
 
 		/* Four numbers of each group of a vertex (stride of them), from the first of them. */
@@ -929,7 +972,7 @@ Elemenx.Service('Renderer', {
 		}
 
 		function mesh (geometry, mode) {
-			var made = {VAO: gl.createVertexArray(), Buffers: {}, Sizes: {}, Count: 0, Indexed: false, Mode: mode || 'triangles', Instances: 0};
+			var made = {VAO: gl.createVertexArray(), Buffers: {}, Sizes: {}, Points: {}, Count: 0, Indexed: false, Mode: mode || 'triangles', Instances: 0};
 
 			made.Update = function (shape) {
 				var count = shape.Positions.length / 3;
@@ -1024,12 +1067,18 @@ Elemenx.Service('Renderer', {
 				return made;
 			};
 
-			/* The attributes of each copy: {aInstance: {Size, Data}, ...}, count the copies. */
-			made.Instance = function (data, count) {
+			/*
+			 * The attributes of each copy: {aInstance: {Size, Data}, ...}, count the copies. from: another mesh given the same
+			 * just now, whose buffers it reads (the shape of a shadow of a list, its lines): nothing sent to the card again.
+			 */
+			made.Instance = function (data, count, from) {
 				gl.bindVertexArray(made.VAO);
 
 				Object.keys(data).forEach(function (name) {
-					attribute(made, name, data[name].Size, data[name].Data, 1);
+					var location = self.Locations[name];
+
+					if (from && from.Buffers[name] && location !== undefined) point(made, name, location, from.Buffers[name], data[name].Size, 1);
+					else attribute(made, name, data[name].Size, data[name].Data, 1);
 				});
 
 				gl.bindVertexArray(null);
@@ -1168,6 +1217,93 @@ Elemenx.Service('Renderer', {
 			return blanks[type];
 		}
 
+		/*
+		 * A texture on a unit: nothing told the context where the unit holds it already, not even which unit is active.
+		 * Regression: the unit made active for each sampler of each draw, 3400 calls a frame, all but 500 for nothing.
+		 */
+		function put (unit, target, handle) {
+			var at = bound.Units[unit];
+			if (at && at.Textures[target] === handle) return;
+
+			gl.activeTexture(gl.TEXTURE0 + unit);
+			gl.bindTexture(target, handle);
+		}
+
+		/*
+		 * Of a program set over a shared set (Draw): which of its uniforms the set holds (In), and those a draw gave of its own
+		 * over it (Over, Count), what the set holds there not on the program now.
+		 */
+		function overOf (uniforms, shared, program) {
+			var made = {In: {}, Over: {}, Count: 0};
+			var names = Object.keys(uniforms);
+			var i;
+
+			for (i = 0; i < names.length; i++) {
+				if (program.Uniforms[names[i]] && !program.Uniforms[names[i]].Sampler && holds(made, names[i], shared)) {
+					made.Over[names[i]] = true;
+					made.Count++;
+				}
+			}
+
+			return made;
+		}
+
+		/* Whether a shared set holds a value of a name, asked once for a program set over it. */
+		function holds (over, name, shared) {
+			if (over.In[name] === undefined)
+				over.In[name] = name in shared;
+
+			return over.In[name];
+		}
+
+		/*
+		 * A draw over the shared set on its program already (Draw): its samplers, each on its unit as before; its own values;
+		 * and what of the set another draw had put its own over, back. Regression: all the uniforms of the program walked by
+		 * name and compared for each draw, a hundred of them, the same for all the draws of a pass.
+		 */
+		function own (program, uniforms, shared, units) {
+			var samplers = program.Samplers;
+			var over = program.Over;
+			var names = Object.keys(uniforms);
+			var info;
+			var value;
+			var i;
+
+			for (i = 0; i < samplers.length; i++) {
+				value = uniforms[samplers[i].Name];
+
+				uniform(samplers[i], value !== undefined && value !== null ? value : blank(samplers[i].Type), units);
+			}
+
+			for (i = 0; i < names.length; i++) {
+				info = program.Uniforms[names[i]];
+
+				if (!info || info.Sampler) continue;
+
+				value = uniforms[names[i]];
+
+				if (value !== undefined && value !== null)
+					uniform(info, value, units);
+
+				if (!over.Over[names[i]] && holds(over, names[i], shared)) {
+					over.Over[names[i]] = true;
+					over.Count++;
+				}
+			}
+
+			if (!over.Count) return;
+
+			for (info in over.Over) {
+				if (!over.Over[info] || Object.prototype.hasOwnProperty.call(uniforms, info)) continue;
+
+				over.Over[info] = false;
+				over.Count--;
+
+				if (shared[info] !== undefined && shared[info] !== null)
+					uniform(program.Uniforms[info], shared[info], units);
+			}
+		}
+
 		/* The value of a uniform set by its type, as the program found it. */
 		function uniform (info, value, units) {
 			var location = info.Location;
@@ -1208,9 +1344,10 @@ Elemenx.Service('Renderer', {
 					break;
 				case gl.SAMPLER_2D:
 				case gl.SAMPLER_2D_SHADOW:
-					gl.activeTexture(gl.TEXTURE0 + units.Next);
-					gl.bindTexture(gl.TEXTURE_2D, value ? value.Handle : null);
-					gl.bindSampler(units.Next, value && value.Sampler ? value.Sampler : null);
+					put(units.Next, gl.TEXTURE_2D, value ? value.Handle : null);
+
+					if (value && value.Sampler || bound.Units[units.Next] && bound.Units[units.Next].Sampler)
+						gl.bindSampler(units.Next, value && value.Sampler ? value.Sampler : null);
 
 					sampled(info, location, units.Next);
 
@@ -1218,8 +1355,7 @@ Elemenx.Service('Renderer', {
 
 					break;
 				case gl.SAMPLER_3D:
-					gl.activeTexture(gl.TEXTURE0 + units.Next);
-					gl.bindTexture(gl.TEXTURE_3D, value ? value.Handle : null);
+					put(units.Next, gl.TEXTURE_3D, value ? value.Handle : null);
 
 					sampled(info, location, units.Next);
 
@@ -1227,8 +1363,7 @@ Elemenx.Service('Renderer', {
 
 					break;
 				case gl.SAMPLER_CUBE:
-					gl.activeTexture(gl.TEXTURE0 + units.Next);
-					gl.bindTexture(gl.TEXTURE_CUBE_MAP, value ? value.Handle : null);
+					put(units.Next, gl.TEXTURE_CUBE_MAP, value ? value.Handle : null);
 
 					sampled(info, location, units.Next);
 
@@ -1237,8 +1372,7 @@ Elemenx.Service('Renderer', {
 					break;
 				/* The layers of one texture (SceneTextures.Array: the tiles of the materials of a ground). */
 				case gl.SAMPLER_2D_ARRAY:
-					gl.activeTexture(gl.TEXTURE0 + units.Next);
-					gl.bindTexture(gl.TEXTURE_2D_ARRAY, value ? value.Handle : null);
+					put(units.Next, gl.TEXTURE_2D_ARRAY, value ? value.Handle : null);
 
 					sampled(info, location, units.Next);
 
@@ -1320,12 +1454,25 @@ Elemenx.Service('Renderer', {
 			Ready: function (program) {
 				if (program.Settled) return true;
 
+				if (!parallel || gl.getProgramParameter(program.Handle, parallel.COMPLETION_STATUS_KHR)) {
+					selfMade = selfMade || !!parallel;
+
+					settle(program);
+
+					return true;
+				}
+
 				/*
-				 * Not made yet: not waited for, for as long as its patience (Patience, 10 s); then waited for once. Regression:
-				 * where the card makes a program only when it is used or waited for (a canvas shown nowhere), what drew it only
-				 * once it was made waited for it forever (a globe never came).
+				 * Not made yet: not waited for. Past its patience (Patience, 10 s) it is waited for here, one at a time, half a second
+				 * apart, only where the card makes none by itself (none made so far: it makes a program when it is used or waited
+				 * for) or on a canvas shown nowhere (not in the page, of no size, a hidden page). Regression: there what drew it only
+				 * once it was made waited for it forever (a globe never came). Regression: those past their patience were waited for
+				 * in the frame, all of them at once (Progress asks each), on a card making them by itself too: the page frozen 30 to
+				 * 80 s (the ground alone 21 s).
 				 */
-				if (parallel && Date.now() - program.Made < patience && !gl.getProgramParameter(program.Handle, parallel.COMPLETION_STATUS_KHR)) return false;
+				if (Date.now() - program.Made < patience || Date.now() - forcedAt < 500 || selfMade && canvas.isConnected && canvas.offsetWidth > 0 && !(typeof document !== 'undefined' && document.hidden)) return false;
+
+				forcedAt = Date.now();
 
 				settle(program);
 
@@ -1406,7 +1553,7 @@ Elemenx.Service('Renderer', {
 
 				/* A picture seen at a slant stays sharp along its length. */
 				if (settings.Mipmaps && slant)
-					gl.texParameterf(gl.TEXTURE_2D, slant.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+					gl.texParameterf(gl.TEXTURE_2D, slant.TEXTURE_MAX_ANISOTROPY_EXT, slantOf(slant));
 
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, settings.Repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, settings.Repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
@@ -1873,6 +2020,17 @@ Elemenx.Service('Renderer', {
 			 * Arrays (and typed arrays) of uniforms the caller will not change in their place till the next Hold, the common ones of
 			 * a frame: given again, the very same, they are not read again. Those of the Hold before are let go.
 			 */
+			/*
+			 * A set of values many draws share (the camera, the light, the shadows of a pass): draws given values made of it
+			 * (Object.create(values) and their own) set what it holds on a program once, then only their own. Marked again after
+			 * any change of it; it returns it.
+			 */
+			Shared: function (values) {
+				shares.set(values, ++shareMark);
+
+				return values;
+			},
+
 			Hold: function (values) {
 				held = new WeakSet();
 
@@ -1927,6 +2085,8 @@ Elemenx.Service('Renderer', {
 				var value;
 				var blend = draw.Blend === 'add' || draw.Blend === 'over' || draw.Blend === 'alpha' || draw.Blend === 'veil' || draw.Blend === 'premultiplied' ? draw.Blend : '';
 				var cull = draw.Cull === 'none' || draw.Cull === false ? '' : draw.Cull === 'front' ? 'front' : 'back';
+				var shared;
+				var mark;
 				var i;
 
 				if (renderer.Lost) return;
@@ -1944,14 +2104,29 @@ Elemenx.Service('Renderer', {
 				if (current.Target && current.Target.Count > 1)
 					current.Target.Outputs(Math.min(current.Target.Count, program.Outputs));
 
-				/* The uniforms of the program, not all that was given: a set of them is shared by many programs. */
-				list = uniforms ? program.List : [];
+				/*
+				 * The uniforms of the program, not all that was given: a set of them is shared by many programs. Of values over a
+				 * set Shared marked (made of it: Object.create), once that set is on the program only those of the draw itself.
+				 */
+				shared = uniforms ? Object.getPrototypeOf(uniforms) : null;
+				mark = shared ? shares.get(shared) : undefined;
 
-				for (i = 0; i < list.length; i++) {
-					value = uniforms[list[i].Name];
+				if (mark !== undefined && program.Shared === shared && program.SharedMark === mark) {
+					own(program, uniforms, shared, units);
+				}
+				else {
+					list = uniforms ? program.List : [];
 
-					if (value !== undefined && value !== null) uniform(list[i], value, units);
-					else if (list[i].Sampler) uniform(list[i], blank(list[i].Type), units);
+					for (i = 0; i < list.length; i++) {
+						value = uniforms[list[i].Name];
+
+						if (value !== undefined && value !== null) uniform(list[i], value, units);
+						else if (list[i].Sampler) uniform(list[i], blank(list[i].Type), units);
+					}
+
+					program.Shared = mark === undefined ? null : shared;
+					program.SharedMark = mark;
+					program.Over = mark === undefined ? null : overOf(uniforms, shared, program);
 				}
 
 				if (current.Depth !== (draw.Depth !== false)) {

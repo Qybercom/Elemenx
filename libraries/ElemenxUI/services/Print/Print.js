@@ -23,13 +23,14 @@ Elemenx.Service('Print', {
 		var theme;
 		var styles = [];
 		var body = typeof target === 'string' ? target : target ? target.outerHTML : '';
+		var markup = this.$Service('Text');
 
 		options = options || {};
 		language = options.Language || page.getAttribute('lang') || '';
 		theme = options.Theme === false ? document.body.getAttribute('data-theme') || '' : options.Theme || 'light';
 
 		function escape (text) {
-			return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+			return markup.Escape(text);
 		}
 
 		/* The stylesheets of a document or of a shadow root: links by their URL, the others by their text. */

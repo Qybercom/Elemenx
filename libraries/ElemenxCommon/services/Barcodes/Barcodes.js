@@ -768,7 +768,7 @@ Elemenx.Service('Barcodes', {
 
 	/* An attribute of SVG, escaped. */
 	Escape: function (value) {
-		return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		return this.$Service('Text').Escape(value);
 	},
 
 	/* The runs of dark modules of a line: [[from, length]]. */

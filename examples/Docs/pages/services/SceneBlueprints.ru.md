@@ -76,7 +76,7 @@ LibraryShader(name) — шейдерный граф библиотеки bluepri
 - `LibraryShader(name)`
 - `LibraryCosmos()`
 - `LibraryRing()`
-- `Painted(kind, end, head)`
+- `Painted(kind, end, head, options)`
 - `LibraryPlanet()`
 - `LibraryGround()`
 - `Chunk(context, name, lines, guard)`
@@ -90,9 +90,9 @@ LibraryShader(name) — шейдерный граф библиотеки bluepri
 ## Тесты
 
 - [patches a shader loud, draws a bar of health once and reads a shader graph of the library once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/hardcode-tables.test.js#L130) — `tests/regression/hardcode-tables.test.js`
-- [darkens the light round the ground of a planet in its valleys and on what is turned from the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4763) — `tests/regression/library-scene.test.js`
-- [reads the woods of a planet aside, as its colors, no steps along their edges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4777) — `tests/regression/library-scene.test.js`
-- [mirrors the sky of a location on the water of the far ground round it by the one light of the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4793) — `tests/regression/library-scene.test.js`
+- [darkens the light round the ground of a planet in its valleys and on what is turned from the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4863) — `tests/regression/library-scene.test.js`
+- [reads the woods of a planet aside, as its colors, no steps along their edges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4877) — `tests/regression/library-scene.test.js`
+- [mirrors the sky of a location on the water of the far ground round it by the one light of the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4893) — `tests/regression/library-scene.test.js`
 - [makes the land of a body in the page of the graph that bakes its picture, the same numbers as before, no craters under a sea](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L90) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [gives the lightnings of a storm and of an effect one shape of a graph: its jags, its branch, its own of BoltGraph or Graphs](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L213) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [makes the weather of a planet a graph of numbers: its shader and the page give the same cover, kind, cirrus and rain](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L336) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
@@ -101,3 +101,5 @@ LibraryShader(name) — шейдерный граф библиотеки bluepri
 - [draws a ring of a graph of its bands, gaps, colors and light, of one gap the ring of before](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L583) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [draws a globe of a graph of its parts, the shadow of its ring of the ring graph on it, a graph of its own drawn too](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L675) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [draws the ground of a globe of a graph of its parts, the shadow of a ring on it of the alpha of the ring graph](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L774) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
+
++1 ещё в тех же файлах

@@ -16,9 +16,7 @@ var fs = require('fs');
 var path = require('path');
 
 /* The text of an attribute or of an element, escaped. */
-function escape (value) {
-	return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+var escape = require('./common.js').escapeMarkup;
 
 /* A CSS color, or an error: names, #hex, rgb(), hsl(), var() are fine; nothing that closes a rule. */
 function color (value, name) {

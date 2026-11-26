@@ -879,12 +879,12 @@ Elemenx.Service('Designer', {
 		}
 
 		function escape (text) {
-			return String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			return self.$Service('Text').Escape(text);
 		}
 
 		/* A text of the template: a {{ of its own is written as text, but not in a copy of a Component, whose texts keep their expressions (bound). */
 		function text (value) {
-			var written = String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			var written = self.$Service('Text').EscapeText(value);
 
 			return bound ? written : written.replace(/\{\{/g, '{{ \'{{\' }}');
 		}

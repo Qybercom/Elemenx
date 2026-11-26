@@ -1030,6 +1030,13 @@ Elemenx.Service('SceneMannequin', {
 		var now = values(at);
 		var hipsRest = bones[0].At;
 		var height = v0.Height === undefined ? 1 : v0.Height;
+		var vectors = this.$Service('Math').Vectors;
+		var add = vectors.Add;
+		var sub = vectors.Subtract;
+		var times3 = vectors.Scale;
+		var dot = vectors.Dot;
+		var cross = vectors.Cross;
+		var unit = vectors.Normalize;
 
 		function times (a, b) {
 			return [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
@@ -1049,32 +1056,6 @@ Elemenx.Service('SceneMannequin', {
 			var s = Math.sin(angle / 2);
 
 			return [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(angle / 2)];
-		}
-
-		function add (a, b) {
-			return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-		}
-
-		function sub (a, b) {
-			return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-		}
-
-		function times3 (a, k) {
-			return [a[0] * k, a[1] * k, a[2] * k];
-		}
-
-		function dot (a, b) {
-			return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-		}
-
-		function cross (a, b) {
-			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-		}
-
-		function unit (a) {
-			var size = Math.sqrt(dot(a, a)) || 1;
-
-			return [a[0] / size, a[1] / size, a[2] / size];
 		}
 
 		/* The part of a direction across another (a side, of a front). */

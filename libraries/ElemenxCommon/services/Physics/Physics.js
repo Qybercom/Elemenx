@@ -611,26 +611,12 @@ Elemenx.Service('Physics', {
 		var contacts = [];
 		var touching = {};
 		var next = 1;
-
-		function add (a, b) {
-			return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-		}
-
-		function sub (a, b) {
-			return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-		}
-
-		function scale (a, s) {
-			return [a[0] * s, a[1] * s, a[2] * s];
-		}
-
-		function dot (a, b) {
-			return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-		}
-
-		function cross (a, b) {
-			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-		}
+		var vectors = this.$Service('Math').Vectors;
+		var add = vectors.Add;
+		var sub = vectors.Subtract;
+		var scale = vectors.Scale;
+		var dot = vectors.Dot;
+		var cross = vectors.Cross;
 
 		function size (a) {
 			return Math.sqrt(dot(a, a));

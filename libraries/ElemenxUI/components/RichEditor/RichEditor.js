@@ -516,7 +516,7 @@ Elemenx.Component('RichEditor', {
 	},
 
 	Escape: function (text) {
-		return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		return this.$Service('Text').Escape(text);
 	},
 
 	Command: function (name, value) {

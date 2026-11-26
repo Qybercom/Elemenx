@@ -30,6 +30,8 @@ Elemenx.Trait('SceneCamera', {
 		var state = {Active: '', From: null, Fly: 0, Flown: 0, Fov: 0, Cut: 0, Focus: 0, Was: null, Rigs: {}, Poses: {}};
 		/* What each rig of a camera is (resources/camera/rigs): its numbers and what it does. */
 		var rigs = Elemenx.Resources('Data', 'ElemenxGraphics/camera/rigs') || {};
+		var cross = this.$Service('Math').Vectors.Cross;
+		var lerp = this.$Service('Math').Vectors.Lerp;
 
 		/* The rigs to choose for a camera in an inspector (SceneEditor). */
 		engine.Options = engine.Options || {};
@@ -386,14 +388,6 @@ Elemenx.Trait('SceneCamera', {
 			self.Objects('camera').forEach(function (object) {
 				state.Poses[object.ID] = rigged(object, poseOf(object), elapsed);
 			});
-		}
-
-		function cross (a, b) {
-			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-		}
-
-		function lerp (a, b, t) {
-			return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 		}
 
 		/* The angle of the view up and down (degrees) of a focal length on a sensor, for a picture of that aspect. */

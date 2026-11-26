@@ -16,7 +16,7 @@ SceneBlueprints: what a Scene adds to Blueprints, declared in $Provides: Bluepri
 - The arms of a galaxy as blocks of numbers of a generator (GalaxyData.Kernel: the page and a shader alike): GalaxyTurn, GalaxyBend, GalaxyWave, GalaxyArm; LibraryGalaxy() the graph of them of the library (blueprints/shader/galaxy), Galaxy(graph) {Of, Arm, GLSL (vec4 galaxy_spiral(...))}: its stars, its picture, the band of it from a system alike.
 - The kind cosmos: the sky far behind a system (CosmosGraph of a Scene), its blocks the parts of that sky: see Cosmoses; LibraryCosmos() the graph of the library (blueprints/shader/cosmos).
 - The kind ring: a ring round a body (RingGraph of a Scene), its bands, its gaps, its colors and its light as blocks: see Rings; LibraryRing() the graph of the library (blueprints/shader/ring).
-- The kind planet: a globe from far (PlanetGraph of a Scene): its picture lit, its clouds and their shadows, the shadow of its ring, its towns at night, its air at its edge as blocks: see Planets; LibraryPlanet() the graph of the library (blueprints/shader/planet). Painted(kind, end, head): such a kind of a function of a body in a shader.
+- The kind planet: a globe from far (PlanetGraph of a Scene): its picture lit, its clouds and their shadows, the shadow of its ring, its towns at night, its air at its edge as blocks: see Planets; LibraryPlanet() the graph of the library (blueprints/shader/planet). Painted(kind, end, head, options): such a kind of a function in a shader ({Label, Text}).
 - The kind ground: the ground of a globe near and from over it (GroundGraph of a Scene): its picture, woods, fields, snow, dunes, relief, the tiles near, its light and the shadows of clouds and of its ring, water, towns at night, clouds from over them and air as blocks: see Grounds; LibraryGround() the graph of the library (blueprints/shader/ground).
 - LibraryShader(name): a shader graph of the library (blueprints/shader/<name>) read; LibraryCosmos(), LibraryRing(), LibraryPlanet(), LibraryGround(), LibraryForecast(), LibraryBolt() and LibraryGalaxy() each give theirs of it.
 - The shape of a lightning, one for the bolt of a storm (SceneLighting) and the one of an effect (SceneEffects, kind bolt): a generator of the jag of each of its steps (Step, Seed: X and Z, -0.5 to 0.5), its parameters Steps (of its way), Wide (a jag to its length), Fork (the step a branch leaves at), ForkSteps, ForkDown and ForkWide (the branch: its steps, how far down and how wide each, to the bolt). LibraryBolt() the one of the library (blueprints/shader/bolt); Bolt(graph) {Jag(step, seed) ([X, Z]), Steps.. ForkWide, GLSL (the text of vec2 bolt_jag(float step, float seed), the shape in a shader: of a hash of a sine, its floats part from the numbers of the page where the sine is large, the way the same)}, made once a graph.
@@ -26,7 +26,7 @@ SceneBlueprints: what a Scene adds to Blueprints, declared in $Provides: Bluepri
 - `LibraryShader(name)`
 - `LibraryCosmos()`
 - `LibraryRing()`
-- `Painted(kind, end, head)`
+- `Painted(kind, end, head, options)`
 - `LibraryPlanet()`
 - `LibraryGround()`
 - `Chunk(context, name, lines, guard)`
@@ -40,9 +40,9 @@ SceneBlueprints: what a Scene adds to Blueprints, declared in $Provides: Bluepri
 ## Tests
 
 - [patches a shader loud, draws a bar of health once and reads a shader graph of the library once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/hardcode-tables.test.js#L130) — `tests/regression/hardcode-tables.test.js`
-- [darkens the light round the ground of a planet in its valleys and on what is turned from the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4763) — `tests/regression/library-scene.test.js`
-- [reads the woods of a planet aside, as its colors, no steps along their edges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4777) — `tests/regression/library-scene.test.js`
-- [mirrors the sky of a location on the water of the far ground round it by the one light of the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4793) — `tests/regression/library-scene.test.js`
+- [darkens the light round the ground of a planet in its valleys and on what is turned from the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4863) — `tests/regression/library-scene.test.js`
+- [reads the woods of a planet aside, as its colors, no steps along their edges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4877) — `tests/regression/library-scene.test.js`
+- [mirrors the sky of a location on the water of the far ground round it by the one light of the sky](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L4893) — `tests/regression/library-scene.test.js`
 - [makes the land of a body in the page of the graph that bakes its picture, the same numbers as before, no craters under a sea](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L90) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [gives the lightnings of a storm and of an effect one shape of a graph: its jags, its branch, its own of BoltGraph or Graphs](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L213) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [makes the weather of a planet a graph of numbers: its shader and the page give the same cover, kind, cirrus and rain](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L336) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
@@ -51,3 +51,5 @@ SceneBlueprints: what a Scene adds to Blueprints, declared in $Provides: Bluepri
 - [draws a ring of a graph of its bands, gaps, colors and light, of one gap the ring of before](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L583) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [draws a globe of a graph of its parts, the shadow of its ring of the ring graph on it, a graph of its own drawn too](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L675) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [draws the ground of a globe of a graph of its parts, the shadow of a ring on it of the alpha of the ring graph](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L774) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
+
++1 more in the same files

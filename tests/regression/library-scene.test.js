@@ -1780,6 +1780,104 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		frames(60, 40);
 
 		expect(inner.Ratio).toBe(1);
+
+		/*
+		 * Regression: a scene held up by what it draws, not by its pixels, went down to the least resolution, as slow as before
+		 * and blurred. A step down that does not make the frames a tenth faster is taken back, and not tried for a while.
+		 */
+		scene.Quality = '';
+		inner.Ratio = 1;
+		inner.Trial = null;
+		inner.Unshrunk = 0;
+		inner.FrameTime = 0.04;
+
+		frames(25, 40);
+
+		expect(inner.Ratio).toBeCloseTo(0.85, 6);
+
+		frames(60, 40);
+
+		expect(inner.Ratio).toBe(1);
+
+		frames(300, 40);
+
+		expect(inner.Ratio).toBe(1);
+
+		/* One that made them faster is kept. */
+		inner.Unshrunk = 0;
+		inner.Slow = 0;
+
+		frames(25, 40);
+		frames(60, 16.7);
+
+		expect(inner.Ratio).toBeCloseTo(0.85, 6);
+	});
+
+	/* Regression: the targets of the air, of the rays and of the sun seen were never let go: five more at each size of the view. */
+	it('lets go of all the targets of its picture when the view is of another size', async function () {
+		var mounted = await mount('<Scene Paused="true" Quality="high" (ready)="Ready">' +
+			'<SceneObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</Scene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var renderer = scene.Engine().Renderer;
+		var target = renderer.Target;
+		var made = [];
+		var now = performance.now() + 100;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				scene.Engine().Frame(now += 33);
+			}
+		}
+
+		frames(3);
+
+		renderer.Target = function () {
+			var one = target.apply(renderer, arguments);
+			var destroy = one.Destroy;
+
+			made.push(one);
+
+			one.Destroy = function () {
+				one.Gone = true;
+
+				return destroy.apply(this, arguments);
+			};
+
+			return one;
+		};
+
+		try {
+			renderer.Resize(300, 200, 1);
+
+			/* Its picture made again for the size (its programs made by the card first, under load a while). */
+			await waitFor(function () {
+				frames(1);
+
+				return made.length > 5;
+			}, 60000);
+
+			var first = made.slice();
+
+			renderer.Resize(320, 210, 1);
+
+			await waitFor(function () {
+				frames(1);
+
+				return made.length >= first.length * 2;
+			}, 60000);
+
+			expect(first.length).toBeGreaterThan(5);
+			expect(first.filter(function (one) {
+				return !one.Gone && one.Width >= 75;
+			}).length).toBe(0);
+		}
+		finally {
+			renderer.Target = target;
+		}
 	});
 
 	it('steps down from frames that are late, but not to where the grass goes', async function () {
@@ -1802,6 +1900,8 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			scene.Engine().PostTime(0.05);
 
 		expect(scene.Graphics().Level).toBe('ultra');
+		/* Regression: copied at each call (many a draw, thousands of objects a frame): the same one while the level is. */
+		expect(scene.Graphics()).toBe(scene.Graphics());
 	});
 
 	/*
@@ -9147,45 +9247,28 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 			frames(4);
 
 			/*
-			 * The mirror: the world drawn again, its triangles turned, into a picture as fine as the screen of the part of it the
-			 * mirror covers (regression: a quarter of the whole screen, of which a small mirror showed a blur), in steps of 32.
+			 * From out of the car its mirror is not made: a few dots of the screen, each picture of it all the world drawn once
+			 * more (regression: two million triangles), from behind the car too, on a phone too.
 			 */
-			expect(turned).toBeGreaterThan(0);
+			expect(turned).toBe(0);
+			expect(sizes.length).toBe(0);
+
+			/*
+			 * From in it, the mirror: the world drawn again, its triangles turned, into a picture as fine as the screen of the part
+			 * of it the mirror covers (regression: a quarter of the whole screen, of which a small mirror showed a blur), in steps of 32.
+			 */
+			scene.Person = 'first';
+
+			await waitFor(function () {
+				frames(1);
+
+				return turned > 0 && mirrors.indexOf(1) !== -1;
+			}, 10000);
+
 			expect(sizes.length).toBeGreaterThan(0);
 			expect(sizes.every(function (size) {
 				return size[0] % 32 === 0 && size[1] % 32 === 0 && size[0] <= renderer.Width + 32 && size[1] <= renderer.Height + 32;
 			})).toBe(true);
-			expect(mirrors).toContain(1);
-
-			/*
-			 * On a phone (a finger the only pointer) the mirror behind the car keeps the picture it has: each new one was all the
-			 * world drawn once more, two million triangles, for a few dots of the screen. Regression.
-			 */
-			var media = window.matchMedia;
-
-			window.matchMedia = function (query) {
-				return {matches: query === '(pointer: coarse)', media: query, addEventListener: function () {}, removeEventListener: function () {}, addListener: function () {}, removeListener: function () {}};
-			};
-
-			try {
-				turned = 0;
-
-				frames(6);
-
-				expect(turned).toBe(0);
-				expect(mirrors).toContain(1);
-			}
-			finally {
-				window.matchMedia = media;
-			}
-
-			/* Out of the car elsewhere: made again, but four times less often than its Every (2), once in eight frames. */
-			turned = 0;
-
-			frames(16);
-
-			expect(turned).toBeGreaterThan(0);
-			expect(turned).toBeLessThan(4);
 
 			/* The screen, to an eye in the car (no further one sees it): once its picture is made, the element it names, red. */
 			scene.Person = 'first';
@@ -14593,5 +14676,16 @@ describe('Contract: Terrain, the ground of a game', function () {
 
 			expect(math.Vectors.Dot(n, math.Vectors.Add(a, patch.Center)), 'face ' + face).toBeGreaterThan(0);
 		}
+	});
+
+	/* Regression: posed four times over in the main of the skinned vertex shader, all inlined, took a card 13 s to make, for each of its programs. */
+	it('poses the joints of a skinned vertex in a loop, one call of posed', function () {
+		var main = gameSceneSource.slice(gameSceneSource.indexOf('mat4 moved = mat4(0.0);'));
+
+		main = main.slice(0, main.indexOf('gl_Position'));
+
+		expect(main).toContain('for (int k = 0; k < 4; k++) {');
+		expect(main.match(/posed\(/g).length).toBe(1);
+		expect(gameSceneSource).not.toContain('posed(aJoints.x) * aWeights.x');
 	});
 });

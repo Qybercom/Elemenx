@@ -447,8 +447,10 @@ Elemenx.Service('Syntax', {
 	},
 
 	HTML: function (text, language) {
+		var markup = this.$Service('Text');
+
 		return this.Tokens(text, language).map(function (token) {
-			var escaped = token.Text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			var escaped = markup.EscapeText(token.Text);
 
 			return token.Type ? '<span class="elemenx-syntax-' + token.Type + '">' + escaped + '</span>' : escaped;
 		}).join('');

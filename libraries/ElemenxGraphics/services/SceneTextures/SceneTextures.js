@@ -17,10 +17,11 @@
  * - Define(name, recipe), Get(name), Has(name), Names(group).
  * - Bake(renderer, name, params): the tile on that renderer ({Color: albedo in sRGB with roughness in a, Surface: the normal
  *   xy, the height and the light reached, Metres, Size, Name}), made once for the same params (its own, Seed, and Size: the
- *   texels across, smaller for a quick look); Forget(renderer, name) drops it.
+ *   texels across, smaller for a quick look); null while the card is still making its programs (a renderer of Patient
+ *   programs: asked again a frame later); Forget(renderer, name) drops it.
  * - Array(renderer, names, params): the tiles of names as the layers of two textures ({Color, Surface, Layers: {name: index},
  *   Metres: {name: metres}}), for a ground of many materials: one sampler each, however many materials; params {name:
- *   {param: value}}. Made again only when one of its tiles is.
+ *   {param: value}}. Made again only when one of its tiles is; null till all its tiles are baked.
  * - Chunk(layered): the GLSL of tex_sample(Color, Surface, place, metres, spin, ...) (spin 1: each hexagon turns the tile its
  *   own way, for what has no way of its own; 0: only shifted, for beds and flutes that must stay level and upright; below 0:
  *   the tile as it is, no hexagons, for blocks laid in rows) a ground samples a tile with: a grid of hexagons
@@ -230,10 +231,27 @@ Elemenx.Service('SceneTextures', {
 		'}'
 	].join('\n'),
 
+	/* The most slant a tile is read at (16 at most), asked of the card once for a context. Regression: asked for each tile, the page waited for the card each time. */
+	Slants: typeof WeakMap === 'function' ? new WeakMap() : null,
+
+	SlantOf: function (gl, slant) {
+		var most = this.Slants ? this.Slants.get(gl) : undefined;
+
+		if (most === undefined) {
+			most = Math.min(16, gl.getParameter(slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT));
+
+			if (this.Slants)
+				this.Slants.set(gl, most);
+		}
+
+		return most;
+	},
+
 	/* The tiles baked, of each renderer: {key: {Key, Made}}. */
 	Baked: typeof WeakMap === 'function' ? new WeakMap() : null,
 
 	Bake: function (renderer, name, params) {
+		var self = this;
 		var recipe = this.Get(name);
 		var kept;
 		var key;
@@ -269,6 +287,14 @@ Elemenx.Service('SceneTextures', {
 		if (kept[name])
 			this.Forget(renderer, name);
 
+		/*
+		 * Its programs made by the card first, the frames going on meanwhile: null till then (what draws it draws with none
+		 * a while). Regression: drawn at once with a program not made, the page waited for the card 8 to 12 s.
+		 */
+		var colors = renderer.Program(this.$Service('Renderer').Shaders.Quad, this.Source(name));
+		var normals = renderer.Program(this.$Service('Renderer').Shaders.Quad, this.Normals);
+		if (renderer.Ready && (!renderer.Ready(colors) || !renderer.Ready(normals))) return null;
+
 		gl = renderer.GL;
 		target = renderer.Target(size, size, {Colors: 2});
 
@@ -282,7 +308,7 @@ Elemenx.Service('SceneTextures', {
 
 		kept.Quad = kept.Quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 
-		renderer.Draw(kept.Quad, renderer.Program(this.$Service('Renderer').Shaders.Quad, this.Source(name)), uniforms, {Depth: false, DepthWrite: false, Cull: 'none'});
+		renderer.Draw(kept.Quad, colors, uniforms, {Depth: false, DepthWrite: false, Cull: 'none'});
 
 		target.End();
 
@@ -291,7 +317,7 @@ Elemenx.Service('SceneTextures', {
 
 		surface.Begin();
 
-		renderer.Draw(kept.Quad, renderer.Program(this.$Service('Renderer').Shaders.Quad, this.Normals), {uHeight: target.Textures[1], uSize: size}, {Depth: false, DepthWrite: false, Cull: 'none'});
+		renderer.Draw(kept.Quad, normals, {uHeight: target.Textures[1], uSize: size}, {Depth: false, DepthWrite: false, Cull: 'none'});
 
 		surface.End();
 
@@ -307,7 +333,7 @@ Elemenx.Service('SceneTextures', {
 			gl.generateMipmap(gl.TEXTURE_2D);
 
 			if (slant)
-				gl.texParameterf(gl.TEXTURE_2D, slant.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(16, gl.getParameter(slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+				gl.texParameterf(gl.TEXTURE_2D, slant.TEXTURE_MAX_ANISOTROPY_EXT, self.SlantOf(gl, slant));
 		});
 
 		kept[name] = {Key: key, Made: {Key: key, Name: name, Color: target.Textures[0], Surface: surface.Textures[0], Metres: Number(recipe.Metres) || 1, Size: size, Target: target, Targets: [target, surface]}};
@@ -323,15 +349,20 @@ Elemenx.Service('SceneTextures', {
 		}).map(function (name) {
 			return self.Bake(renderer, name, params && params[name]);
 		});
-		var key = made.map(function (one) {
-			return one.Key;
-		}).join('|');
+		var key;
 		var gl;
 		var size;
 		var slant;
 		var arrays;
 
-		if (!made.length) return null;
+		/* A tile not baked yet (its program not made): no array till all are. */
+		if (!made.length || made.some(function (one) {
+			return !one;
+		})) return null;
+
+		key = made.map(function (one) {
+			return one.Key;
+		}).join('|');
 
 		kept = this.Baked ? this.Baked.get(renderer) : renderer.TexturesBaked;
 
@@ -366,7 +397,7 @@ Elemenx.Service('SceneTextures', {
 			gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
 
 			if (slant)
-				gl.texParameterf(gl.TEXTURE_2D_ARRAY, slant.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(16, gl.getParameter(slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+				gl.texParameterf(gl.TEXTURE_2D_ARRAY, slant.TEXTURE_MAX_ANISOTROPY_EXT, self.SlantOf(gl, slant));
 		});
 
 		made.forEach(function (one, layer) {

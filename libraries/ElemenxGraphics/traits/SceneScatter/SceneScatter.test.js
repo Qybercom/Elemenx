@@ -46,6 +46,126 @@ describe('Regression: what is sown casts its shadow', function () {
 	});
 
 	/*
+	 * Regression: a wood cast its finest shape into every slice of the shadow, 2.5 million triangles of 3.4 a frame. Past the
+	 * nearest slice (ShadowSlice far) what is sown casts by a simpler shape (ShadowScatter Simpler), what is smaller than
+	 * Least metres none; the nearest as it was.
+	 */
+	it('casts the shadows of what is sown simpler past the nearest slice, by ShadowScatter of the quality', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var models = scene.$Service('SceneModels');
+		var name = scene.$Service('SceneFlora').Define('scatter-shadow-birch', 'birch', {Variants: 1});
+		var now = performance.now() + 100;
+		var set = scene.Graphics();
+		var given = set.ShadowScatter;
+		var matrix;
+
+		await new Promise(function (done) {
+			models.Load(name, done);
+		});
+
+		scene.Add({Kind: 'forest', ID: 'birches', Traits: {Scatter: {Shapes: [name], Density: 1.5, Cover: 1, Patch: 60, MaxSlope: 1}}});
+		scene.SetViewpoint({Target: [0, 1, 0], Yaw: 0.4, Pitch: 0.3, Distance: 20});
+
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			return scene.Sown().Things > 20 && !scene.Sown().Waiting;
+		}, 60000);
+
+		matrix = inner.Camera.Matrix(1);
+
+		function cast (slice, scatter) {
+			var before = renderer.Counts();
+
+			set.ShadowScatter = scatter;
+			inner.ShadowSlice = slice;
+
+			engine.ScatterShadow(matrix);
+
+			inner.ShadowSlice = '';
+
+			return {Draws: renderer.Counts().Draws - before.Draws, Triangles: renderer.Counts().Triangles - before.Triangles};
+		}
+
+		try {
+			var finest = cast('far', {Simpler: 0, Least: 0});
+			var near = cast('near', {Simpler: 1, Least: 1000});
+			var simpler = cast('far', {Simpler: 1, Least: 0});
+			var none = cast('far', {Simpler: 0, Least: 1000});
+
+			expect(finest.Triangles).toBeGreaterThan(0);
+			expect(near).toEqual(finest);
+			expect(simpler.Draws).toBe(finest.Draws);
+			expect(simpler.Triangles).toBeLessThan(finest.Triangles);
+			/* The tiles of proxies far off are not sown things: theirs are cast. */
+			expect(none.Draws).toBeLessThan(finest.Draws);
+			expect(none.Triangles).toBeLessThan(simpler.Triangles);
+		}
+		finally {
+			set.ShadowScatter = given;
+		}
+	});
+
+	/* Regression: the lamps of the things sown were made again each frame (the time in their key), the models of all the squares made again for it. */
+	it('makes the lamps of the things of a square once, and gives those within reach each frame', async function () {
+		var scene = await mount();
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var models = scene.$Service('SceneModels');
+		var make = models.Make;
+		var now = performance.now() + 100;
+		var made = 0;
+		var first;
+		var again;
+
+		await new Promise(function (done) {
+			models.Load('streetlamp', done);
+		});
+
+		scene.Add({Kind: 'forest', ID: 'lamps', Traits: {Scatter: {Shapes: ['streetlamp'], Density: 1.5, Cover: 1, Patch: 60, MaxSlope: 1}}});
+		scene.SetViewpoint({Target: [0, 1, 0], Yaw: 0.4, Pitch: 0.3, Distance: 45});
+
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			return scene.Sown().Things > 20 && !scene.Sown().Waiting;
+		}, 60000);
+
+		first = engine.ScatterLamps([0, 0, 0], 160);
+
+		expect(first.length).toBeGreaterThan(0);
+
+		models.Make = function () {
+			made++;
+
+			return make.apply(this, arguments);
+		};
+
+		try {
+			inner.Seconds += 1;
+			again = engine.ScatterLamps([1, 0, 1], 160);
+			inner.Seconds += 1;
+
+			engine.ScatterLamps([2, 0, 2], 160);
+		}
+		finally {
+			models.Make = make;
+		}
+
+		expect(again.length).toBeGreaterThan(0);
+		expect(made).toBe(0);
+		/* Those far off left out. */
+		expect(engine.ScatterLamps([5000, 0, 5000], 10)).toEqual([]);
+	});
+
+	/*
 	 * The near things were drawn into the shadow by the shape of the next level, which held the copies of that level: where
 	 * the levels do not overlap (at ultra, farther apart), the trees near the eye cast no shadow.
 	 */

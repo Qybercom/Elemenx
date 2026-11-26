@@ -216,7 +216,7 @@ Elemenx.Service('RichText', {
 	},
 
 	Escape: function (value) {
-		return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		return this.$Service('Text').Escape(value);
 	},
 
 	/*
@@ -759,7 +759,7 @@ Elemenx.Service('RichText', {
 		var source = String(text == null ? '' : text).replace(/\r\n?/g, '\n').replace(/\t/g, '    ');
 
 		function escape (value) {
-			return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+			return self.$Service('Text').Escape(value);
 		}
 
 		/* The HTML of inline Markdown. */

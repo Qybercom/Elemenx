@@ -553,7 +553,7 @@ Elemenx.Service('QR', {
 
 	/* An attribute value of SVG, escaped. */
 	Attribute: function (value) {
-		return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+		return this.$Service('Text').Escape(value);
 	},
 
 	/*
@@ -680,7 +680,7 @@ Elemenx.Service('QR', {
 			center = '<image href="' + this.Attribute(settings.Logo) + '" x="' + (hole.From + 1 + margin) + '" y="' + (hole.From + 1 + margin) + '" width="' + middle + '" height="' + middle + '" preserveAspectRatio="xMidYMid meet"/>';
 		}
 		else if (hole) {
-			center = '<text x="' + (total / 2) + '" y="' + (total / 2) + '" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-weight="700" font-size="' + Math.min(middle * 0.45, middle * 1.6 / Math.max(1, String(settings.Text).length)) + '" fill="' + fill + '">' + String(settings.Text).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</text>';
+			center = '<text x="' + (total / 2) + '" y="' + (total / 2) + '" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-weight="700" font-size="' + Math.min(middle * 0.45, middle * 1.6 / Math.max(1, String(settings.Text).length)) + '" fill="' + fill + '">' + this.$Service('Text').EscapeText(settings.Text) + '</text>';
 		}
 
 		return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + total + ' ' + total + '"' + (shape === 'square' && !settings.Eyes ? ' shape-rendering="crispEdges"' : '') + '>' + defs + (light === 'transparent' ? '' : '<rect width="100%" height="100%" fill="' + this.Attribute(light) + '"/>') + '<path d="' + path + '" fill="' + fill + '"/><path d="' + eyePaths.Frame + '" fill="' + (settings.EyeColor ? this.Attribute(settings.EyeColor) : fill) + '" fill-rule="evenodd"/><path d="' + eyePaths.Ball + '" fill="' + (settings.EyeColor ? this.Attribute(settings.EyeColor) : fill) + '"/>' + center + '</svg>';

@@ -184,15 +184,19 @@ describe('Contract: Scatter draws far tiles of what is sown as proxies of SceneP
 
 		renderer = ready.Engine().Renderer;
 
-		/* The copies given to the meshes of the streams: each time the streams are made again. */
+		/*
+		 * The copies given to the meshes of the streams: each time the streams are made again. A mesh that reads the copies
+		 * of another (Instance(data, count, from): the simpler shapes of the shadow) sends nothing, and is not counted.
+		 */
 		var mesh = renderer.Mesh;
 
 		renderer.Mesh = function () {
 			var result = mesh.apply(this, arguments);
 			var instance = result.Instance;
 
-			result.Instance = function () {
-				made++;
+			result.Instance = function (data, count, from) {
+				if (!from)
+					made++;
 
 				return instance.apply(this, arguments);
 			};

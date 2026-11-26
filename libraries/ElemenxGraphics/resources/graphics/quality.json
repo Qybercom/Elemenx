@@ -1,7 +1,7 @@
 {
 	"low": {
 		"Post": false, "Cascades": 1, "Bounce": false, "Occlusion": 0, "Rays": false, "Samples": 0, "Reach": 0.6, "Grass": false, "Field": true, "FieldWait": 240,
-		"Splashes": false, "Effects": {"Steps": 10}, "Mirrors": {"Most": 1, "Scatter": "none"}, "Shadow": {"Side": 1024, "Whole": 0},
+		"Splashes": false, "Effects": {"Steps": 10}, "Mirrors": {"Most": 1, "Scatter": "none"}, "Shadow": {"Side": 1024, "Whole": 0}, "ShadowScatter": {"Simpler": 1, "Least": 1.5},
 		"Galaxy": {"Glow": 70000, "Plane": 1024, "Part": 0.3, "Steps": 20, "FinePart": 0.5, "FineSteps": 32, "Field": 40000, "Near": 120},
 		"Cosmos": {"Sky": 256, "Band": 128, "BandSteps": 200},
 		"Nebula": {"Side": 64, "Steps": 40},
@@ -9,7 +9,7 @@
 	},
 	"medium": {
 		"Post": true, "Cascades": 1, "Bounce": false, "Occlusion": 0, "Rays": false, "Samples": 4, "Reach": 0.8, "Field": true, "Clouds": 9,
-		"Splashes": true, "Effects": {"Steps": 14}, "Mirrors": {"Most": 1, "Scatter": "large"}, "Shadow": {"Side": 2048, "Whole": 4096},
+		"Splashes": true, "Effects": {"Steps": 14}, "Mirrors": {"Most": 1, "Scatter": "large"}, "Shadow": {"Side": 2048, "Whole": 4096}, "ShadowScatter": {"Simpler": 1, "Least": 1},
 		"Galaxy": {"Glow": 130000, "Plane": 1536, "Part": 0.35, "Steps": 24, "FinePart": 0.75, "FineSteps": 40, "Field": 80000, "Near": 240},
 		"Cosmos": {"Sky": 512, "Band": 256, "BandSteps": 400},
 		"Nebula": {"Side": 128, "Steps": 64},
@@ -17,7 +17,7 @@
 	},
 	"high": {
 		"Post": true, "Cascades": 4, "ShadowFar": 300, "Bounce": true, "Occlusion": 0.5, "Contact": true, "Rays": true, "Samples": 4, "Reach": 1, "Mirror": true, "Frames": true, "Field": true, "Clouds": 16, "Lamps": 2, "Probes": 8, "ProbeSubset": 8,
-		"Splashes": true, "Effects": {"Steps": 20}, "Mirrors": {"Most": 2, "Scatter": "all"}, "Shadow": {"Side": 2048, "Whole": 4096},
+		"Splashes": true, "Effects": {"Steps": 20}, "Mirrors": {"Most": 2, "Scatter": "all"}, "Shadow": {"Side": 2048, "Whole": 4096}, "ShadowScatter": {"Simpler": 1, "Least": 0.6},
 		"Galaxy": {"Glow": 190000, "Plane": 2048, "Part": 0.4, "Steps": 28, "FinePart": 1, "FineSteps": 52, "Field": 120000, "Near": 360},
 		"Cosmos": {"Sky": 1024, "Band": 384, "BandSteps": 400},
 		"Nebula": {"Side": 128, "Steps": 80},
@@ -25,7 +25,7 @@
 	},
 	"ultra": {
 		"Post": true, "Cascades": 4, "ShadowFar": 500, "Bounce": true, "Occlusion": 1, "Contact": true, "Rays": true, "Samples": 4, "Reach": 1.4, "Mirror": true, "Frames": true, "Field": true, "Clouds": 26, "Lamps": 2, "Probes": 16, "ProbeSubset": 4,
-		"Splashes": true, "Effects": {"Steps": 28}, "Mirrors": {"Most": 3, "Scatter": "all"}, "Shadow": {"Side": 2048, "Whole": 4096},
+		"Splashes": true, "Effects": {"Steps": 28}, "Mirrors": {"Most": 3, "Scatter": "all"}, "Shadow": {"Side": 2048, "Whole": 4096}, "ShadowScatter": {"Simpler": 0, "Least": 0},
 		"Galaxy": {"Glow": 260000, "Plane": 2048, "Part": 0.5, "Steps": 32, "FinePart": 1, "FineSteps": 64, "Field": 160000, "Near": 480},
 		"Cosmos": {"Sky": 2048, "Band": 512, "BandSteps": 400},
 		"Nebula": {"Side": 128, "Steps": 96},

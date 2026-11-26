@@ -1829,10 +1829,10 @@ Elemenx.Service('DataFormats', {
 		var step = options.Indent === 0 ? '' : new Array((options.Indent || 2) + 1).join(' ');
 		var breakLine = step ? '\n' : '';
 
-		function escape (text, attribute) {
-			var out = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		var markup = this.$Service('Text');
 
-			return attribute ? out.replace(/"/g, '&quot;') : out;
+		function escape (text, attribute) {
+			return attribute ? markup.Escape(text) : markup.EscapeText(text);
 		}
 
 		function write (node, depth) {

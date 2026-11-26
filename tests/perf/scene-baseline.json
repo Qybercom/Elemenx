@@ -1,0 +1,1453 @@
+{
+	"Game@medium": {
+		"Level": "medium",
+		"Frames": 80,
+		"Frame": 50,
+		"P95": 444.5,
+		"Longest": 2072.2,
+		"Hitches": 35,
+		"Cpu": 84.38,
+		"Draws": 369,
+		"Triangles": 2388120,
+		"Gl": {
+			"activeTexture": 396,
+			"bindFramebuffer": 43,
+			"bindTexture": 426,
+			"bindVertexArray": 500,
+			"bufferData": 8,
+			"bufferSubData": 415,
+			"draw*": 377,
+			"uniform*": 1098,
+			"useProgram": 85,
+			"vertexAttribPointer": 8
+		},
+		"GlTotal": 3356,
+		"Garbage": 8705,
+		"Load": {
+			"Ms": 19247,
+			"Longest": 2158,
+			"Programs": 55
+		}
+	},
+	"Game@high": {
+		"Level": "high",
+		"Frames": 203,
+		"Frame": 44.4,
+		"P95": 66.7,
+		"Longest": 2055.6,
+		"Hitches": 30,
+		"Cpu": 43.32,
+		"Draws": 464,
+		"Triangles": 3236438,
+		"Gl": {
+			"activeTexture": 712,
+			"bindFramebuffer": 43,
+			"bindTexture": 744,
+			"bindVertexArray": 606,
+			"bufferData": 5,
+			"bufferSubData": 449,
+			"draw*": 470,
+			"uniform*": 1404,
+			"useProgram": 87,
+			"vertexAttribPointer": 5
+		},
+		"GlTotal": 4525,
+		"Garbage": 7162,
+		"Load": {
+			"Ms": 6110,
+			"Longest": 1312,
+			"Programs": 55
+		}
+	},
+	"Game@ultra": {
+		"Level": "ultra",
+		"Frames": 204,
+		"Frame": 33.3,
+		"P95": 66.6,
+		"Longest": 2072.2,
+		"Hitches": 14,
+		"Cpu": 42.04,
+		"Draws": 433,
+		"Triangles": 3066344,
+		"Gl": {
+			"activeTexture": 591,
+			"bindFramebuffer": 43,
+			"bindTexture": 622,
+			"bindVertexArray": 574,
+			"bufferData": 4,
+			"bufferSubData": 447,
+			"draw*": 439,
+			"uniform*": 1268,
+			"useProgram": 87,
+			"vertexAttribPointer": 4
+		},
+		"GlTotal": 4079,
+		"Garbage": 6546,
+		"Load": {
+			"Ms": 6868,
+			"Longest": 1694,
+			"Programs": 55
+		}
+	},
+	"World@medium": {
+		"Level": "medium",
+		"Frames": 1035,
+		"Frame": 11.1,
+		"P95": 11.2,
+		"Longest": 16.7,
+		"Hitches": 0,
+		"Cpu": 5.37,
+		"Draws": 233,
+		"Triangles": 800226,
+		"Gl": {
+			"activeTexture": 283,
+			"bindFramebuffer": 40,
+			"bindTexture": 312,
+			"bindVertexArray": 263,
+			"bufferSubData": 107,
+			"draw*": 233,
+			"uniform*": 607,
+			"useProgram": 91
+		},
+		"GlTotal": 1936,
+		"Garbage": 1032,
+		"Load": {
+			"Ms": 20029,
+			"Longest": 1431,
+			"Programs": 114
+		}
+	},
+	"World@high": {
+		"Level": "high",
+		"Frames": 615,
+		"Frame": 16.7,
+		"P95": 16.8,
+		"Longest": 27.7,
+		"Hitches": 0,
+		"Cpu": 9.26,
+		"Draws": 508,
+		"Triangles": 1879487,
+		"Gl": {
+			"activeTexture": 633,
+			"bindFramebuffer": 75,
+			"bindTexture": 676,
+			"bindVertexArray": 534,
+			"bufferSubData": 109,
+			"draw*": 508,
+			"uniform*": 1347,
+			"useProgram": 246
+		},
+		"GlTotal": 4128,
+		"Garbage": 1886,
+		"Load": {
+			"Ms": 6907,
+			"Longest": 964,
+			"Programs": 114
+		}
+	},
+	"World@ultra": {
+		"Level": "ultra",
+		"Frames": 457,
+		"Frame": 22.2,
+		"P95": 22.3,
+		"Longest": 33.4,
+		"Hitches": 0,
+		"Cpu": 9.32,
+		"Draws": 519,
+		"Triangles": 2738796,
+		"Gl": {
+			"activeTexture": 603,
+			"bindFramebuffer": 75,
+			"bindTexture": 627,
+			"bindVertexArray": 545,
+			"bufferSubData": 109,
+			"draw*": 519,
+			"uniform*": 1286,
+			"useProgram": 245
+		},
+		"GlTotal": 4009,
+		"Garbage": 1865,
+		"Load": {
+			"Ms": 5843,
+			"Longest": 814,
+			"Programs": 114
+		}
+	},
+	"Racing@medium": {
+		"Level": "medium",
+		"Frames": 605,
+		"Frame": 16.6,
+		"P95": 27.8,
+		"Longest": 94.8,
+		"Hitches": 2,
+		"Cpu": 13.76,
+		"Draws": 335,
+		"Triangles": 1982170,
+		"Gl": {
+			"activeTexture": 435,
+			"bindFramebuffer": 46,
+			"bindTexture": 469,
+			"bindVertexArray": 557,
+			"bufferData": 8,
+			"bufferSubData": 443,
+			"draw*": 336,
+			"uniform*": 982,
+			"useProgram": 90,
+			"vertexAttribPointer": 3
+		},
+		"GlTotal": 3369,
+		"Garbage": 3164,
+		"Load": {
+			"Ms": 20588,
+			"Longest": 1515,
+			"Programs": 115
+		}
+	},
+	"Racing@high": {
+		"Level": "high",
+		"Frames": 380,
+		"Frame": 22.2,
+		"P95": 55.4,
+		"Longest": 100,
+		"Hitches": 21,
+		"Cpu": 20.56,
+		"Draws": 990,
+		"Triangles": 4888200,
+		"Gl": {
+			"activeTexture": 529,
+			"bindFramebuffer": 102,
+			"bindTexture": 590,
+			"bindVertexArray": 1240,
+			"bufferData": 12,
+			"bufferSubData": 471,
+			"draw*": 996,
+			"uniform*": 1479,
+			"useProgram": 336,
+			"vertexAttribPointer": 5
+		},
+		"GlTotal": 5760,
+		"Garbage": 5145,
+		"Load": {
+			"Ms": 10322,
+			"Longest": 1333,
+			"Programs": 115
+		}
+	},
+	"Racing@ultra": {
+		"Level": "ultra",
+		"Frames": 284,
+		"Frame": 27.8,
+		"P95": 72.2,
+		"Longest": 111.1,
+		"Hitches": 53,
+		"Cpu": 23.43,
+		"Draws": 1233,
+		"Triangles": 7452403,
+		"Gl": {
+			"activeTexture": 612,
+			"bindFramebuffer": 112,
+			"bindTexture": 657,
+			"bindVertexArray": 1513,
+			"bufferData": 16,
+			"bufferSubData": 504,
+			"draw*": 1239,
+			"uniform*": 1723,
+			"useProgram": 432,
+			"vertexAttribPointer": 6
+		},
+		"GlTotal": 6814,
+		"Garbage": 6442,
+		"Load": {
+			"Ms": 9760,
+			"Longest": 1268,
+			"Programs": 115
+		}
+	},
+	"Orbit@medium": {
+		"Level": "medium",
+		"Frames": 106,
+		"Frame": 77.8,
+		"P95": 138.8,
+		"Longest": 538.9,
+		"Hitches": 100,
+		"Cpu": 75.42,
+		"Draws": 414,
+		"Triangles": 2818498,
+		"Gl": {
+			"activeTexture": 1206,
+			"bindFramebuffer": 41,
+			"bindTexture": 1244,
+			"bindVertexArray": 530,
+			"bufferData": 12,
+			"bufferSubData": 270,
+			"draw*": 422,
+			"uniform*": 1459,
+			"useProgram": 43,
+			"vertexAttribPointer": 11
+		},
+		"GlTotal": 5238,
+		"Garbage": 7487,
+		"Load": {
+			"Ms": 14018,
+			"Longest": 1559,
+			"Programs": 99
+		}
+	},
+	"Orbit@high": {
+		"Level": "high",
+		"Frames": 100,
+		"Frame": 77.8,
+		"P95": 139,
+		"Longest": 539,
+		"Hitches": 93,
+		"Cpu": 80.74,
+		"Draws": 408,
+		"Triangles": 2787907,
+		"Gl": {
+			"activeTexture": 1184,
+			"bindFramebuffer": 41,
+			"bindTexture": 1224,
+			"bindVertexArray": 526,
+			"bufferData": 15,
+			"bufferSubData": 270,
+			"draw*": 417,
+			"uniform*": 1423,
+			"useProgram": 43,
+			"vertexAttribPointer": 13
+		},
+		"GlTotal": 5156,
+		"Garbage": 7827,
+		"Load": {
+			"Ms": 17601,
+			"Longest": 1552,
+			"Programs": 99
+		}
+	},
+	"Orbit@ultra": {
+		"Level": "ultra",
+		"Frames": 111,
+		"Frame": 72.3,
+		"P95": 138.9,
+		"Longest": 561.1,
+		"Hitches": 101,
+		"Cpu": 70.82,
+		"Draws": 398,
+		"Triangles": 2730889,
+		"Gl": {
+			"activeTexture": 1131,
+			"bindFramebuffer": 40,
+			"bindTexture": 1170,
+			"bindVertexArray": 514,
+			"bufferData": 14,
+			"bufferSubData": 270,
+			"draw*": 406,
+			"uniform*": 1347,
+			"useProgram": 43,
+			"vertexAttribPointer": 12
+		},
+		"GlTotal": 4947,
+		"Garbage": 7936,
+		"Load": {
+			"Ms": 20148,
+			"Longest": 1590,
+			"Programs": 99
+		}
+	},
+	"Universe@medium": {
+		"Level": "medium",
+		"Frames": 358,
+		"Frame": 27.8,
+		"P95": 39,
+		"Longest": 2077.8,
+		"Hitches": 7,
+		"Cpu": 25.6,
+		"Draws": 259,
+		"Triangles": 2080009,
+		"Gl": {
+			"activeTexture": 594,
+			"bindFramebuffer": 40,
+			"bindTexture": 617,
+			"bindVertexArray": 363,
+			"bufferData": 2,
+			"bufferSubData": 251,
+			"draw*": 260,
+			"uniform*": 766,
+			"useProgram": 33,
+			"vertexAttribPointer": 2
+		},
+		"GlTotal": 2928,
+		"Garbage": 4729,
+		"Load": {
+			"Ms": 3923,
+			"Longest": 979,
+			"Programs": 55
+		}
+	},
+	"Universe@high": {
+		"Level": "high",
+		"Frames": 369,
+		"Frame": 27.7,
+		"P95": 38.9,
+		"Longest": 2072.2,
+		"Hitches": 4,
+		"Cpu": 24.83,
+		"Draws": 259,
+		"Triangles": 2077208,
+		"Gl": {
+			"activeTexture": 595,
+			"bindFramebuffer": 41,
+			"bindTexture": 617,
+			"bindVertexArray": 363,
+			"bufferData": 2,
+			"bufferSubData": 251,
+			"draw*": 260,
+			"uniform*": 766,
+			"useProgram": 33,
+			"vertexAttribPointer": 2
+		},
+		"GlTotal": 2930,
+		"Garbage": 4765,
+		"Load": {
+			"Ms": 4323,
+			"Longest": 1305,
+			"Programs": 55
+		}
+	},
+	"Universe@ultra": {
+		"Level": "ultra",
+		"Frames": 368,
+		"Frame": 27.7,
+		"P95": 38.9,
+		"Longest": 2050,
+		"Hitches": 3,
+		"Cpu": 24.88,
+		"Draws": 258,
+		"Triangles": 2076724,
+		"Gl": {
+			"activeTexture": 595,
+			"bindFramebuffer": 41,
+			"bindTexture": 616,
+			"bindVertexArray": 363,
+			"bufferData": 2,
+			"bufferSubData": 251,
+			"draw*": 260,
+			"uniform*": 766,
+			"useProgram": 32,
+			"vertexAttribPointer": 2
+		},
+		"GlTotal": 2928,
+		"Garbage": 4717,
+		"Load": {
+			"Ms": 4580,
+			"Longest": 1735,
+			"Programs": 55
+		}
+	},
+	"Combat@medium": {
+		"Level": "medium",
+		"Frames": 1098,
+		"Frame": 11.1,
+		"P95": 11.2,
+		"Longest": 16.7,
+		"Hitches": 0,
+		"Cpu": 1.81,
+		"Draws": 80,
+		"Triangles": 160406,
+		"Gl": {
+			"activeTexture": 27,
+			"bindFramebuffer": 40,
+			"bindTexture": 40,
+			"bindVertexArray": 92,
+			"bufferData": 0,
+			"bufferSubData": 70,
+			"draw*": 80,
+			"uniform*": 101,
+			"useProgram": 15,
+			"vertexAttribPointer": 0
+		},
+		"GlTotal": 465,
+		"Garbage": 321,
+		"Load": {
+			"Ms": 2507,
+			"Longest": 715,
+			"Programs": 110
+		}
+	},
+	"Combat@high": {
+		"Level": "high",
+		"Frames": 725,
+		"Frame": 11.2,
+		"P95": 16.7,
+		"Longest": 16.8,
+		"Hitches": 0,
+		"Cpu": 2.58,
+		"Draws": 161,
+		"Triangles": 279362,
+		"Gl": {
+			"activeTexture": 62,
+			"bindFramebuffer": 83,
+			"bindTexture": 79,
+			"bindVertexArray": 163,
+			"bufferData": 0,
+			"bufferSubData": 70,
+			"draw*": 161,
+			"uniform*": 205,
+			"useProgram": 33,
+			"vertexAttribPointer": 0
+		},
+		"GlTotal": 856,
+		"Garbage": 450,
+		"Load": {
+			"Ms": 2571,
+			"Longest": 686,
+			"Programs": 110
+		}
+	},
+	"Combat@ultra": {
+		"Level": "ultra",
+		"Frames": 609,
+		"Frame": 16.7,
+		"P95": 22.2,
+		"Longest": 27.8,
+		"Hitches": 0,
+		"Cpu": 2.63,
+		"Draws": 163,
+		"Triangles": 301775,
+		"Gl": {
+			"activeTexture": 62,
+			"bindFramebuffer": 84,
+			"bindTexture": 79,
+			"bindVertexArray": 166,
+			"bufferData": 0,
+			"bufferSubData": 70,
+			"draw*": 163,
+			"uniform*": 216,
+			"useProgram": 31,
+			"vertexAttribPointer": 0
+		},
+		"GlTotal": 871,
+		"Garbage": 455,
+		"Load": {
+			"Ms": 2586,
+			"Longest": 692,
+			"Programs": 110
+		}
+	},
+	"Terrain@medium": {
+		"Level": "medium",
+		"Frames": 830,
+		"Frame": 11.1,
+		"P95": 16.7,
+		"Longest": 66.7,
+		"Hitches": 2,
+		"Cpu": 7.56,
+		"Draws": 450,
+		"Triangles": 6032445,
+		"Gl": {
+			"activeTexture": 529,
+			"bindFramebuffer": 40,
+			"bindTexture": 552,
+			"bindVertexArray": 457,
+			"bufferData": 0,
+			"bufferSubData": 48,
+			"draw*": 450,
+			"uniform*": 1136,
+			"useProgram": 164,
+			"vertexAttribPointer": 0
+		},
+		"GlTotal": 3376,
+		"Garbage": 1670,
+		"Load": {
+			"Ms": 8626,
+			"Longest": 813,
+			"Programs": 110
+		}
+	},
+	"Terrain@high": {
+		"Level": "high",
+		"Frames": 480,
+		"Frame": 22.2,
+		"P95": 27.8,
+		"Longest": 38.8,
+		"Hitches": 0,
+		"Cpu": 17.75,
+		"Draws": 1311,
+		"Triangles": 7514705,
+		"Gl": {
+			"activeTexture": 1163,
+			"bindFramebuffer": 78,
+			"bindTexture": 1208,
+			"bindVertexArray": 1312,
+			"bufferSubData": 49,
+			"draw*": 1311,
+			"uniform*": 2815,
+			"useProgram": 593
+		},
+		"GlTotal": 8529,
+		"Garbage": 3304,
+		"Load": {
+			"Ms": 8637,
+			"Longest": 804,
+			"Programs": 110
+		}
+	},
+	"Terrain@ultra": {
+		"Level": "ultra",
+		"Frames": 365,
+		"Frame": 27.8,
+		"P95": 33.4,
+		"Longest": 39,
+		"Hitches": 0,
+		"Cpu": 17.96,
+		"Draws": 1425,
+		"Triangles": 12559137,
+		"Gl": {
+			"activeTexture": 1139,
+			"bindFramebuffer": 79,
+			"bindTexture": 1176,
+			"bindVertexArray": 1425,
+			"bufferSubData": 49,
+			"draw*": 1425,
+			"uniform*": 3030,
+			"useProgram": 641
+		},
+		"GlTotal": 8964,
+		"Garbage": 3386,
+		"Load": {
+			"Ms": 6990,
+			"Longest": 807,
+			"Programs": 110
+		}
+	},
+	"Locations@medium": {
+		"Level": "medium",
+		"Frames": 1802,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.8,
+		"Hitches": 0,
+		"Cpu": 1.77,
+		"Draws": 40,
+		"Triangles": 72120,
+		"Gl": {
+			"activeTexture": 59,
+			"bindFramebuffer": 40,
+			"bindTexture": 73,
+			"bindVertexArray": 35,
+			"bufferData": 0,
+			"bufferSubData": 28,
+			"draw*": 40,
+			"uniform*": 79,
+			"useProgram": 16
+		},
+		"GlTotal": 370,
+		"Garbage": 249,
+		"Load": {
+			"Ms": 3515,
+			"Longest": 406,
+			"Programs": 104
+		}
+	},
+	"Locations@high": {
+		"Level": "high",
+		"Frames": 1133,
+		"Frame": 11.1,
+		"P95": 11.2,
+		"Longest": 16.7,
+		"Hitches": 0,
+		"Cpu": 2.34,
+		"Draws": 88,
+		"Triangles": 188255,
+		"Gl": {
+			"activeTexture": 106,
+			"bindFramebuffer": 85,
+			"bindTexture": 124,
+			"bindVertexArray": 70,
+			"bufferData": 0,
+			"bufferSubData": 28,
+			"draw*": 88,
+			"uniform*": 148,
+			"useProgram": 42
+		},
+		"GlTotal": 691,
+		"Garbage": 357,
+		"Load": {
+			"Ms": 3521,
+			"Longest": 412,
+			"Programs": 104
+		}
+	},
+	"Locations@ultra": {
+		"Level": "ultra",
+		"Frames": 869,
+		"Frame": 11.1,
+		"P95": 16.6,
+		"Longest": 16.8,
+		"Hitches": 0,
+		"Cpu": 2.36,
+		"Draws": 89,
+		"Triangles": 190538,
+		"Gl": {
+			"activeTexture": 106,
+			"bindFramebuffer": 85,
+			"bindTexture": 124,
+			"bindVertexArray": 71,
+			"bufferData": 0,
+			"bufferSubData": 28,
+			"draw*": 89,
+			"uniform*": 147,
+			"useProgram": 42
+		},
+		"GlTotal": 692,
+		"Garbage": 365,
+		"Load": {
+			"Ms": 3459,
+			"Longest": 409,
+			"Programs": 104
+		}
+	},
+	"Space@medium": {
+		"Level": "medium",
+		"Frames": 1797,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 11.3,
+		"Hitches": 0,
+		"Cpu": 2.99,
+		"Draws": 69,
+		"Triangles": 162534,
+		"Gl": {
+			"activeTexture": 54,
+			"bindFramebuffer": 30,
+			"bindTexture": 66,
+			"bindVertexArray": 44,
+			"bufferSubData": 30,
+			"draw*": 69,
+			"uniform*": 263,
+			"useProgram": 15
+		},
+		"GlTotal": 571,
+		"Garbage": 998,
+		"Load": {
+			"Ms": 2013,
+			"Longest": 426,
+			"Programs": 97
+		}
+	},
+	"Space@high": {
+		"Level": "high",
+		"Frames": 1797,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 11.2,
+		"Hitches": 0,
+		"Cpu": 3.01,
+		"Draws": 73,
+		"Triangles": 162542,
+		"Gl": {
+			"activeTexture": 59,
+			"bindFramebuffer": 38,
+			"bindTexture": 73,
+			"bindVertexArray": 44,
+			"bufferSubData": 30,
+			"draw*": 73,
+			"uniform*": 267,
+			"useProgram": 19
+		},
+		"GlTotal": 603,
+		"Garbage": 1006,
+		"Load": {
+			"Ms": 2066,
+			"Longest": 447,
+			"Programs": 97
+		}
+	},
+	"Space@ultra": {
+		"Level": "ultra",
+		"Frames": 1799,
+		"Frame": 5.6,
+		"P95": 5.7,
+		"Longest": 11.2,
+		"Hitches": 0,
+		"Cpu": 3.02,
+		"Draws": 73,
+		"Triangles": 162542,
+		"Gl": {
+			"activeTexture": 59,
+			"bindFramebuffer": 38,
+			"bindTexture": 73,
+			"bindVertexArray": 44,
+			"bufferSubData": 30,
+			"draw*": 73,
+			"uniform*": 267,
+			"useProgram": 19
+		},
+		"GlTotal": 603,
+		"Garbage": 1006,
+		"Load": {
+			"Ms": 2565,
+			"Longest": 409,
+			"Programs": 97
+		}
+	},
+	"DeepSpace@medium": {
+		"Level": "medium",
+		"Frames": 1796,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 38.9,
+		"Hitches": 0,
+		"Cpu": 1.39,
+		"Draws": 60,
+		"Triangles": 45068,
+		"Gl": {
+			"activeTexture": 14,
+			"bindFramebuffer": 30,
+			"bindTexture": 25,
+			"bindVertexArray": 23,
+			"bufferData": 5,
+			"draw*": 60,
+			"uniform*": 187,
+			"useProgram": 21,
+			"vertexAttribPointer": 4
+		},
+		"GlTotal": 369,
+		"Garbage": 318,
+		"Load": {
+			"Ms": 1634,
+			"Longest": 393,
+			"Programs": 98
+		}
+	},
+	"DeepSpace@high": {
+		"Level": "high",
+		"Frames": 1798,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 39,
+		"Hitches": 0,
+		"Cpu": 1.3,
+		"Draws": 60,
+		"Triangles": 45068,
+		"Gl": {
+			"activeTexture": 14,
+			"bindFramebuffer": 30,
+			"bindTexture": 26,
+			"bindVertexArray": 23,
+			"bufferData": 5,
+			"draw*": 60,
+			"uniform*": 189,
+			"useProgram": 21,
+			"vertexAttribPointer": 4
+		},
+		"GlTotal": 372,
+		"Garbage": 316,
+		"Load": {
+			"Ms": 1904,
+			"Longest": 399,
+			"Programs": 98
+		}
+	},
+	"DeepSpace@ultra": {
+		"Level": "ultra",
+		"Frames": 1803,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 6.2,
+		"Hitches": 0,
+		"Cpu": 1.3,
+		"Draws": 60,
+		"Triangles": 45068,
+		"Gl": {
+			"activeTexture": 14,
+			"bindFramebuffer": 30,
+			"bindTexture": 26,
+			"bindVertexArray": 23,
+			"bufferData": 5,
+			"draw*": 60,
+			"uniform*": 189,
+			"useProgram": 21,
+			"vertexAttribPointer": 4
+		},
+		"GlTotal": 372,
+		"Garbage": 316,
+		"Load": {
+			"Ms": 2396,
+			"Longest": 383,
+			"Programs": 98
+		}
+	},
+	"Galaxy@medium": {
+		"Level": "medium",
+		"Frames": 1802,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.9,
+		"Hitches": 0,
+		"Cpu": 0.26,
+		"Draws": 4,
+		"Triangles": 5,
+		"Gl": {
+			"activeTexture": 7,
+			"bindFramebuffer": 3,
+			"bindTexture": 7,
+			"bindVertexArray": 3,
+			"bufferData": 0,
+			"draw*": 4,
+			"uniform*": 3,
+			"useProgram": 4
+		},
+		"GlTotal": 31,
+		"Garbage": 33,
+		"Load": {
+			"Ms": 3195,
+			"Longest": 968,
+			"Programs": 55
+		}
+	},
+	"Galaxy@high": {
+		"Level": "high",
+		"Frames": 1801,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.8,
+		"Hitches": 0,
+		"Cpu": 0.23,
+		"Draws": 4,
+		"Triangles": 4,
+		"Gl": {
+			"activeTexture": 6,
+			"bindFramebuffer": 3,
+			"bindTexture": 6,
+			"bindVertexArray": 3,
+			"bufferData": 0,
+			"draw*": 4,
+			"uniform*": 3,
+			"useProgram": 4
+		},
+		"GlTotal": 29,
+		"Garbage": 29,
+		"Load": {
+			"Ms": 3615,
+			"Longest": 1318,
+			"Programs": 55
+		}
+	},
+	"Galaxy@ultra": {
+		"Level": "ultra",
+		"Frames": 1802,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.9,
+		"Hitches": 0,
+		"Cpu": 0.22,
+		"Draws": 4,
+		"Triangles": 4,
+		"Gl": {
+			"activeTexture": 6,
+			"bindFramebuffer": 3,
+			"bindTexture": 6,
+			"bindVertexArray": 3,
+			"bufferData": 0,
+			"draw*": 4,
+			"uniform*": 3,
+			"useProgram": 4
+		},
+		"GlTotal": 29,
+		"Garbage": 29,
+		"Load": {
+			"Ms": 3984,
+			"Longest": 1711,
+			"Programs": 55
+		}
+	},
+	"Showcase@medium": {
+		"Level": "medium",
+		"Frames": 611,
+		"Frame": 22.1,
+		"P95": 27.7,
+		"Longest": 33.4,
+		"Hitches": 0,
+		"Cpu": 20.5,
+		"Draws": 835,
+		"Triangles": 3487168,
+		"Gl": {
+			"activeTexture": 250,
+			"bindFramebuffer": 47,
+			"bindTexture": 265,
+			"bindVertexArray": 1032,
+			"bufferData": 1,
+			"bufferSubData": 536,
+			"draw*": 839,
+			"uniform*": 1248,
+			"useProgram": 120,
+			"vertexAttribPointer": 1
+		},
+		"GlTotal": 4339,
+		"Garbage": 4858,
+		"Load": {
+			"Ms": 89585,
+			"Longest": 10853,
+			"Programs": 119
+		}
+	},
+	"Showcase@high": {
+		"Level": "high",
+		"Frames": 860,
+		"Frame": 5.6,
+		"P95": 27.8,
+		"Longest": 33.5,
+		"Hitches": 0,
+		"Cpu": 23.92,
+		"Draws": 753,
+		"Triangles": 4116655,
+		"Gl": {
+			"activeTexture": 519,
+			"bindFramebuffer": 81,
+			"bindTexture": 535,
+			"bindVertexArray": 947,
+			"bufferData": 1,
+			"bufferSubData": 538,
+			"draw*": 756,
+			"uniform*": 1393,
+			"useProgram": 194,
+			"vertexAttribPointer": 1
+		},
+		"GlTotal": 4965,
+		"Garbage": 7612,
+		"Load": {
+			"Ms": 84937,
+			"Longest": 10929,
+			"Programs": 119
+		}
+	},
+	"Showcase@ultra": {
+		"Level": "ultra",
+		"Frames": 937,
+		"Frame": 5.6,
+		"P95": 27.8,
+		"Longest": 39,
+		"Hitches": 0,
+		"Cpu": 25.2,
+		"Draws": 818,
+		"Triangles": 5606747,
+		"Gl": {
+			"activeTexture": 498,
+			"bindFramebuffer": 81,
+			"bindTexture": 514,
+			"bindVertexArray": 1014,
+			"bufferData": 1,
+			"bufferSubData": 540,
+			"draw*": 821,
+			"uniform*": 1429,
+			"useProgram": 192,
+			"vertexAttribPointer": 1
+		},
+		"GlTotal": 5091,
+		"Garbage": 8871,
+		"Load": {
+			"Ms": 78810,
+			"Longest": 10976,
+			"Programs": 119
+		}
+	},
+	"Gaits@medium": {
+		"Level": "medium",
+		"Frames": 1225,
+		"Frame": 5.6,
+		"P95": 16.6,
+		"Longest": 83.3,
+		"Hitches": 3,
+		"Cpu": 4.36,
+		"Draws": 97,
+		"Triangles": 398941,
+		"Gl": {
+			"activeTexture": 54,
+			"bindFramebuffer": 40,
+			"bindTexture": 70,
+			"bindVertexArray": 109,
+			"bufferSubData": 70,
+			"draw*": 97,
+			"uniform*": 133,
+			"useProgram": 15
+		},
+		"GlTotal": 588,
+		"Garbage": 1188,
+		"Load": {
+			"Ms": 6611,
+			"Longest": 2743,
+			"Programs": 110
+		}
+	},
+	"Gaits@high": {
+		"Level": "high",
+		"Frames": 930,
+		"Frame": 11.1,
+		"P95": 22.2,
+		"Longest": 116.5,
+		"Hitches": 4,
+		"Cpu": 6.17,
+		"Draws": 182,
+		"Triangles": 755172,
+		"Gl": {
+			"activeTexture": 112,
+			"bindFramebuffer": 83,
+			"bindTexture": 141,
+			"bindVertexArray": 182,
+			"bufferSubData": 70,
+			"draw*": 182,
+			"uniform*": 227,
+			"useProgram": 36
+		},
+		"GlTotal": 1033,
+		"Garbage": 1730,
+		"Load": {
+			"Ms": 6747,
+			"Longest": 2692,
+			"Programs": 110
+		}
+	},
+	"Gaits@ultra": {
+		"Level": "ultra",
+		"Frames": 907,
+		"Frame": 11.1,
+		"P95": 22.2,
+		"Longest": 72.4,
+		"Hitches": 7,
+		"Cpu": 6.55,
+		"Draws": 200,
+		"Triangles": 794858,
+		"Gl": {
+			"activeTexture": 112,
+			"bindFramebuffer": 83,
+			"bindTexture": 141,
+			"bindVertexArray": 199,
+			"bufferSubData": 70,
+			"draw*": 200,
+			"uniform*": 246,
+			"useProgram": 36
+		},
+		"GlTotal": 1087,
+		"Garbage": 2133,
+		"Load": {
+			"Ms": 6871,
+			"Longest": 2758,
+			"Programs": 110
+		}
+	},
+	"Models@medium": {
+		"Level": "medium",
+		"Frames": 962,
+		"Frame": 11.1,
+		"P95": 16.7,
+		"Longest": 72.2,
+		"Hitches": 1,
+		"Cpu": 7.77,
+		"Draws": 323,
+		"Triangles": 425375,
+		"Gl": {
+			"activeTexture": 159,
+			"bindFramebuffer": 40,
+			"bindTexture": 176,
+			"bindVertexArray": 553,
+			"bufferSubData": 614,
+			"draw*": 323,
+			"uniform*": 189,
+			"useProgram": 29
+		},
+		"GlTotal": 2083,
+		"Garbage": 2071,
+		"Load": {
+			"Ms": 9298,
+			"Longest": 3541,
+			"Programs": 110
+		}
+	},
+	"Models@high": {
+		"Level": "high",
+		"Frames": 722,
+		"Frame": 16.6,
+		"P95": 27.7,
+		"Longest": 77.8,
+		"Hitches": 5,
+		"Cpu": 12.49,
+		"Draws": 477,
+		"Triangles": 941740,
+		"Gl": {
+			"activeTexture": 325,
+			"bindFramebuffer": 76,
+			"bindTexture": 350,
+			"bindVertexArray": 698,
+			"bufferSubData": 614,
+			"draw*": 477,
+			"uniform*": 385,
+			"useProgram": 60
+		},
+		"GlTotal": 2985,
+		"Garbage": 3188,
+		"Load": {
+			"Ms": 9324,
+			"Longest": 3545,
+			"Programs": 110
+		}
+	},
+	"Models@ultra": {
+		"Level": "ultra",
+		"Frames": 663,
+		"Frame": 16.6,
+		"P95": 27.9,
+		"Longest": 72.2,
+		"Hitches": 6,
+		"Cpu": 13.67,
+		"Draws": 494,
+		"Triangles": 950249,
+		"Gl": {
+			"activeTexture": 327,
+			"bindFramebuffer": 77,
+			"bindTexture": 351,
+			"bindVertexArray": 720,
+			"bufferSubData": 617,
+			"draw*": 497,
+			"uniform*": 390,
+			"useProgram": 61
+		},
+		"GlTotal": 3040,
+		"Garbage": 3760,
+		"Load": {
+			"Ms": 9515,
+			"Longest": 3599,
+			"Programs": 110
+		}
+	},
+	"Textures@medium": {
+		"Level": "",
+		"Frames": 1802,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.9,
+		"Hitches": 0,
+		"Cpu": 0,
+		"Draws": 0,
+		"Triangles": 0,
+		"Gl": {},
+		"GlTotal": 0,
+		"Garbage": 0,
+		"Load": {
+			"Ms": 4048,
+			"Longest": 200,
+			"Programs": 3
+		}
+	},
+	"Textures@high": {
+		"Level": "",
+		"Frames": 1802,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.8,
+		"Hitches": 0,
+		"Cpu": 0,
+		"Draws": 0,
+		"Triangles": 0,
+		"Gl": {},
+		"GlTotal": 0,
+		"Garbage": 0,
+		"Load": {
+			"Ms": 4053,
+			"Longest": 65,
+			"Programs": 3
+		}
+	},
+	"Textures@ultra": {
+		"Level": "",
+		"Frames": 1804,
+		"Frame": 5.6,
+		"P95": 5.7,
+		"Longest": 6,
+		"Hitches": 0,
+		"Cpu": 0,
+		"Draws": 0,
+		"Triangles": 0,
+		"Gl": {},
+		"GlTotal": 0,
+		"Garbage": 0,
+		"Load": {
+			"Ms": 4059,
+			"Longest": 67,
+			"Programs": 3
+		}
+	},
+	"Cinema@medium": {
+		"Level": "medium",
+		"Frames": 1036,
+		"Frame": 11.1,
+		"P95": 11.2,
+		"Longest": 39,
+		"Hitches": 0,
+		"Cpu": 2.14,
+		"Draws": 89,
+		"Triangles": 443776,
+		"Gl": {
+			"activeTexture": 47,
+			"bindFramebuffer": 48,
+			"bindTexture": 65,
+			"bindVertexArray": 78,
+			"bufferData": 0,
+			"bufferSubData": 28,
+			"draw*": 89,
+			"uniform*": 141,
+			"useProgram": 21,
+			"vertexAttribPointer": 0
+		},
+		"GlTotal": 517,
+		"Garbage": 377,
+		"Load": {
+			"Ms": 6326,
+			"Longest": 2668,
+			"Programs": 110
+		}
+	},
+	"Cinema@high": {
+		"Level": "high",
+		"Frames": 644,
+		"Frame": 16.6,
+		"P95": 22.1,
+		"Longest": 27.7,
+		"Hitches": 0,
+		"Cpu": 2.92,
+		"Draws": 166,
+		"Triangles": 834903,
+		"Gl": {
+			"activeTexture": 85,
+			"bindFramebuffer": 92,
+			"bindTexture": 109,
+			"bindVertexArray": 144,
+			"bufferData": 0,
+			"bufferSubData": 28,
+			"draw*": 166,
+			"uniform*": 240,
+			"useProgram": 40,
+			"vertexAttribPointer": 0
+		},
+		"GlTotal": 904,
+		"Garbage": 507,
+		"Load": {
+			"Ms": 6503,
+			"Longest": 2730,
+			"Programs": 110
+		}
+	},
+	"Cinema@ultra": {
+		"Level": "ultra",
+		"Frames": 617,
+		"Frame": 16.7,
+		"P95": 22.2,
+		"Longest": 22.3,
+		"Hitches": 0,
+		"Cpu": 3.05,
+		"Draws": 178,
+		"Triangles": 862003,
+		"Gl": {
+			"activeTexture": 85,
+			"bindFramebuffer": 93,
+			"bindTexture": 109,
+			"bindVertexArray": 156,
+			"bufferData": 0,
+			"bufferSubData": 28,
+			"draw*": 178,
+			"uniform*": 252,
+			"useProgram": 40,
+			"vertexAttribPointer": 0
+		},
+		"GlTotal": 941,
+		"Garbage": 515,
+		"Load": {
+			"Ms": 6491,
+			"Longest": 2736,
+			"Programs": 110
+		}
+	},
+	"WorldEditor@medium": {
+		"Level": "high",
+		"Frames": 1801,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.8,
+		"Hitches": 0,
+		"Cpu": 0.21,
+		"Draws": 4,
+		"Triangles": 4,
+		"Gl": {
+			"activeTexture": 6,
+			"bindFramebuffer": 3,
+			"bindTexture": 6,
+			"bindVertexArray": 3,
+			"bufferData": 0,
+			"draw*": 4,
+			"uniform*": 3,
+			"useProgram": 4
+		},
+		"GlTotal": 29,
+		"Garbage": 29,
+		"Load": {
+			"Ms": 2607,
+			"Longest": 1338,
+			"Programs": 55
+		}
+	},
+	"WorldEditor@high": {
+		"Level": "high",
+		"Frames": 1804,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.9,
+		"Hitches": 0,
+		"Cpu": 0.22,
+		"Draws": 4,
+		"Triangles": 4,
+		"Gl": {
+			"activeTexture": 6,
+			"bindFramebuffer": 3,
+			"bindTexture": 6,
+			"bindVertexArray": 3,
+			"bufferData": 0,
+			"draw*": 4,
+			"uniform*": 3,
+			"useProgram": 4
+		},
+		"GlTotal": 29,
+		"Garbage": 29,
+		"Load": {
+			"Ms": 3583,
+			"Longest": 1297,
+			"Programs": 55
+		}
+	},
+	"WorldEditor@ultra": {
+		"Level": "high",
+		"Frames": 1803,
+		"Frame": 5.6,
+		"P95": 5.6,
+		"Longest": 5.8,
+		"Hitches": 0,
+		"Cpu": 0.24,
+		"Draws": 4,
+		"Triangles": 4,
+		"Gl": {
+			"activeTexture": 6,
+			"bindFramebuffer": 3,
+			"bindTexture": 6,
+			"bindVertexArray": 3,
+			"bufferData": 0,
+			"draw*": 4,
+			"uniform*": 3,
+			"useProgram": 4
+		},
+		"GlTotal": 29,
+		"Garbage": 29,
+		"Load": {
+			"Ms": 3588,
+			"Longest": 1305,
+			"Programs": 55
+		}
+	}
+}

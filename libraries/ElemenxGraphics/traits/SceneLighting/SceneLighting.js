@@ -114,8 +114,18 @@ Elemenx.Trait('SceneLighting', {
 			return state.Level;
 		}
 
+		/*
+		 * The set of its level, made once for each level (read, not changed). Regression: copied at each call, many a draw,
+		 * thousands of objects a frame.
+		 */
+		var graphicsOf = {};
+
 		this.Graphics = function () {
-			return Object.assign({Level: level()}, sets[level()]);
+			var now = level();
+
+			graphicsOf[now] = graphicsOf[now] || Object.assign({Level: now}, sets[now]);
+
+			return graphicsOf[now];
 		};
 
 		/*
@@ -176,13 +186,19 @@ Elemenx.Trait('SceneLighting', {
 			return state.Programs;
 		}
 
+		/* Regression: those of the air, of the rays and of the sun seen (Aired, ShaftPast, ShaftNext, Sunlit, SunlitNext) were never let go: five more at each size of the view. */
 		function destroy () {
-			[state.Scene, state.Dark, state.Soft, state.Touch, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror, state.Normals, state.Circle, state.Disc, state.Focused].concat(state.Bloom).forEach(function (target) {
+			[state.Scene, state.Aired, state.Dark, state.Soft, state.Touch, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.ShaftPast, state.ShaftNext, state.Sunlit, state.SunlitNext, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror, state.Normals, state.Circle, state.Disc, state.Focused].concat(state.Bloom).forEach(function (target) {
 				if (target)
 					target.Destroy();
 			});
 
 			state.Scene = null;
+			state.Aired = null;
+			state.ShaftPast = null;
+			state.ShaftNext = null;
+			state.Sunlit = null;
+			state.SunlitNext = null;
 			state.Dark = null;
 			state.Soft = null;
 			state.Touch = null;

@@ -172,7 +172,8 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 		await waitFor(function () {
 			mounted.Frames(1);
 
-			return tiles.indexOf(scene.$Service('SceneTextures').Bake(renderer, 'asphalt').Color) !== -1;
+			/* Null till its programs are made by the card. */
+			return tiles.indexOf((scene.$Service('SceneTextures').Bake(renderer, 'asphalt') || {}).Color) !== -1;
 		}, 20000);
 
 		renderer.Draw = draw;
@@ -615,6 +616,9 @@ describe('Contract: the roads of a Scene: drawn as their models, the ground made
 
 		expect(met).toBeGreaterThan(0);
 		expect(worst).toBeLessThan(wall);
+		/* Regression: a car kept no hints of where on the road its wheels were: every point of the track looked at for each wheel at each step. */
+		expect(car.SurfaceHints.length).toBe(1);
+		expect(Math.abs(car.SurfaceHints[0] - roads.Near(road, car.Car.X, car.Car.Z).Along)).toBeLessThan(3);
 	}, 60000);
 	it('stands barriers of kind barrier along a road its Road names, or on points of their own, and they stop a car', async function () {
 		var mounted = await mount();

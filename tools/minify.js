@@ -8,8 +8,9 @@
  */
 
 var Mangle = require('./mangle.js');
+var Scanner = require('./scanner.js');
 
-var Word = /[A-Za-z0-9_$\u0080-￿]/;
+var Word = Scanner.Word;
 
 /*
  * After these characters a line break cannot end a statement: it goes. A closing parenthesis is among them because
@@ -22,50 +23,8 @@ var Open = '{([,;:=?&|+-*/%<>!~^)';
 var Close = '})],;.:?';
 
 /* After these characters, and after these words, a slash starts a regular expression. */
-var RegexAfter = '(,=:[!&|?{};+-*%<>~^';
+var RegexAfter = Scanner.RegexAfter;
 var RegexWords = ['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await'];
-
-function scanString (source, start) {
-	var quote = source.charAt(start);
-	var i = start + 1;
-
-	while (i < source.length && source.charAt(i) !== quote) {
-		if (source.charAt(i) === '\\')
-			i++;
-
-		i++;
-	}
-
-	return i + 1;
-}
-
-function scanRegex (source, start) {
-	var i = start + 1;
-	var klass = false;
-	var c;
-
-	while (i < source.length) {
-		c = source.charAt(i);
-
-		if (c === '/' && !klass) break;
-
-		if (c === '\n')
-			throw new Error('Unterminated regular expression at ' + start);
-
-		if (c === '[') klass = true;
-		else if (c === ']') klass = false;
-
-		i += c === '\\' ? 2 : 1;
-	}
-
-	i++;
-
-	while (i < source.length && /[a-z]/i.test(source.charAt(i))) {
-		i++;
-	}
-
-	return i;
-}
 
 function JavaScript (source) {
 	var out = [];
@@ -154,7 +113,7 @@ function JavaScript (source) {
 			i = end + 2;
 		}
 		else if (c === '"' || c === '\'' || c === '`') {
-			end = scanString(source, i);
+			end = Scanner.String(source, i);
 
 			emit(source.substring(i, end));
 
@@ -162,7 +121,7 @@ function JavaScript (source) {
 			i = end;
 		}
 		else if (c === '/' && regexAllowed()) {
-			end = scanRegex(source, i);
+			end = Scanner.Regex(source, i);
 
 			emit(source.substring(i, end));
 
@@ -235,7 +194,7 @@ function CSS (source) {
 			i = end;
 		}
 		else if (c === '"' || c === '\'') {
-			end = scanString(source, i);
+			end = Scanner.String(source, i);
 
 			flush();
 

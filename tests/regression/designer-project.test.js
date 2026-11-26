@@ -13,6 +13,7 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 		localStorage.setItem('elemenx-designer:project', JSON.stringify({Mode: 'application', Name: 'Old', Settings: {Title: 'Old', Language: 'en', Theme: '', Router: 'history'}, Documents: [{ID: 'd1', Type: 'page', Name: 'Home', Route: '/', Title: 'Home', Description: '', Props: [], Root: null}, {ID: 'd2', Type: 'page', Name: 'About', Route: '/about', Title: 'About', Description: '', Props: [], Root: null}], Current: 'd1'}));
 
 		await loadElemenx();
+		await import('../../libraries/ElemenxCommon/services/Text/Text.js');
 		await import('../../libraries/ElemenxUI/services/Designer/Designer.js');
 
 		designer = Elemenx.Service('Designer');

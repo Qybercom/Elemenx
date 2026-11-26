@@ -60,6 +60,7 @@
 		"test:coverage:tools": "node tests/coverage/tools.mjs",
 		"test:e2e": "playwright test",
 		"test:bench": "node tests/perf/bench.mjs",
+		"test:bench3d": "node tests/perf/scene.bench.mjs",
 		"test:compute": "vitest run --config vitest.compute.config.mjs --reporter=verbose",
 		"test:stress": "playwright test --repeat-each 5 --retries 0",
 		"examples": "vite --host 127.0.0.1",

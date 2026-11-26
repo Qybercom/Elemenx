@@ -264,7 +264,7 @@ Elemenx.Trait('SceneCinema', {
 		}
 
 		function escaped (value) {
-			return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+			return self.$Service('Text').Escape(value);
 		}
 
 		/* The layer as a view of it says: written again only when what it shows changed. */

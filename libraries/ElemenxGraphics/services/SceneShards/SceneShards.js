@@ -161,22 +161,11 @@ Elemenx.Service('SceneShards', {
 		var c;
 		var d;
 		var i;
-
-		function sub (p, q) {
-			return [p[0] - q[0], p[1] - q[1], p[2] - q[2]];
-		}
-
-		function cross (p, q) {
-			return [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
-		}
-
-		function dot (p, q) {
-			return p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
-		}
-
-		function length (p) {
-			return Math.sqrt(dot(p, p));
-		}
+		var vectors = this.$Service('Math').Vectors;
+		var sub = vectors.Subtract;
+		var cross = vectors.Cross;
+		var dot = vectors.Dot;
+		var length = vectors.Length;
 
 		function face (x, y, z) {
 			var normal = cross(sub(list[y], list[x]), sub(list[z], list[x]));

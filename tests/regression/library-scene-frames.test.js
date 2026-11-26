@@ -256,13 +256,10 @@ describe('Regression: what made the frames of a scene uneven or heavy', function
 				engine.Frame(now += 33);
 			}
 
-			/* From behind the car, never both in one frame, and each four times less often than from in it. */
-			expect(turned.slice(4).every(function (count) {
-				return count <= 1;
-			})).toBe(true);
+			/* From behind the car none: a mirror of a car is made only from in it (each picture all the world drawn once more). */
 			expect(turned.slice(4).reduce(function (sum, count) {
 				return sum + count;
-			}, 0)).toBeGreaterThan(1);
+			}, 0)).toBe(0);
 
 			/* From in the car, after the first pictures, one mirror a frame. */
 			scene.Person = 'first';

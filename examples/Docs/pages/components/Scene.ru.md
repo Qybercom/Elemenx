@@ -72,6 +72,8 @@ SeasonGraph — граф сезона (по умолчанию blueprints/weathe
 
 Подписи объектов — метки SceneMarks: они больше не ложатся друг на друга (сдвигаются, к сдвинутой ведёт линия), выбранный объект первым. Свои элементы над местами сцены ставит Mark(key, options) или компонент SceneMark в слоте hud; событие markcluster — нажатие на бейдж +N кластера меток.
 
+Зеркала машины рисуются только из салона. Автокачество снижает разрешение шагами ×0,85 и проверяет каждый шаг: если кадры не стали на десятую быстрее, разрешение возвращается и полминуты не снижается (тогда снижается уровень качества). Тени рассева дальше ближнего среза — по ShadowScatter набора качества (см. SceneScatter).
+
 ## Свойства
 
 | Свойство | По умолчанию |
@@ -230,4 +232,4 @@ SeasonGraph — граф сезона (по умолчанию blueprints/weathe
 - [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L252) — `tests/regression/library-game-strategy.test.js`
 - [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L280) — `tests/regression/library-game-strategy.test.js`
 
-+385 ещё в тех же файлах
++387 ещё в тех же файлах

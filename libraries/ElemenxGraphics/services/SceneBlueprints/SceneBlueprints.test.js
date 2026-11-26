@@ -1039,4 +1039,30 @@ describe('Contract: the shader graphs of a Scene (C13 phase 5): the bake of a bo
 		expect(blueprints.Compile(numbers).Surface).toBe(null);
 		expect(blueprints.Compile(numbers).Look({}, 3).Count).toBeGreaterThan(0);
 	});
+
+	/*
+	 * Regression: the water, the sky, the sky far off, a ring and the bake each wrote again a kind of graph of a function in a
+	 * shader: one way now (Painted), its options the name in its error (Label) and no text by hand (Text false).
+	 */
+	it('makes a kind of graph of a function in a shader by Painted, its name in the error of a text of none, or no text by hand', function () {
+		var blueprints = Elemenx.Service('Blueprints');
+		var scenes = Elemenx.Service('SceneBlueprints');
+		var made;
+
+		scenes.Painted('painted-test', 'PaintedTestEnd', 'void blueprintPaintedTest(inout vec3 color)', {Label: 'test of paint'});
+		scenes.Painted('painted-plain', 'PaintedPlainEnd', 'void blueprintPaintedPlain(inout vec3 color)', {Text: false});
+
+		made = blueprints.Compile({type: 'painted-test', glsl: 'void blueprintPaintedTest(inout vec3 color) { color = vec3(1.0); }'});
+
+		expect(made.Function).toContain('blueprintPaintedTest');
+		expect(function () {
+			blueprints.Compile({type: 'painted-test', glsl: 'void main() { blueprintPaintedTest_(); }'});
+		}).toThrow('Elemenx Blueprints: a test of paint written by hand has no blueprintPaintedTest');
+		expect(function () {
+			blueprints.Compile({type: 'painted-plain', glsl: 'void blueprintPaintedPlain(inout vec3 color) {}'});
+		}).toThrow();
+		expect(function () {
+			blueprints.Compile({type: 'cosmos', glsl: 'void main() {}'});
+		}).toThrow('Elemenx Blueprints: a sky far off written by hand has no blueprintCosmos');
+	});
 });

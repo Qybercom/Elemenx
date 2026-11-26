@@ -117,4 +117,27 @@ describe('Contract: SceneProxies, many things far away as one simpler shape', fu
 		expect(there.Positions).toBeInstanceOf(Float32Array);
 		expect(Array.from(there.Positions.slice(0, 9))).toEqual(Array.from(here.Positions.slice(0, 9)));
 	});
+
+	/* Regression: a proxy to keep was packed on the page as the worker gave it (6 % of a frame of a race): packed in the worker too. */
+	it('merges and packs a proxy in a worker at once (MergePacked), as Merge and Pack give them', async function () {
+		var pool = proxies.Work();
+		var house = proxies.Shape(meshes.Merge([{Geometry: meshes.Box({Width: 6, Height: 5, Depth: 8}), Color: [0.7, 0.6, 0.5]}]));
+		var job = {Lists: [Object.assign({Shape: 'house'}, tile(16))], Origin: [0, 0, 0], Cell: 1};
+		var here = proxies.Merge(Object.assign({Shapes: {house: house}}, job));
+		var packed = proxies.Pack(here);
+
+		pool.Share('proxy-test:house', house);
+
+		var there = await new Promise(function (done, fail) {
+			pool.Run('SceneProxies', 'MergePacked', [Object.assign({Shapes: {house: 'proxy-test:house'}}, job)], function (error, result) {
+				if (error) fail(error);
+				else done(result);
+			});
+		});
+
+		expect(there.Made.Triangles).toBe(here.Triangles);
+		expect(there.Packed.Positions).toBeInstanceOf(Int16Array);
+		expect(Array.from(there.Packed.Positions)).toEqual(Array.from(packed.Positions));
+		expect(there.Packed.Box).toEqual(packed.Box);
+	});
 });

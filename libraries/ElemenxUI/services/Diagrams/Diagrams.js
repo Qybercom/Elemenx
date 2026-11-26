@@ -72,7 +72,7 @@ Elemenx.Service('Diagrams', {
 	},
 
 	Escape: function (value) {
-		return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		return this.$Service('Text').Escape(value);
 	},
 
 	/* A label as SVG text centered at x, y: its lines one under the other. */

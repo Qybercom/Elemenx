@@ -513,7 +513,7 @@ Elemenx.Component('Topology', {
 	},
 
 	Escape: function (text) {
-		return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		return this.$Service('Text').Escape(text);
 	},
 
 	/* A node by its ID, or a link by link:<index>; nothing with an empty one. */

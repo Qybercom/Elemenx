@@ -84,12 +84,12 @@
 
 ## Тесты
 
-- [Random: the same numbers for the same seed, its helpers in their bounds, a fork of its own, a smooth noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L28) — `tests/regression/game-services.test.js`
-- [Random: Sequence gives the numbers of the old linear generator of a text, that towns and settlements are laid by](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L69) — `tests/regression/game-services.test.js`
-- [SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L86) — `tests/regression/game-services.test.js`
-- [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L123) — `tests/regression/game-services.test.js`
-- [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L200) — `tests/regression/game-services.test.js`
-- [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L247) — `tests/regression/game-services.test.js`
+- [Random: the same numbers for the same seed, its helpers in their bounds, a fork of its own, a smooth noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L29) — `tests/regression/game-services.test.js`
+- [Random: Sequence gives the numbers of the old linear generator of a text, that towns and settlements are laid by](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L70) — `tests/regression/game-services.test.js`
+- [SpatialIndex: the things in a rectangle, within a radius the nearest first, the nearest one, as they move and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L87) — `tests/regression/game-services.test.js`
+- [Pathfinding: a way round the walls, no corner cut, around costly cells, to the nearest reachable cell, on a graph of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L124) — `tests/regression/game-services.test.js`
+- [Visibility: a line, the sight past a wall, the field of view and its shadows, the fog of war](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L201) — `tests/regression/game-services.test.js`
+- [Loop: steps of the same time whatever the frames, a part of a step to draw between, its speed, pause and catch-up limit](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L248) — `tests/regression/game-services.test.js`
 - [runs a tree of behaviour: a utility of scores choosing what to do, kept a while, the tasks of the application, the one left told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L1090) — `tests/regression/blueprints.test.js`
 - [runs the blocks of a tree: a selector, a condition, a cooldown, a limit, a loop, a wait, what it remembers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L1204) — `tests/regression/blueprints.test.js`
 - [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L130) — `tests/regression/headless.test.js`

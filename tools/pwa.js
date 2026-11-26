@@ -27,9 +27,7 @@ var Updates = ['auto', 'prompt', 'manual'];
 /* The largest file kept when the worker installs; the larger ones are kept once fetched. */
 var Precached = 2 * 1024 * 1024;
 
-function escape (value) {
-	return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+var escape = require('./common.js').escapeMarkup;
 
 /* The size of a PNG from its header ('512x512'), or 'any' for an SVG, or null. */
 function sizeOf (file) {

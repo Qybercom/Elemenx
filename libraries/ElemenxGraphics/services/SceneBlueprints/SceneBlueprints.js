@@ -55,7 +55,7 @@
  *   see Rings; LibraryRing() the graph of the library (blueprints/shader/ring).
  * - The kind planet: a globe from far (PlanetGraph of a Scene): its picture lit, its clouds and their shadows, the shadow
  *   of its ring, its towns at night, its air at its edge as blocks: see Planets; LibraryPlanet() the graph of the library
- *   (blueprints/shader/planet). Painted(kind, end, head): such a kind of a function of a body in a shader.
+ *   (blueprints/shader/planet). Painted(kind, end, head, options): such a kind of a function in a shader ({Label, Text}).
  * - The kind ground: the ground of a globe near and from over it (GroundGraph of a Scene): its picture, woods, fields,
  *   snow, dunes, relief, the tiles near, its light and the shadows of clouds and of its ring, water, towns at night, clouds
  *   from over them and air as blocks: see Grounds; LibraryGround() the graph of the library (blueprints/shader/ground).
@@ -591,50 +591,13 @@ Elemenx.Service('SceneBlueprints', {
 	 */
 	Waters: function () {
 		var blueprints = this.$Service('Blueprints');
-		var shaders = this.$Service('BlueprintShaders');
 		var water = ['water'];
 
 		function node (type, inputs, outputs, glsl) {
 			blueprints.Node(type, {Graphs: water, Group: inputs.length ? 'water' : 'input', Inputs: inputs, Outputs: outputs, GLSL: glsl});
 		}
 
-		blueprints.Graph('water', {
-			End: 'Water',
-			Text: function (glsl) {
-				var written = shaders.Written(glsl);
-				var made;
-
-				if (!/\bvoid\s+blueprintWater\s*\(/.test(glsl))
-					throw new Error('Elemenx Blueprints: a water written by hand has no blueprintWater');
-
-				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
-				made.Values = shaders.Values(made);
-
-				return made;
-			},
-			Compile: function (plan) {
-				var shader = shaders.Shader(plan, 'water');
-				var made = {
-					Function: ['void blueprintWater(inout vec3 color, inout float alpha) {']
-						.concat(shader.Lines.map(function (line) {
-							return '\t' + line;
-						}))
-						.concat([shader.Result.Water || '', '}'])
-						.filter(function (line) {
-							return line !== '';
-						})
-						.join('\n'),
-					Needs: shader.Needs,
-					Uniforms: shader.Uniforms,
-					Textures: [],
-					Sources: shader.Sources
-				};
-
-				made.Values = shaders.Values(made);
-
-				return made;
-			}
-		});
+		this.Painted('water', 'Water', 'void blueprintWater(inout vec3 color, inout float alpha)');
 
 		/* What the shader of water has at a point. */
 		node('Place', [], [{Key: 'Place', Type: 'vec3'}], 'vWorld + uEye');
@@ -802,7 +765,6 @@ Elemenx.Service('SceneBlueprints', {
 	 */
 	Skies: function () {
 		var blueprints = this.$Service('Blueprints');
-		var shaders = this.$Service('BlueprintShaders');
 		var sky = ['sky'];
 
 		function node (type, inputs, outputs, glsl) {
@@ -817,43 +779,7 @@ Elemenx.Service('SceneBlueprints', {
 			return {Key: key, Type: 'vec3', Default: fallback};
 		}
 
-		blueprints.Graph('sky', {
-			End: 'SkyEnd',
-			Text: function (glsl) {
-				var written = shaders.Written(glsl);
-				var made;
-
-				if (!/\bvoid\s+blueprintSky\s*\(/.test(glsl))
-					throw new Error('Elemenx Blueprints: a sky written by hand has no blueprintSky');
-
-				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
-				made.Values = shaders.Values(made);
-
-				return made;
-			},
-			Compile: function (plan) {
-				var shader = shaders.Shader(plan, 'sky');
-				var made = {
-					Function: ['void blueprintSky(inout vec3 color, inout float alpha) {']
-						.concat(shader.Lines.map(function (line) {
-							return '\t' + line;
-						}))
-						.concat([shader.Result.SkyEnd || '', '}'])
-						.filter(function (line) {
-							return line !== '';
-						})
-						.join('\n'),
-					Needs: shader.Needs,
-					Uniforms: shader.Uniforms,
-					Textures: [],
-					Sources: shader.Sources
-				};
-
-				made.Values = shaders.Values(made);
-
-				return made;
-			}
-		});
+		this.Painted('sky', 'SkyEnd', 'void blueprintSky(inout vec3 color, inout float alpha)');
 
 		/* The way of the eye through a point of the sky, how high it looks and the sun stands, how near the sun it looks. */
 		node('SkyRay', [], [{Key: 'Ray', Type: 'vec3'}, {Key: 'Height', Type: 'float'}, {Key: 'Sun', Type: 'float'}, {Key: 'Toward', Type: 'float'}], function (context) {
@@ -1079,7 +1005,6 @@ Elemenx.Service('SceneBlueprints', {
 	 */
 	Cosmoses: function () {
 		var blueprints = this.$Service('Blueprints');
-		var shaders = this.$Service('BlueprintShaders');
 		var cosmos = ['cosmos'];
 
 		function pin (key, type, fallback) {
@@ -1125,43 +1050,7 @@ Elemenx.Service('SceneBlueprints', {
 			}});
 		}
 
-		blueprints.Graph('cosmos', {
-			End: 'CosmosEnd',
-			Text: function (glsl) {
-				var written = shaders.Written(glsl);
-				var made;
-
-				if (!/\bvoid\s+blueprintCosmos\s*\(/.test(glsl))
-					throw new Error('Elemenx Blueprints: a sky far off written by hand has no blueprintCosmos');
-
-				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
-				made.Values = shaders.Values(made);
-
-				return made;
-			},
-			Compile: function (plan) {
-				var shader = shaders.Shader(plan, 'cosmos');
-				var made = {
-					Function: ['void blueprintCosmos(vec3 d, vec3 s, inout vec3 color) {']
-						.concat(shader.Lines.map(function (line) {
-							return '\t' + line;
-						}))
-						.concat([shader.Result.CosmosEnd || '', '}'])
-						.filter(function (line) {
-							return line !== '';
-						})
-						.join('\n'),
-					Needs: shader.Needs,
-					Uniforms: shader.Uniforms,
-					Textures: [],
-					Sources: shader.Sources
-				};
-
-				made.Values = shaders.Values(made);
-
-				return made;
-			}
-		});
+		this.Painted('cosmos', 'CosmosEnd', 'void blueprintCosmos(vec3 d, vec3 s, inout vec3 color)', {Label: 'sky far off'});
 
 		/* The way of a texel of the cube and the seed of the sky. */
 		blueprints.Node('CosmosRay', {Graphs: cosmos, Group: 'input', Inputs: [], Outputs: [out('Ray', 'vec3'), out('Seed', 'vec3')], GLSL: function () {
@@ -1229,43 +1118,7 @@ Elemenx.Service('SceneBlueprints', {
 			return shaders.Literal(Number(context.Properties[key]), 'float');
 		}
 
-		blueprints.Graph('ring', {
-			End: 'RingEnd',
-			Text: function (glsl) {
-				var written = shaders.Written(glsl);
-				var made;
-
-				if (!/\bvoid\s+blueprintRing\s*\(/.test(glsl))
-					throw new Error('Elemenx Blueprints: a ring written by hand has no blueprintRing');
-
-				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
-				made.Values = shaders.Values(made);
-
-				return made;
-			},
-			Compile: function (plan) {
-				var shader = shaders.Shader(plan, 'ring');
-				var made = {
-					Function: ['void blueprintRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha) {']
-						.concat(shader.Lines.map(function (line) {
-							return '\t' + line;
-						}))
-						.concat([shader.Result.RingEnd || '', '}'])
-						.filter(function (line) {
-							return line !== '';
-						})
-						.join('\n'),
-					Needs: shader.Needs,
-					Uniforms: shader.Uniforms,
-					Textures: [],
-					Sources: shader.Sources
-				};
-
-				made.Values = shaders.Values(made);
-
-				return made;
-			}
-		});
+		this.Painted('ring', 'RingEnd', 'void blueprintRing(float r, vec3 world, vec3 normal, inout vec3 color, inout float alpha)');
 
 		/* Where on the ring: how far across it, the point, its normal, the seed of the ring. */
 		blueprints.Node('RingPlace', {Graphs: ring, Group: 'input', Inputs: [], Outputs: [out('R'), out('World', 'vec3'), out('Normal', 'vec3'), out('Seed')], GLSL: function () {
@@ -1331,22 +1184,26 @@ Elemenx.Service('SceneBlueprints', {
 	},
 
 	/*
-	 * A kind of graph of a function of a body painted in a shader (planet...): its hook, End its end, its function made of
-	 * the lines of its blocks (or written by hand with that function).
+	 * A kind of graph of a function in a shader (a body painted, the water, the sky, the sky far off, a ring, the bake of a
+	 * body): its hook, End its end, its function made of the lines of its blocks, or written by hand with that function
+	 * (options Text false: not). options Label: its name in the error of a text of no such function (the kind else).
+	 * Regression: the water, the sky, the sky far off, a ring and the bake each wrote this again.
 	 */
-	Painted: function (kind, end, head) {
+	Painted: function (kind, end, head, options) {
 		var blueprints = this.$Service('Blueprints');
 		var shaders = this.$Service('BlueprintShaders');
 		var name = /void\s+(\w+)\s*\(/.exec(head)[1];
+		var settings = options || {};
+		var hook = new RegExp('\\bvoid\\s+' + name + '\\s*\\(');
 
 		blueprints.Graph(kind, {
 			End: end,
-			Text: function (glsl) {
+			Text: settings.Text === false ? undefined : function (glsl) {
 				var written = shaders.Written(glsl);
 				var made;
 
-				if (glsl.indexOf(name + '(') === -1)
-					throw new Error('Elemenx Blueprints: a ' + kind + ' written by hand has no ' + name);
+				if (!hook.test(glsl))
+					throw new Error('Elemenx Blueprints: a ' + (settings.Label || kind) + ' written by hand has no ' + name);
 
 				made = {Function: written.Body, Needs: written.Needs, Uniforms: written.Uniforms, Textures: [], Parameters: written.Parameters};
 				made.Values = shaders.Values(made);
@@ -2051,31 +1908,7 @@ Elemenx.Service('SceneBlueprints', {
 			Cratered: {Code: '(uKind == 0 ? 1.0 : 0.0)'}
 		};
 
-		blueprints.Graph('bake', {
-			End: 'BakeEnd',
-			Compile: function (plan) {
-				var shader = shaders.Shader(plan, 'bake');
-				var made = {
-					Function: ['void blueprintBake(vec3 p, inout vec4 surface, inout vec4 sky) {']
-						.concat(shader.Lines.map(function (line) {
-							return '\t' + line;
-						}))
-						.concat([shader.Result.BakeEnd || '', '}'])
-						.filter(function (line) {
-							return line !== '';
-						})
-						.join('\n'),
-					Needs: shader.Needs,
-					Uniforms: shader.Uniforms,
-					Textures: [],
-					Sources: shader.Sources
-				};
-
-				made.Values = shaders.Values(made);
-
-				return made;
-			}
-		});
+		this.Painted('bake', 'BakeEnd', 'void blueprintBake(vec3 p, inout vec4 surface, inout vec4 sky)', {Text: false});
 
 		/* Its land and its height of noise (h): what the page reads of it too (BakeLandGraph), as it is in the shader. */
 		node('BakeLand', [input('Land', 'float', '0.5'), input('H', 'float', '0.5')], [{Key: 'Land', Type: 'float'}, {Key: 'H', Type: 'float'}], function (context) {

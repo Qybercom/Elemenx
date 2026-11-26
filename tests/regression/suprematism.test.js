@@ -30,6 +30,7 @@ describe('Contract: Suprematism, pictures made of a seed', function () {
 		await import('../../libraries/ElemenxCommon/directives/Mount/Mount.js');
 		await import('../../libraries/ElemenxCommon/services/Random/Random.js');
 		await import('../../libraries/ElemenxCommon/services/Seeded/Seeded.js');
+		await import('../../libraries/ElemenxCommon/services/Text/Text.js');
 		await import('../../libraries/ElemenxUI/services/Suprematist/Suprematist.js');
 
 		define(componentSource, 'Suprematism', componentTemplate);

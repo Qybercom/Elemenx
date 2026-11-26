@@ -33,7 +33,7 @@ Elemenx.Service('Formulas', {
 		var body;
 
 		function escape (value) {
-			return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+			return self.$Service('Text').Escape(value);
 		}
 
 		function fail (message) {

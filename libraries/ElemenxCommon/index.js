@@ -15,6 +15,7 @@
 	'services/Astronomy/Astronomy.js',
 	'services/Envelope/Envelope.js',
 	'services/Diff/Diff.js',
+	'services/Text/Text.js',
 	'services/Formulas/Formulas.js',
 	'services/DataFormats/DataFormats.js',
 	'services/Signatures/Signatures.js',

@@ -160,7 +160,7 @@ Elemenx.Component('CodeEditor', {
 		};
 
 		this.Escape = function (text) {
-			return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			return self.$Service('Text').EscapeText(text);
 		};
 	},
 

@@ -636,6 +636,7 @@ Elemenx.Component('Scene', {
 		var kinds = this.$Service('SceneKinds');
 		var library = this.$Service('SceneModels');
 		var random = this.$Service('Random');
+		var markup = this.$Service('Text');
 		var vectors = math.Vectors;
 		var view = element.ownerDocument.defaultView || window;
 		var shaders = this.Globed(this.Forecasted(this.Clouded(this.Aired(this.Weathered(this.Baked(this.Landed(this.Skied(this.Watered(this.Winded(this.Shaders(graphics)))))))))));
@@ -1978,6 +1979,7 @@ Elemenx.Component('Scene', {
 			gpu.Quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 			gpu.Shapes = {};
 			gpu.ShadowShapes = {};
+			gpu.VoxelShapes = {};
 			gpu.Stars = stars();
 			scene.Lines = {};
 			scene.Rings = {};
@@ -2086,9 +2088,10 @@ Elemenx.Component('Scene', {
 		/*
 		 * A simpler shape for a map of a shadow: the corners within one cell of a grid become one, at the middle of them, with
 		 * the joints and weights of the first (the body of a car of a file has a skeleton); a face that lost a corner goes. Its
-		 * normals and colors are not there: the depth alone is drawn of it.
+		 * normals and colors are not there: the depth alone is drawn of it. With colored, the colors of the corners of a cell
+		 * mixed, the normal and the uv of the first (the voxels of the light of the probes: what color a wall is).
 		 */
-		function shadowGeometry (geometry, cell) {
+		function shadowGeometry (geometry, cell, colored) {
 			var p = geometry.Positions;
 			var joints = geometry.Joints && geometry.Joints.length ? geometry.Joints : null;
 			var weights = joints ? geometry.Weights : null;
@@ -2137,6 +2140,9 @@ Elemenx.Component('Scene', {
 
 			made = {Positions: new Float32Array(counts.length * 3), Normals: null, UVs: null, Colors: null, Joints: joints ? new Float32Array(counts.length * 4) : null, Weights: joints ? new Float32Array(counts.length * 4) : null, Indices: indices};
 
+			if (colored)
+				coloredOf(geometry, made, map, counts, firsts);
+
 			for (i = 0; i < counts.length; i++) {
 				made.Positions[i * 3] = sums[i * 3] / counts[i];
 				made.Positions[i * 3 + 1] = sums[i * 3 + 1] / counts[i];
@@ -2149,6 +2155,77 @@ Elemenx.Component('Scene', {
 			}
 
 			return made;
+		}
+
+		/* The colors of the corners of each cell mixed, the normal and the uv of the first (shadowGeometry colored). */
+		function coloredOf (geometry, made, map, counts, firsts) {
+			var colors = geometry.Colors;
+			var normals = geometry.Normals;
+			var uvs = geometry.UVs;
+			var i;
+
+			if (colors && colors.length) {
+				made.Colors = new Float32Array(counts.length * 3);
+
+				for (i = 0; i < map.length; i++) {
+					made.Colors[map[i] * 3] += colors[i * 3] / counts[map[i]];
+					made.Colors[map[i] * 3 + 1] += colors[i * 3 + 1] / counts[map[i]];
+					made.Colors[map[i] * 3 + 2] += colors[i * 3 + 2] / counts[map[i]];
+				}
+			}
+
+			if (normals && normals.length) {
+				made.Normals = new Float32Array(counts.length * 3);
+
+				for (i = 0; i < counts.length; i++)
+					made.Normals.set(normals.subarray ? normals.subarray(firsts[i] * 3, firsts[i] * 3 + 3) : normals.slice(firsts[i] * 3, firsts[i] * 3 + 3), i * 3);
+			}
+
+			if (uvs && uvs.length) {
+				made.UVs = new Float32Array(counts.length * 2);
+
+				for (i = 0; i < counts.length; i++) {
+					made.UVs[i * 2] = uvs[firsts[i] * 2];
+					made.UVs[i * 2 + 1] = uvs[firsts[i] * 2 + 1];
+				}
+			}
+		}
+
+		/*
+		 * The shape a still list is laid into the voxels of the light of the probes by (scene.Voxels): of cells of half a metre,
+		 * its colors kept, reading the copies of its shape. A voxel is a metre: its finest corners laid there were all lost.
+		 * Regression: drawn whole, a race track laid 1.8 million triangles a frame into them as the eye went on. One made a
+		 * frame, the whole till then; the whole where it gives little (less than a third fewer).
+		 */
+		function voxelShape (name, list) {
+			var geometry = list.Geometry;
+			var made = gpu.VoxelShapes[name];
+			var simple;
+			var scale;
+
+			if (made !== undefined)
+				return made || shape(name);
+
+			if (!geometry || !geometry.Indices || geometry.Indices.length < 3000 || !list.Uploaded) return shape(name);
+
+			gpu.VoxelSimpler = gpu.VoxelSimpler || new WeakMap();
+			simple = gpu.VoxelSimpler.get(geometry);
+
+			if (simple === undefined) {
+				if (gpu.VoxelBudget < 1) return shape(name);
+
+				gpu.VoxelBudget--;
+				/* Half a metre in the world: of the size of its first copy. */
+				scale = Math.max(1e-3, Math.hypot(list.X[0], list.X[1], list.X[2]));
+				simple = shadowGeometry(geometry, 0.5 / scale, true);
+				simple = simple.Indices.length < geometry.Indices.length * 0.67 ? simple : null;
+
+				gpu.VoxelSimpler.set(geometry, simple);
+			}
+
+			made = gpu.VoxelShapes[name] = simple ? renderer.Mesh(simple).Instance(list.Uploaded, list.Count, shape(name)) : null;
+
+			return made || shape(name);
 		}
 
 		function shapeGeometry (name) {
@@ -3908,6 +3985,7 @@ Elemenx.Component('Scene', {
 			}
 
 			scene.Steady++;
+			scene.FrameTime = scene.FrameTime ? scene.FrameTime * 0.95 + elapsed * 0.05 : elapsed;
 
 			if (elapsed > 0.026) {
 				scene.Slow++;
@@ -3918,8 +3996,30 @@ Elemenx.Component('Scene', {
 				scene.Slow = 0;
 			}
 
-			if (scene.Slow > 20 && scene.Ratio > Math.max(0.7, scene.Most * 0.5)) {
-				scene.Ratio = Math.max(0.7, scene.Most * 0.5, scene.Ratio * 0.8);
+			if (scene.Unshrunk > 0)
+				scene.Unshrunk--;
+
+			/*
+			 * A step down tried: a second later, the frames not a tenth faster, the pixels were not what held it up (all that is
+			 * drawn, the shadows, the work of the page): the resolution back, and not stepped down for half a minute, the quality
+			 * of the light lowered instead (SceneLighting, PostTime: late frames). Regression: a race track, held up by what it
+			 * draws, went down to the least resolution, as slow as before and blurred.
+			 */
+			if (scene.Trial && ++scene.Trial.Frames >= 60) {
+				if (scene.FrameTime > scene.Trial.Before * 0.9) {
+					scene.Ratio = scene.Trial.Ratio;
+					scene.Unshrunk = 1800;
+
+					renderer.Resize(scene.Width, scene.Height, scene.Ratio);
+				}
+
+				scene.Trial = null;
+			}
+
+			/* In steps of 0.85 of the screen: each step makes the targets of the picture again, not some each second. */
+			if (scene.Slow > 20 && !scene.Trial && !(scene.Unshrunk > 0) && scene.Ratio > Math.max(0.7, scene.Most * 0.5)) {
+				scene.Trial = {Ratio: scene.Ratio, Before: scene.FrameTime, Frames: 0};
+				scene.Ratio = Math.max(0.7, scene.Most * 0.5, scene.Ratio * 0.85);
 				scene.Slow = 0;
 
 				/* It went up and could not hold it: longer before the next try, so the picture does not pump. */
@@ -4466,6 +4566,9 @@ Elemenx.Component('Scene', {
 
 			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uSkySun: scene.Ground ? scene.Ground.Sun : [0, 1, 0], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: snowed(), uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1, uScreenMirror: engine.ScreenMirror && engine.ScreenMirror() ? 1 : 0, uLevel: engine.LevelColor('near', 0)}, shade, self.WindValues(scene.Seconds));
 
+			/* What the draws of the frame share: set on a program once, then only what is their own (Renderer.Shared; marked again at each change). */
+			renderer.Shared(common);
+
 			/* The arrays of the frame stay as they are till the next one: given again to each draw, they are not read again. */
 			renderer.Hold(Object.keys(common).map(function (key) {
 				return common[key];
@@ -4508,7 +4611,7 @@ Elemenx.Component('Scene', {
 				scene.Ground.Under = !!scene.Ground.Field.Water && !scene.Camera.Ortho && scene.Eye[1] < self.$Service('SceneWaves').At(scene.Ground.Waves, scene.Eye[0], scene.Eye[2], scene.Seconds).Height;
 
 			var worldOf = function (vp, eye, small) {
-				var mine = Object.assign(Object.create(common), {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uHoleAt: [0, 0, 0, 0], uHoleHalf: [0, 0, 0, 0], uHeroFade: 0});
+				var mine = renderer.Shared(Object.assign(Object.create(common), {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uHoleAt: [0, 0, 0, 0], uHoleHalf: [0, 0, 0, 0], uHeroFade: 0}));
 
 				var sees = frustum(vp, renderer.Width);
 
@@ -4519,8 +4622,7 @@ Elemenx.Component('Scene', {
 					/* The glass of a mirror is not in its own picture, nor in another's. */
 					if (list.Material && seeThrough(list.Material) || list.MirrorKey || !seen(list, sees)) return;
 
-					if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign(Object.create(mine), {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
-					else renderer.Draw(shape(name), gpu.Many, Object.assign(Object.create(mine), {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}, engine.SeasonValues(name), engine.DissolveValues(list)));
+					drawList(name, list, mine, {Origin: originOf(list)});
 				});
 
 				/* A mirror of a car shows the trees and the grass too at high and ultra: its picture is as fine as the screen now, and no bigger than the mirror. */
@@ -4569,6 +4671,8 @@ Elemenx.Component('Scene', {
 				passed(after, [0, 0.5], [camera.Near, split * 1.0001]);
 
 				common.uViewProjection = after;
+
+				renderer.Shared(common);
 			}
 			else {
 				passed(matrix, null, [camera.Near, camera.Far]);
@@ -4580,6 +4684,8 @@ Elemenx.Component('Scene', {
 
 				common.uViewProjection = matrix;
 				common.uDepthRange = range || [0, 1];
+
+				renderer.Shared(common);
 
 				if (range)
 					renderer.GL.depthRange(range[0], range[1]);
@@ -4710,21 +4816,14 @@ Elemenx.Component('Scene', {
 						return;
 					}
 
-					if (list.Material) {
-						var blended = seeThrough(list.Material);
+					var blended = !!list.Material && seeThrough(list.Material);
+					var drawn = function () {
+						drawList(name, list, common, {Origin: originOf(list), Level: true, Blend: true, Values: list.Material ? {uMoving: list.Still || blended ? 0 : 1, uSteady: list.Still ? 0 : 1, uCut: heroCut(list)} : {uMoving: list.Still ? 0 : 1}});
+					};
 
-						var drawn = function () {
-							renderer.Draw(shape(name), pbrOf(list), Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || blended ? 0 : 1, uSteady: list.Still ? 0 : 1, uCut: heroCut(list)}), surface(list), blueprintValues(list), engine.SeasonValues(name), engine.DissolveValues(list), levelOf(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
-						};
-
-						/* What is seen through comes after all it shows, and hides nothing of what is drawn after it. */
-						if (blended) later.push(drawn);
-						else drawn();
-
-						return;
-					}
-
-					renderer.Draw(shape(name), gpu.Many, uniforms(Object.assign({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}, engine.SeasonValues(name), engine.DissolveValues(list), levelOf(list))));
+					/* What is seen through comes after all it shows, and hides nothing of what is drawn after it. */
+					if (blended) later.push(drawn);
+					else drawn();
 				});
 
 				/*
@@ -4870,6 +4969,8 @@ Elemenx.Component('Scene', {
 				renderer.GL.depthRange(0, 1);
 
 				common.uViewProjection = matrix;
+
+				renderer.Shared(common);
 			}
 
 			/* How deep in a cave the eye is: asked each frame, so it follows. */
@@ -5194,6 +5295,12 @@ Elemenx.Component('Scene', {
 			if (gpu.Shapes[name])
 				gpu.Shapes[name].Destroy();
 
+			/* What read the copies of the shape let go: made again of the new one. */
+			if (gpu.VoxelShapes[name])
+				gpu.VoxelShapes[name].Destroy();
+
+			delete gpu.VoxelShapes[name];
+
 			gpu.Shapes[name] = renderer.Mesh({Positions: built.Positions, Normals: built.Normals, Colors: built.Colors, UVs: built.UVs, Indices: built.Indices});
 			list.Clustered = {Built: built, Key: '', Level: 0, Clusters: 0};
 
@@ -5231,6 +5338,40 @@ Elemenx.Component('Scene', {
 		engine.ClusterPixels = 1;
 
 		/* The color of the level a list is drawn at while Levels is on: of its clusters, the coarsest drawn. */
+		/*
+		 * What a list of models gives each draw of it, of its material, its graph, the season and its dissolving: made once a
+		 * frame, the passes that draw it (the view, the mirrors) given the same. Regression: made again for each draw of each
+		 * pass, objects and arrays of them, much of the garbage of a frame.
+		 */
+		function valuesOf (name, list) {
+			if (list.ValuesAt === scene.Painted && list.ValuesName === name && list.Values) return list.Values;
+
+			list.Values = Object.assign({}, list.Material ? surface(list) : null, list.Material ? blueprintValues(list) : null, engine.SeasonValues(name), engine.DissolveValues(list));
+			list.ValuesAt = scene.Painted;
+			list.ValuesName = name;
+
+			return list.Values;
+		}
+
+		/*
+		 * A list of models drawn over a set of values (base: of the pass, Shared), its material by its program or the plain one:
+		 * the one way the view, the mirrors and a ship over a surface draw them. own: {Origin, Values (over those of the list),
+		 * Level (its color of a level of detail), Blend (what is seen through over what is behind, not written in depth)}.
+		 * Regression: written three times, they went apart (a ship over a surface drew no hole of its ramp).
+		 */
+		function drawList (name, list, base, own) {
+			var made = Object.create(base);
+			var blended = !!own.Blend && !!list.Material && seeThrough(list.Material);
+
+			if (list.Material) {
+				renderer.Draw(shape(name), pbrOf(list), Object.assign(made, {uOrigin: own.Origin, uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, valuesOf(name, list), own.Values, own.Level ? levelOf(list) : null), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
+
+				return;
+			}
+
+			renderer.Draw(shape(name), gpu.Many, Object.assign(made, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: own.Origin}, valuesOf(name, list), own.Values, own.Level ? levelOf(list) : null));
+		}
+
 		function levelOf (list) {
 			return list.Clustered ? {uLevel: engine.LevelColor('near', list.Clustered.Level)} : null;
 		}
@@ -5461,6 +5602,11 @@ Elemenx.Component('Scene', {
 				gpu.ShadowShapes['merged:' + name].Destroy();
 
 			delete gpu.ShadowShapes[name];
+
+			if (gpu.VoxelShapes[name])
+				gpu.VoxelShapes[name].Destroy();
+
+			delete gpu.VoxelShapes[name];
 			delete gpu.ShadowShapes['merged:' + name];
 			delete lists[name];
 		}
@@ -5477,22 +5623,26 @@ Elemenx.Component('Scene', {
 				data.aLayer = {Size: 4, Data: list.Layers.subarray(0, size)};
 			}
 
-			shape(name, list.Geometry).Instance(data, list.Count);
+			var made = shape(name, list.Geometry).Instance(data, list.Count);
 
 			list.Uploaded = data;
 
+			/*
+			 * Its shapes of the shadows and its lines read the copies of its shape (Instance from): sent to the card once.
+			 * Regression: sent again for each, the same numbers three or four times a frame.
+			 */
 			if (gpu.ShadowShapes[name])
-				gpu.ShadowShapes[name].Instance(data, list.Count);
+				gpu.ShadowShapes[name].Instance(data, list.Count, made);
 
 			if (gpu.ShadowShapes['merged:' + name])
-				gpu.ShadowShapes['merged:' + name].Instance(data, list.Count);
+				gpu.ShadowShapes['merged:' + name].Instance(data, list.Count, made);
 
 			/* The wire of the scene, the edges of its models: their lines copied as the shape is. */
 			if (wired() && name.indexOf('outline:') !== 0)
-				linesMesh('wire', name, list.Geometry).Instance(data, list.Count);
+				linesMesh('wire', name, list.Geometry).Instance(data, list.Count, made);
 
 			if (edged() && name.indexOf('outline:') !== 0)
-				linesMesh('edges', name, list.Geometry).Instance(data, list.Count);
+				linesMesh('edges', name, list.Geometry).Instance(data, list.Count, made);
 		}
 
 		/*
@@ -7053,7 +7203,12 @@ Elemenx.Component('Scene', {
 
 			(nearMap || gpu.ShadowMap).Begin();
 
+			/* One map of all, or the map round the hero over the slices: what is sown simpler there (ShadowScatter). */
+			scene.ShadowSlice = 'far';
+
 			casters(matrix);
+
+			scene.ShadowSlice = '';
 
 			(nearMap || gpu.ShadowMap).End();
 
@@ -7166,7 +7321,12 @@ Elemenx.Component('Scene', {
 				if (slice.Draw) {
 					gpu.Cascades.Begin([index % 2 * side, Math.floor(index / 2) * side, side, side]);
 
+					/* The nearest slice its finest; the others what is sown simpler (ShadowScatter of the quality, SceneScatter). */
+					scene.ShadowSlice = index === 0 ? 'near' : 'far';
+
 					casters(matrix);
+
+					scene.ShadowSlice = '';
 
 					gpu.Cascades.End();
 
@@ -7316,6 +7476,7 @@ Elemenx.Component('Scene', {
 
 			/* One simpler shape of a shadow made a frame (shadowShape). */
 			gpu.ShadowBudget = 1;
+			gpu.VoxelBudget = 1;
 
 			/*
 			 * How far back along the sun its views must reach: to the highest of the ground within far of the eye, from a little
@@ -7436,7 +7597,7 @@ Elemenx.Component('Scene', {
 					var list = models[name];
 					if (list.Skinned || !list.Still || list.Material && list.Material.Transmission && seeThrough(list.Material) || !seen(list, sees)) return;
 
-					renderer.Draw(shape(name), moved(list, gpu.VoxelMany, 'VoxelSurface'), Object.assign({}, list.Material ? surface(list) : null, {uViewProjection: matrix, uWind: 0, uOrigin: originOf(list), uSurfaceOn: list.Material ? 1 : 0}, movedValues(list)), {Cull: 'none', Depth: false, DepthWrite: false});
+					renderer.Draw(voxelShape(name, list), moved(list, gpu.VoxelMany, 'VoxelSurface'), Object.assign({}, list.Material ? surface(list) : null, {uViewProjection: matrix, uWind: 0, uOrigin: originOf(list), uSurfaceOn: list.Material ? 1 : 0}, movedValues(list)), {Cull: 'none', Depth: false, DepthWrite: false});
 				});
 
 				if (engine.ScatterVoxels)
@@ -10171,6 +10332,12 @@ Elemenx.Component('Scene', {
 			}).filter(function (one) {
 				var seen = math.Apply(math.Multiply(projection, view), one.At);
 
+				/*
+				 * A mirror of a car only from in it: seen from out of it, it is a few dots of the screen, its glass as its material
+				 * is. Regression: all the world drawn once more for it (two million triangles), from behind the car too.
+				 */
+				if (one.Small && !inCar(drivenCar())) return false;
+
 				return one.Seen && (one.Far < Math.max(one.Pane.Width, one.Pane.Height) * 2 || Math.abs(seen[0]) < 1.4 && Math.abs(seen[1]) < 1.4 && seen[2] < 1);
 			}).sort(function (a, b) {
 				return a.Far - b.Far;
@@ -10869,9 +11036,7 @@ Elemenx.Component('Scene', {
 			}
 
 			function text (value) {
-				var made = String(value);
-
-				return /[&<>]/.test(made) ? made.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : made;
+				return markup.EscapeText(value);
 			}
 
 			function quoted (value) {
@@ -13004,7 +13169,9 @@ Elemenx.Component('Scene', {
 
 			var dim = flying.Aired ? flying.Aired.Dim : 1;
 
-			common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: [sun[0] * 1e6, sun[1] * 1e6, sun[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [sunColor[0] * 1.15, sunColor[1] * 1.15, sunColor[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: [(0.3 * day + 0.01) * dim, (0.38 * day + 0.012) * dim, (0.5 * day + 0.02) * dim], uFloorLight: [0.12 * day * dim, 0.11 * day * dim, 0.1 * day * dim], uSkySun: sun, uAmbient: [0.05 + 0.12 * day * dim, 0.055 + 0.13 * day * dim, 0.07 + 0.16 * day * dim], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: 0, uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uHoleAt: [0, 0, 0, 0], uHoleHalf: [0, 0, 0, 0], uHeroFade: 0}, idle(), localLights(), self.WindValues(scene.Seconds));
+			common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: [sun[0] * 1e6, sun[1] * 1e6, sun[2] * 1e6, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightColors: [sunColor[0] * 1.15, sunColor[1] * 1.15, sunColor[2] * 1.15, 0, 0, 0, 0, 0, 0, 0, 0, 0], uLightCount: 1, uSkyLight: [(0.3 * day + 0.01) * dim, (0.38 * day + 0.012) * dim, (0.5 * day + 0.02) * dim], uFloorLight: [0.12 * day * dim, 0.11 * day * dim, 0.1 * day * dim], uSkySun: sun, uAmbient: [0.05 + 0.12 * day * dim, 0.055 + 0.13 * day * dim, 0.07 + 0.16 * day * dim], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: 0, uWet: 0, uSnowed: 0, uRainDrops: 0, uEyeAt: [0, 0, 0], uTime2: scene.Seconds % 1000, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0], uHoleAt: [0, 0, 0, 0], uHoleHalf: [0, 0, 0, 0], uHeroFade: 0, uNightGlow: scene.Ground ? scene.Ground.Night || 0 : 1, uScreenMirror: engine.ScreenMirror && engine.ScreenMirror() ? 1 : 0, uLevel: engine.LevelColor('near', 0)}, idle(), localLights(), self.WindValues(scene.Seconds));
+
+			renderer.Shared(common);
 
 			/*
 			 * What is seen through (glass: the window of its inside, SceneAboard) after all the rest, over it, its depth not written.
@@ -13014,14 +13181,11 @@ Elemenx.Component('Scene', {
 				return (lists[a].Material && seeThrough(lists[a].Material) ? 1 : 0) - (lists[b].Material && seeThrough(lists[b].Material) ? 1 : 0);
 			}).forEach(function (name) {
 				var list = lists[name];
-				var blended = !!list.Material && seeThrough(list.Material);
-
 				if (!list.Count) return;
 
 				upload(name, list);
 
-				if (list.Material) renderer.Draw(shape(name), pbrOf(list), Object.assign(Object.create(common), {uOrigin: [0, 0, 0], uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uSeasonOn: 0}, engine.DissolveValues(list), surface(list), blueprintValues(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
-				else renderer.Draw(shape(name), gpu.Many, Object.assign(Object.create(common), {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: [0, 0, 0], uSeasonOn: 0, uDissolve: [0, 0, 1, 0]}));
+				drawList(name, list, common, {Origin: [0, 0, 0], Blend: true, Values: {uSeasonOn: 0}});
 			});
 
 			/* The shells of its shield, where it is over the surface. Regression: drawn in space only, not of the ship over a planet. */
@@ -17310,7 +17474,14 @@ Elemenx.Component('Scene', {
 				/* The wind: the vertex graph of the wind of the scene (WindGraph) in this place, run before the Vertex of a material. */
 				'void blueprintWind(vec3 position, vec3 normal, vec2 uv, float sway, float phase, float size, inout vec3 world, inout vec3 bent) {}',
 				'void main() {',
-				'	mat4 moved = posed(aJoints.x) * aWeights.x + posed(aJoints.y) * aWeights.y + posed(aJoints.z) * aWeights.z + posed(aJoints.w) * aWeights.w;',
+				/*
+				 * Its four joints in a loop, one of no weight passed over. Regression: posed four times over, inlined (each poses its
+				 * leg, blending up to six frames of three joints), took a card 13 s to make, for each of its programs.
+				 */
+				'	mat4 moved = mat4(0.0);',
+				'	for (int k = 0; k < 4; k++) {',
+				'		if (aWeights[k] > 0.0) moved += posed(aJoints[k]) * aWeights[k];',
+				'	}',
 				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
 				'	mat3 turn = mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz));',
 				'	vBody = vec3(length(aInstance2.xyz), length(aInstance3.xyz), length(aInstance4.xyz)) * (moved * vec4(aPosition, 1.0)).xyz;',

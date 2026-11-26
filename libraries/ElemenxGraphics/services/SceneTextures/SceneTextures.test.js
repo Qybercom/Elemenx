@@ -100,6 +100,47 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 	 * two grounds asking in turn (a planet near and a location under a hovering ship) made two arrays a frame, till the
 	 * card ran out of memory and lost the context.
 	 */
+	/* Regression: a tile was drawn at once with a program the card had not made, and the page waited for it 8 to 12 s. */
+	it('bakes no tile nor array till its programs are made, then bakes them', async function () {
+		var renderer = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false, Patient: true, Patience: 0});
+		var made = false;
+		var real = renderer.Ready;
+		var targets = 0;
+		var target = renderer.Target;
+		var tile;
+
+		renderer.Ready = function (program) {
+			return made && real.call(renderer, program);
+		};
+
+		renderer.Target = function () {
+			targets++;
+
+			return target.apply(renderer, arguments);
+		};
+
+		try {
+			expect(textures.Bake(renderer, 'lawn', {Size: 64})).toBe(null);
+			expect(textures.Array(renderer, ['lawn', 'grassy-soil'], {lawn: {Size: 64}, 'grassy-soil': {Size: 64}})).toBe(null);
+			expect(targets).toBe(0);
+
+			made = true;
+
+			/* Made by the card in the background, or waited for one at a time (Renderer.Ready). */
+			await waitFor(function () {
+				tile = textures.Bake(renderer, 'lawn', {Size: 64});
+
+				return tile;
+			}, 10000);
+
+			expect(tile && tile.Color).toBeTruthy();
+			expect(targets).toBe(2);
+		}
+		finally {
+			renderer.Destroy();
+		}
+	});
+
 	it('keeps the arrays of grounds asked in turn, and gives back the textures of one it lets go', function () {
 		var canvas = document.createElement('canvas');
 		var renderer = Elemenx.Service('Renderer').Create(canvas, {Antialias: false});
@@ -290,13 +331,14 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		};
 
 		try {
+			/* The program of the land made by the card in the background, none waited for on a shown canvas (some 30 s here). */
 			await waitFor(function () {
 				ready.Scene().Rest = 0;
 
 				ready.Engine().Frame(performance.now() + 100 + bound.length);
 
 				return bound.length > 0;
-			}, 20000);
+			}, 60000);
 
 			for (i = 0; i < 2; i++)
 				ready.Engine().Frame(performance.now() + 200 + i);
@@ -308,5 +350,5 @@ describe('Contract: SceneTextures, textures of materials baked once into tiles w
 		expect(ready.Scene().Ground.Field.Materials).toContain('lawn');
 		expect(bound[0].Handle).toBeTruthy();
 		expect(renderer.GL.getError()).toBe(renderer.GL.NO_ERROR);
-	}, 40000);
+	}, 90000);
 });

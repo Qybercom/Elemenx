@@ -104,12 +104,21 @@ describe('Regression: the light of a tunnel under a mountain and of the shadow o
 			return draw.apply(this, arguments);
 		};
 
+		/* The programs of the views of the sun made by the card first (none waited for on a shown canvas): frames till then. */
 		try {
 			for (i = 0; i < 6; i++) {
 				scene.Scene().Rest = 0;
 
 				engine.Frame(scene.Now += 33);
 			}
+
+			await waitFor(function () {
+				scene.Scene().Rest = 0;
+
+				engine.Frame(scene.Now += 33);
+
+				return seen;
+			}, 60000);
 		}
 		finally {
 			engine.Renderer.Draw = draw;

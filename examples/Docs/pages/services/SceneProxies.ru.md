@@ -12,11 +12,14 @@ SceneProxies: то, что стоит далеко, — много вещей о
 
 Scatter сцены рисует им дальние плитки посева (свойство Proxies сцены). Режим Levels сцены показывает плитки цветом их уровня.
 
+MergePacked(job) — то же, что Merge, и сразу упакованное, как Pack ({Made, Packed}): там, где выполняется (в воркере), так что страница при сохранении в кэш ничего не упаковывает.
+
 ## Методы
 
 - `Work()`
 - `Shape(geometry)`
 - `Merge(job)`
+- `MergePacked(job)`
 - `Pack(made)`
 - `Unpack(packed)`
 
@@ -34,3 +37,5 @@ Scatter сцены рисует им дальние плитки посева (�
 - [merges the copies of a tile into one shape of fewer faces, the small ones as small bodies](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js#L47) — `libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js`
 - [packs a proxy small to be kept and unpacks it as it was](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js#L75) — `libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js`
 - [makes the same proxy in a worker, its shapes sent once by Share](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js#L101) — `libraries/ElemenxGraphics/services/SceneProxies/SceneProxies.test.js`
+
++1 ещё в тех же файлах

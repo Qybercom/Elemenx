@@ -1680,6 +1680,8 @@ Elemenx.Service('SceneModels', {
 		var order = [];
 		var held = !!(options && options.Held);
 		var followers = {};
+		var unit = math.Vectors.Normalize;
+		var cross = math.Vectors.Cross;
 
 		asset.Skins.forEach(function (skin) {
 			skin.Joints.forEach(function (joint) {
@@ -1705,16 +1707,6 @@ Elemenx.Service('SceneModels', {
 			var r = times(times(q, [v[0], v[1], v[2], 0]), back(q));
 
 			return [r[0], r[1], r[2]];
-		}
-
-		function unit (v) {
-			var size = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1;
-
-			return [v[0] / size, v[1] / size, v[2] / size];
-		}
-
-		function cross (a, b) {
-			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 		}
 
 		/* The turn that takes a direction to another. */

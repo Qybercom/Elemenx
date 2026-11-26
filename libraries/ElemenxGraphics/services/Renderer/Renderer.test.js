@@ -416,6 +416,226 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		}
 	});
 
+	/*
+	 * Regression: past their patience the programs the card was still making were waited for in the frame (Progress asked
+	 * each), all at once, and on a card that makes them by itself too: the page froze 30 to 80 s, the ground's alone 21 s.
+	 */
+	it('waits for no program a card that makes them by itself still makes on a shown canvas; else for one at a time', function () {
+		var shown = document.createElement('canvas');
+		var source = ['#version 300 es\nin vec3 aPosition;\nvoid main() { gl_Position = vec4(aPosition, 1.0); }', '#version 300 es\nprecision highp float;\nout vec4 outColor;\nvoid main() { outColor = vec4(0.5); }'];
+		var made = [];
+
+		/* by: the card makes the first program by itself (true) or none (false). */
+		function renderer (canvas, by) {
+			var own = Elemenx.Service('Renderer').Create(canvas, {Antialias: false, Patient: true, Patience: 0});
+			var gl = own.GL;
+			var real = gl.getProgramParameter;
+			var parallel = gl.getExtension('KHR_parallel_shader_compile');
+			var one = {Renderer: own, Asked: 0, Parallel: parallel};
+
+			one.Programs = [own.Program(source[0], source[1]), own.Program(source[0], source[1].replace('0.5', '0.25')), own.Program(source[0], source[1].replace('0.5', '0.75'))];
+
+			/* LINK_STATUS asked is a wait for the card. */
+			gl.getProgramParameter = function (handle, name) {
+				if (parallel && name === parallel.COMPLETION_STATUS_KHR) return by && handle === one.Programs[0].Handle;
+
+				if (name === gl.LINK_STATUS)
+					one.Asked++;
+
+				return real.apply(this, arguments);
+			};
+
+			one.Programs.forEach(function (program) {
+				program.Settled = false;
+			});
+
+			made.push(one);
+
+			return one;
+		}
+
+		shown.style.cssText = 'width: 40px; height: 40px';
+
+		document.body.appendChild(shown);
+
+		try {
+			var by = renderer(shown, true);
+			var none = renderer(document.createElement('canvas'), false);
+
+			if (!by.Parallel) return;
+
+			/* Making them by itself, on a shown canvas: the one made settled, the others not waited for. */
+			expect(by.Renderer.Progress()).toEqual({Done: 1, Total: 3, Needed: 2});
+			expect(by.Renderer.Progress()).toEqual({Done: 1, Total: 3, Needed: 2});
+			expect(by.Asked).toBe(1);
+
+			/* Making none by itself: the first waited for, the others not in the same half second. */
+			expect(none.Renderer.Progress()).toEqual({Done: 1, Total: 3, Needed: 2});
+			expect(none.Asked).toBe(1);
+		}
+		finally {
+			made.forEach(function (one) {
+				one.Renderer.Destroy();
+			});
+
+			shown.remove();
+		}
+	});
+
+	/* Regression: the most slant of a texture was asked of the card for each texture made, a wait for it each time. */
+	it('asks the card the most slant of a texture once', function () {
+		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = own.GL;
+		var slant = gl.getExtension('EXT_texture_filter_anisotropic');
+		var real = gl.getParameter;
+		var asked = 0;
+		var i;
+
+		if (!slant) {
+			own.Destroy();
+
+			return;
+		}
+
+		gl.getParameter = function (name) {
+			if (name === slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
+				asked++;
+
+			return real.apply(this, arguments);
+		};
+
+		try {
+			for (i = 0; i < 3; i++)
+				own.Texture({Width: 4, Height: 4, Data: new Uint8Array(64)}, {Mipmaps: true});
+
+			expect(asked).toBe(1);
+		}
+		finally {
+			gl.getParameter = real;
+
+			own.Destroy();
+		}
+	});
+
+	/*
+	 * Regression: the copies of a list were sent to the card again for each mesh that draws them (its shape, its shapes of the
+	 * shadows, its lines), and where each attribute reads was told again at each upload: thousands of calls a frame.
+	 */
+	it('reads the copies of another mesh with Instance(data, count, from), and tells where an attribute reads once', function () {
+		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = own.GL;
+		var geometry = {Positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], Indices: [0, 1, 2]};
+		var data = {aInstance: {Size: 4, Data: new Float32Array([0, 0, 0, 1, 2, 0, 0, 1])}};
+		var shape = own.Mesh(geometry);
+		var shadow = own.Mesh(geometry);
+		var location = Elemenx.Service('Renderer').Locations.aInstance;
+		var calls = {bufferData: 0, bufferSubData: 0, vertexAttribPointer: 0};
+		var real = {};
+
+		Object.keys(calls).forEach(function (name) {
+			real[name] = gl[name];
+
+			gl[name] = function () {
+				calls[name]++;
+
+				return real[name].apply(this, arguments);
+			};
+		});
+
+		try {
+			shape.Instance(data, 2);
+			shadow.Instance(data, 2, shape);
+
+			/* Sent once, for the shape; the shadow reads its buffer. */
+			expect(calls.bufferData + calls.bufferSubData).toBe(1);
+
+			gl.bindVertexArray(shadow.VAO);
+
+			expect(gl.getVertexAttrib(location, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)).toBe(shape.Buffers.aInstance);
+			expect(gl.getVertexAttrib(location, gl.VERTEX_ATTRIB_ARRAY_DIVISOR)).toBe(1);
+
+			gl.bindVertexArray(null);
+
+			calls.vertexAttribPointer = 0;
+
+			/* Again: the numbers sent, where it reads not told again. */
+			shape.Instance(data, 2);
+			shadow.Instance(data, 2, shape);
+
+			expect(calls.bufferSubData).toBe(1);
+			expect(calls.vertexAttribPointer).toBe(0);
+			expect(shadow.Instances).toBe(2);
+		}
+		finally {
+			Object.keys(real).forEach(function (name) {
+				gl[name] = real[name];
+			});
+
+			own.Destroy();
+		}
+	});
+
+	/*
+	 * Regression: all the uniforms of a program were walked by name and compared for each draw, a hundred of them, the same for
+	 * all the draws of a pass. Over a set Shared marked, the set is put on a program once, then only what a draw gives itself.
+	 */
+	it('sets a Shared set on a program once, a draw its own over it, the set again where a draw gives none, and the set marked again', function () {
+		var own = Elemenx.Service('Renderer').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = own.GL;
+		var quad = own.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+		var program = own.Program('#version 300 es\nin vec3 aPosition;\nvoid main() { gl_Position = vec4(aPosition, 1.0); }', '#version 300 es\nprecision highp float;\nuniform vec4 uColor;\nuniform vec4 uTint;\nout vec4 outColor;\nvoid main() { outColor = uColor * uTint; }');
+		var shared = own.Shared({uColor: [1, 0, 0, 1], uTint: [1, 1, 1, 1]});
+		var set = gl.uniform4fv;
+		var calls = 0;
+		var pixel = new Uint8Array(4);
+
+		function draw (values) {
+			own.Resize(1, 1, 1);
+			own.Draw(quad, program, values, {Depth: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+			return Array.from(pixel);
+		}
+
+		gl.uniform4fv = function () {
+			calls++;
+
+			return set.apply(this, arguments);
+		};
+
+		try {
+			expect(draw(Object.create(shared))).toEqual([255, 0, 0, 255]);
+
+			calls = 0;
+
+			/* The set is on the program: a draw of nothing of its own sets nothing. */
+			expect(draw(Object.create(shared))).toEqual([255, 0, 0, 255]);
+			expect(calls).toBe(0);
+
+			/* Its own over the set, then a draw of none: the set's value back. */
+			expect(draw(Object.assign(Object.create(shared), {uColor: [0, 1, 0, 1]}))).toEqual([0, 255, 0, 255]);
+			expect(draw(Object.create(shared))).toEqual([255, 0, 0, 255]);
+
+			/* The set changed and marked again: what it holds now. */
+			shared.uTint = [0, 0, 1, 1];
+			shared.uColor = [1, 1, 1, 1];
+
+			own.Shared(shared);
+
+			expect(draw(Object.create(shared))).toEqual([0, 0, 255, 255]);
+
+			/* Values of no set: all of them, as before. */
+			expect(draw({uColor: [0, 1, 0, 1], uTint: [1, 1, 1, 1]})).toEqual([0, 255, 0, 255]);
+			expect(draw(Object.create(shared))).toEqual([0, 0, 255, 255]);
+		}
+		finally {
+			gl.uniform4fv = set;
+
+			own.Destroy();
+		}
+	});
+
 	it('makes a mesh of lines by its mode, and a mesh of the weights of the materials of a ground', function () {
 		var gl = renderer.GL;
 		var program = renderer.Program([

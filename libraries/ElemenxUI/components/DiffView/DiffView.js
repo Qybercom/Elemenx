@@ -36,7 +36,7 @@ Elemenx.Component('DiffView', {
 		var self = this;
 
 		function escape (text) {
-			return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			return self.$Service('Text').EscapeText(text);
 		}
 
 		/* A line as markup, its changed ranges marked. */

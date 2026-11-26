@@ -16,12 +16,14 @@
  * - Pack(made) a proxy made small to be kept (SceneCache): {Positions (Int16Array, of the box of the proxy), Box, Colors
  *   (Uint8Array, a quarter of a step a unit: colors up to 4, a lit window over 1), Triangles}, a quarter of its size; no
  *   normals. Unpack(packed) the proxy again, its normals of its faces (it is flat): what Merge gave, to a centimetre.
+ * - MergePacked(job): {Made, Packed}, what Merge gives and it packed, both made where it runs (a worker: the page packs
+ *   nothing to keep it).
  * - Work(): the pool of its workers, made once.
  */
 Elemenx.Service('SceneProxies', {
 	$Meta: {
 		Description: 'What stands far away as one simpler shape: the copies of a tile merged and snapped to a grid, small things as small bodies.',
-		Methods: ['Shape(geometry)', 'Merge(job)', 'Pack(made)', 'Unpack(packed)', 'Work()']
+		Methods: ['Shape(geometry)', 'Merge(job)', 'MergePacked(job)', 'Pack(made)', 'Unpack(packed)', 'Work()']
 	},
 
 	Work: function () {
@@ -173,6 +175,13 @@ Elemenx.Service('SceneProxies', {
 		}
 
 		return Object.assign(this.Faces(corners, faces, bodies), {Copies: copies});
+	},
+
+	/* Merged and packed where it runs. Regression: packed on the page as a worker gave the proxy, 6 % of a frame of a race. */
+	MergePacked: function (job) {
+		var made = this.Merge(job);
+
+		return {Made: made, Packed: this.Pack(made)};
 	},
 
 	Pack: function (made) {

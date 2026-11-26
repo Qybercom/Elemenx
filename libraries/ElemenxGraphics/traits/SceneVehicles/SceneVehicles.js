@@ -1087,7 +1087,7 @@ Elemenx.Trait('SceneVehicles', {
 		}
 
 		/* What is under a car: a road of the scene (SurfaceAt: its strip, a kerb, a junction), or the ground of the scene. */
-		function surfaceOf (settings) {
+		function surfaceOf (settings, hints) {
 			var field = scene.Ground.Field;
 			var air = scene.Ground.Air || {};
 			var roads = engine.Roads ? engine.Roads().length + engine.Junctions().length : 0;
@@ -1096,7 +1096,21 @@ Elemenx.Trait('SceneVehicles', {
 			var held = 1 - (1 - given(settings.WetGrip, 0.75)) * Math.max(0, Math.min(1, air.Wet || 0));
 
 			return function (x, z) {
-				var under = roads ? engine.SurfaceAt(x, z) : null;
+				/*
+				 * Where on each road its wheels were (hints): the points near looked at, not all. Regression: none kept, every
+				 * point of the track looked at for each wheel at each step.
+				 */
+				var under;
+
+				/* Put elsewhere (far from where its wheels were): the hints of a section it left let go. */
+				if (hints && hints.At && Math.abs(hints.At[0] - x) + Math.abs(hints.At[1] - z) > 50)
+					hints.length = 0;
+
+				if (hints)
+					hints.At = [x, z];
+
+				under = roads ? engine.SurfaceAt(x, z, hints) : null;
+
 				if (under && under.Road)
 					return {Height: under.Height, Grip: under.Grip * held, Drag: under.Drag, Surface: under.Surface};
 
@@ -1203,7 +1217,7 @@ Elemenx.Trait('SceneVehicles', {
 
 		function car (hero, keys, elapsed) {
 			var settings = hero.Values.Vehicle;
-			var surface = surfaceOf(settings);
+			var surface = surfaceOf(settings, hero.SurfaceHints = hero.SurfaceHints || []);
 			var state = hero.Car;
 			var field = scene.Ground.Field;
 			var long = given(settings.Long, given(settings.Base, 2.7) / 2 + 0.95);

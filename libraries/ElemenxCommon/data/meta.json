@@ -288,6 +288,25 @@
 			"Sample": {}
 		},
 		{
+			"Name": "Text",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The texts of markup: what goes into HTML, SVG or XML, escaped.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Escape(value)",
+				"EscapeText(value)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Formulas",
 			"Kind": "Service",
 			"Group": "",

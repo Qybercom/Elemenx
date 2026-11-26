@@ -64,7 +64,7 @@ Elemenx.Component('Diagram', {
 					}, 0);
 				}
 
-				return '<div class="elemenx-diagram-error">' + String(error.message).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</div>';
+				return '<div class="elemenx-diagram-error">' + self.$Service('Text').EscapeText(error.message) + '</div>';
 			}
 		};
 	},

@@ -24,6 +24,8 @@
 - grassy-soil — песчаная земля с пятнами травы и розетками сорняков: Cover (сколько травы, 0..1), Weeds, Pebbles;
 - asphalt — щебень заполнителя в тёмном вяжущем, мелкие поры, протёртые места, залитые трещины и пятна масла: Wear, Cracks, Stains.
 
+Bake возвращает null, пока видеокарта ещё собирает его программы (у рендера с Patient): его спрашивают снова в следующем кадре, ничего не ждёт; Array — null, пока не запечены все его плитки. Максимум анизотропии спрашивается у видеокарты один раз (SlantOf).
+
 ## Методы
 
 - `Define(name, recipe)`
@@ -39,10 +41,11 @@
 ## Тесты
 
 - [bakes a recipe into a tile that repeats with no seam, with mipmaps, once for the same params](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L51) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
-- [keeps the arrays of grounds asked in turn, and gives back the textures of one it lets go](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L103) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
-- [reads a tile the same from pixel to pixel where a pixel covers many tiles, and noises finer than a pixel as their mean](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L155) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
-- [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L203) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
-- [draws the materials of a ground that name a texture with their tiles, a layer each, bound to its land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L243) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [bakes no tile nor array till its programs are made, then bakes them](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L104) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [keeps the arrays of grounds asked in turn, and gives back the textures of one it lets go](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L144) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [reads a tile the same from pixel to pixel where a pixel covers many tiles, and noises finer than a pixel as their mean](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L196) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [shows a texture in TextureLab as a tile or a ground, a slider for each param, and tells change](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L244) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
+- [draws the materials of a ground that name a texture with their tiles, a layer each, bound to its land](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js#L284) — `libraries/ElemenxGraphics/services/SceneTextures/SceneTextures.test.js`
 - [defines the materials and the textures of their resources, one of an Application in the place of one of them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L967) — `tests/regression/blueprints.test.js`
 - [draws a road by the materials of its surfaces and the ground by its own, all of them compiled](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-roads.test.js#L114) — `tests/regression/library-scene-roads.test.js`
-- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2234) — `tests/regression/library-scene.test.js`
+- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L2334) — `tests/regression/library-scene.test.js`

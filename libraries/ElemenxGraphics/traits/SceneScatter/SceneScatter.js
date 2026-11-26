@@ -55,7 +55,7 @@ Elemenx.Trait('SceneScatter', {
 		var shaders = this.Grassed(this.Winded(this.ScatterShaders(graphics)));
 		var size = 48;
 		var steps = [[62, 74], [140, 165], [270, 310]];
-		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Facades: {}, Buildings: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null, Edits: {}, Places: {}, Tiles: {}, Chosen: [], Shapes: {}, Geometries: {}, Making: 0, Heights: {}};
+		var state = {Sown: Math.random().toString(36).slice(2, 8), Generation: 0, Running: 0, Flying: 0, Kept: {}, Houses: [], Settled: '', Surfaces: {}, Facades: {}, Buildings: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null, Edits: {}, Places: {}, Tiles: {}, Chosen: [], Shapes: {}, Geometries: {}, Making: 0, Heights: {}, Sizes: {}, Simpler: {}};
 
 		/*
 		 * The proxies of tiles (SceneProxies), as Voxy draws a far land: a tile is a square of 48 m times 2, 4, 8... of the
@@ -1135,20 +1135,23 @@ Elemenx.Trait('SceneScatter', {
 					return;
 				}
 
-				pool.Run('SceneProxies', 'Merge', [{Shapes: shapes, Lists: lists, Origin: tile.Origin, Cell: tile.Size / tiles.Cells}], function (error, result) {
+				var keep = self.CacheSize !== 0 && self.CacheSize !== '0';
+
+				/* Kept: packed in the worker too (MergePacked), nothing of it done on the page. */
+				pool.Run('SceneProxies', keep ? 'MergePacked' : 'Merge', [{Shapes: shapes, Lists: lists, Origin: tile.Origin, Cell: tile.Size / tiles.Cells}], function (error, result) {
 					if (generation !== state.Generation) return;
 
 					state.Making--;
 
 					if (error || !result) return;
 
-					made(result);
+					made(keep ? result.Made : result);
 
 					if (Number(self.CacheSize) > 0 && cache.Limit !== Number(self.CacheSize))
 						cache.SetLimit(Number(self.CacheSize));
 
-					if (self.CacheSize !== 0 && self.CacheSize !== '0')
-						cache.Put('proxies', key, self.$Service('SceneProxies').Pack(result));
+					if (keep)
+						cache.Put('proxies', key, result.Packed);
 				});
 			});
 		}
@@ -2078,17 +2081,67 @@ Elemenx.Trait('SceneScatter', {
 			gather(view);
 		};
 
-		/* The shadow a stream casts (reach: as far as its copies are drawn, [0, 0] all; the plants of a planet). */
-		function shadowStream (one, matrix, origin, reach) {
+		/* How large a model sown is, metres: across its shape at its own size (its copies a little larger or smaller). */
+		function sizeOf (key) {
+			var parts;
+
+			if (state.Sizes[key] === undefined) {
+				parts = key.split('~');
+				state.Sizes[key] = 2 * library.Bounds(state.Geometries[key] ? state.Geometries[key][0] : library.Whole(library.Make(parts[0], {Variant: Number(parts[1])}))).Radius;
+			}
+
+			return state.Sizes[key];
+		}
+
+		/*
+		 * A mesh of a simpler shape (geometry) reading the copies of another (from: the mesh of the level that holds them),
+		 * kept by a key; made again when its shape is another (the levels came from the worker).
+		 */
+		function simpler (key, geometry, from) {
+			var kept = state.Simpler[key];
+
+			if (!kept || kept.Geometry !== geometry) {
+				if (kept)
+					kept.Mesh.Destroy();
+
+				kept = state.Simpler[key] = {Geometry: geometry, Mesh: renderer.Mesh(geometry)};
+			}
+
+			/* Told again only when the copies are of another mesh or another count (each time: a stream made again for nothing). */
+			if (kept.From !== from || kept.Count !== from.Instances || kept.Mesh.Instances !== from.Instances) {
+				kept.Mesh.Instance({aInstance: {Size: 4}, aInstance2: {Size: 4}}, from.Instances, from);
+
+				kept.From = from;
+				kept.Count = from.Instances;
+			}
+
+			return kept.Mesh;
+		}
+
+		/*
+		 * The shadow a stream casts (reach: as far as its copies are drawn, [0, 0] all; the plants of a planet). coarse: a slice
+		 * past the nearest (ShadowScatter of the quality: {Simpler, Least}): what is smaller than Least metres casts none there,
+		 * the rest by the shape Simpler levels simpler, their copies those of their own level, the wind on them as it is.
+		 * Regression: a wood cast its finest shape into every slice of the shadow, 2.5 million triangles of 3.4 a frame.
+		 */
+		function shadowStream (one, matrix, origin, reach, coarse) {
+			var to = coarse && one.Level < 3 && !building(one.Key) ? Math.min(2, one.Level + (Number(coarse.Simpler) || 0)) : one.Level;
+
+			if (coarse && Number(coarse.Least) > 0 && sizeOf(one.Key) < Number(coarse.Least)) return;
+
 			/*
 			 * Of its pictures (a plant of SceneFlora): its surfaces cast it, its leaves by their alpha. Regression: the near
 			 * level of a model of a file cast no shadow, a plant of cards a shadow of plates or none.
 			 */
 			if (one.Level < 3 && textured(one.Key)) {
-				surfaces(one.Key, one.Level).forEach(function (each) {
-					var cut = engine.Surface(each).uCutoff > 0;
+				var own = surfaces(one.Key, one.Level);
+				var finer = to > one.Level ? surfaces(one.Key, to) : null;
 
-					renderer.Draw(each.Mesh, cut ? programs().DepthCut : programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway, uFade: fadeOf(one.Level, true), uLod: scene.Camera.Ortho ? 0 : lodScale() * detail(one.Key), uFlutter: cut ? flutter(library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway) : 0, uFlutterTime: scene.Seconds % 1000, uReach: reach}, cut ? engine.Surface(each) : null, self.WindValues(scene.Seconds)), {Cull: 'none'});
+				(finer && own.length ? finer : own).forEach(function (each, index) {
+					var cut = engine.Surface(each).uCutoff > 0;
+					var mesh = finer && own.length ? simpler(one.Key + '#' + one.Level + '>' + to + ':' + index, each.Geometry, own[0].Mesh) : each.Mesh;
+
+					renderer.Draw(mesh, cut ? programs().DepthCut : programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway, uFade: fadeOf(one.Level, true), uLod: scene.Camera.Ortho ? 0 : lodScale() * detail(one.Key), uFlutter: cut ? flutter(library.Make(one.Key.split('~')[0], {Variant: Number(one.Key.split('~')[1])}).Sway) : 0, uFlutterTime: scene.Seconds % 1000, uReach: reach}, cut ? engine.Surface(each) : null, self.WindValues(scene.Seconds)), {Cull: 'none'});
 				});
 
 				return;
@@ -2096,7 +2149,7 @@ Elemenx.Trait('SceneScatter', {
 
 			if (one.Level === 3 && !building(one.Key) || one.Level === 0 && surfaces(one.Key)) return;
 
-			renderer.Draw(levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale(), uReach: reach}, self.WindValues(scene.Seconds)), {Cull: 'none'});
+			renderer.Draw(to > one.Level ? simpler(one.Key + '#' + one.Level + '>' + to, state.Geometries[one.Key][to], levels(one.Key)[one.Level]) : levels(one.Key)[one.Level], programs().Depth, Object.assign({uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level), uLod: scene.Camera.Ortho ? 0 : lodScale(), uReach: reach}, self.WindValues(scene.Seconds)), {Cull: 'none'});
 		}
 
 		engine.ScatterShadow = function (matrix) {
@@ -2116,8 +2169,11 @@ Elemenx.Trait('SceneScatter', {
 			 * the next level had the copies of that level, and the trees near the eye cast no shadow where the levels do not
 			 * overlap (at ultra: farther apart).
 			 */
+			var set = self.Graphics().ShadowScatter;
+			var coarse = scene.ShadowSlice === 'far' && set && (Number(set.Simpler) > 0 || Number(set.Least) > 0) ? set : null;
+
 			each(function (one) {
-				shadowStream(one, matrix, origin, [0, 0]);
+				shadowStream(one, matrix, origin, [0, 0], coarse);
 			});
 		};
 
@@ -2158,6 +2214,7 @@ Elemenx.Trait('SceneScatter', {
 			});
 
 			state.VoxelMeshes = state.VoxelMeshes || {};
+			state.VoxelOf = state.VoxelOf || {};
 
 			Object.keys(made).forEach(function (name) {
 				var one = made[name];
@@ -2168,7 +2225,21 @@ Elemenx.Trait('SceneScatter', {
 				if (!bark)
 					levels(name);
 
-				state.VoxelMeshes[name] = state.VoxelMeshes[name] || renderer.Mesh(bark ? bark.Geometry : state.Geometries[name][1]);
+				/*
+				 * Its simplest level (a fifth of it a cell: a voxel is a metre), made again once the levels came from the worker.
+				 * Regression: made of the level of the moment, the whole shape till they came, and kept so: a wood laid 32 thousand
+				 * triangles a tree into the voxels, 1.8 million a frame as the eye went on.
+				 */
+				var geometry = bark ? bark.Geometry : state.Geometries[name][2];
+
+				if (state.VoxelMeshes[name] && state.VoxelOf[name] !== geometry) {
+					state.VoxelMeshes[name].Destroy();
+
+					delete state.VoxelMeshes[name];
+				}
+
+				state.VoxelOf[name] = geometry;
+				state.VoxelMeshes[name] = state.VoxelMeshes[name] || renderer.Mesh(geometry);
 
 				state.VoxelMeshes[name].Instance({aInstance: {Size: 4, Data: one.Places.subarray(0, one.Count * 4)}, aInstance2: {Size: 4, Data: one.Extra.subarray(0, one.Count * 4)}}, one.Count);
 			});
@@ -2573,51 +2644,77 @@ Elemenx.Trait('SceneScatter', {
 		};
 
 		/*
-		 * The lamps of the things sown round a point within reach (a street lamp, the window of a kiosk: the Lamps of their
-		 * models), where each thing stands, as large and turned as it is; made once a frame.
+		 * The lamps of the things of a square (a street lamp, the window of a kiosk: the Lamps of their models), where each
+		 * thing stands, as large and turned as it is: [{At, Lamp, Turn, Large, Seed}], made once for its lists (again only
+		 * while a model of them is not made yet).
+		 */
+		function squareLamps (square) {
+			var found = [];
+			var whole = true;
+
+			if (square.LampLists === square.Lists && square.LampList) return square.LampList;
+
+			Object.keys(square.Lists).forEach(function (name) {
+				var parts = name.split('~');
+				var list = square.Lists[name];
+				var made;
+				var i;
+
+				if (!library.Has(parts[0])) return;
+
+				made = library.Make(parts[0], {Variant: Number(parts[1]) || 0});
+
+				if (!made)
+					whole = false;
+
+				if (!made || !made.Lamps || !made.Lamps.length) return;
+
+				for (i = 0; i < list.Count; i++) {
+					var x = list.Places[i * 4];
+					var y = list.Places[i * 4 + 1];
+					var z = list.Places[i * 4 + 2];
+					var large = list.Places[i * 4 + 3];
+					var turn = list.Extra[i * 4];
+					var c = Math.cos(turn);
+					var s = Math.sin(turn);
+
+					made.Lamps.forEach(function (lamp) {
+						var p = lamp.Place;
+						var aim = lamp.Aim;
+
+						found.push({Place: [x, z], Lamp: {Object: {Seed: i}, Built: true, At: [x + (p[0] * c + p[2] * s) * large, y + p[1] * large, z + (-p[0] * s + p[2] * c) * large], Settings: {Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius * large, Spot: lamp.Spot, Aim: aim ? [aim[0] * c + aim[2] * s, aim[1], -aim[0] * s + aim[2] * c] : null, Night: lamp.Night}}});
+					});
+				}
+			});
+
+			if (whole) {
+				square.LampLists = square.Lists;
+				square.LampList = found;
+			}
+
+			return found;
+		}
+
+		/*
+		 * The lamps of the things sown round a point within reach, of the squares near it; laid out once a frame. Regression:
+		 * remade each frame (the time in its key), the models of all the squares made again for it: 6 % of a frame.
 		 */
 		engine.ScatterLamps = function (from, reach) {
 			var lamps = [];
-			var key = scene.Seconds + ':' + from.join(',') + ':' + reach + ':' + state.Squares.length;
-			if (state.LampKey === key) return state.Lamps;
+			var key = from.join(',') + ':' + reach + ':' + state.Squares.length;
+			if (state.LampKey === key && state.LampSeconds === scene.Seconds) return state.Lamps;
 
 			state.Squares.forEach(function (square) {
 				if (square.X > from[0] + reach || square.Z > from[2] + reach || square.X + size < from[0] - reach || square.Z + size < from[2] - reach) return;
 
-				Object.keys(square.Lists).forEach(function (name) {
-					var parts = name.split('~');
-					var list = square.Lists[name];
-					var made;
-					var i;
-
-					if (!library.Has(parts[0])) return;
-
-					made = library.Make(parts[0], {Variant: Number(parts[1]) || 0});
-
-					if (!made || !made.Lamps || !made.Lamps.length) return;
-
-					for (i = 0; i < list.Count; i++) {
-						var x = list.Places[i * 4];
-						var y = list.Places[i * 4 + 1];
-						var z = list.Places[i * 4 + 2];
-						var large = list.Places[i * 4 + 3];
-						var turn = list.Extra[i * 4];
-						var c = Math.cos(turn);
-						var s = Math.sin(turn);
-
-						if (Math.abs(x - from[0]) > reach || Math.abs(z - from[2]) > reach) continue;
-
-						made.Lamps.forEach(function (lamp) {
-							var p = lamp.Place;
-							var aim = lamp.Aim;
-
-							lamps.push({Object: {Seed: i}, Built: true, At: [x + (p[0] * c + p[2] * s) * large, y + p[1] * large, z + (-p[0] * s + p[2] * c) * large], Settings: {Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius * large, Spot: lamp.Spot, Aim: aim ? [aim[0] * c + aim[2] * s, aim[1], -aim[0] * s + aim[2] * c] : null, Night: lamp.Night}});
-						});
-					}
+				squareLamps(square).forEach(function (one) {
+					if (Math.abs(one.Place[0] - from[0]) <= reach && Math.abs(one.Place[1] - from[2]) <= reach)
+						lamps.push(one.Lamp);
 				});
 			});
 
 			state.LampKey = key;
+			state.LampSeconds = scene.Seconds;
 			state.Lamps = lamps;
 
 			return lamps;

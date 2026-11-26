@@ -315,8 +315,9 @@ Elemenx.Trait('SceneRoadNetwork', {
 			return state.Interchanges;
 		};
 
-		engine.SurfaceAt = function (x, z) {
-			var under = roads.Under(state.Made, x, z);
+		/* hints: a list a caller keeps of where on each road it was (a car: its wheels), so only the points near are looked at. */
+		engine.SurfaceAt = function (x, z, hints) {
+			var under = roads.Under(state.Made, x, z, hints);
 			var junction = under ? null : roads.JunctionAt(state.Junctions, x, z);
 			var field = scene.Ground && scene.Ground.Field;
 			var surface;

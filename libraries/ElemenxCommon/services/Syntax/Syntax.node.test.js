@@ -5,18 +5,26 @@ import vm from 'vm';
 
 var syntax;
 
-/* The Syntax Service of ElemenxCommon, run outside a page: its definition with $OnCreate called, as Elemenx would. */
+/* The Syntax Service of ElemenxCommon, run outside a page: its definition with $OnCreate called, as Elemenx would, and the Text Service it escapes by. */
 function load () {
-	var definition = null;
+	var definitions = {};
 	var context = {
 		Elemenx: {
 			Service: function (name, value) {
-				definition = value;
+				definitions[name] = value;
 			}
 		}
 	};
+	var definition;
 
-	vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxCommon', 'services', 'Syntax', 'Syntax.js'), 'utf8'), context);
+	['Syntax', 'Text'].forEach(function (name) {
+		vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxCommon', 'services', name, name + '.js'), 'utf8'), context);
+	});
+
+	definition = definitions.Syntax;
+	definition.$Service = function (name) {
+		return definitions[name];
+	};
 
 	definition.$OnCreate.call(definition);
 
