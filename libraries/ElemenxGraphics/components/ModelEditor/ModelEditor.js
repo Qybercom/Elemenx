@@ -35,6 +35,8 @@
 Elemenx.Component('ModelEditor', {
 	$TemplateURL: 'ModelEditor.html',
 	$StyleURL: 'ModelEditor.css',
+	/* The graphs of the models of the library (lazy in ElemenxGraphics): here before it is made. */
+	$Needs: {Blueprints: ['ElemenxGraphics/models/*']},
 	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',

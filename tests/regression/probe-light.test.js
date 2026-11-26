@@ -178,6 +178,206 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 		await settled(scene);
 	}, 120000);
 
+	/*
+	 * Regression: the voxels took the colors of the corners of what stood, cut to 0.85: what glows (a color over 1) was a
+	 * dull voxel and lit nothing round it, a model of a file (white corners) was white. Now what glows is laid glowing (alpha
+	 * under 1), and its faces give its light to the probes.
+	 */
+	it('lays what glows glowing, so its faces give its light', async function () {
+		var scene = await mount();
+		var field = scene.Scene().Ground.Field;
+		var voxels;
+		var glowing = 0;
+		var x;
+		var y;
+		var z;
+
+		/* A block of 3 m that glows (a color over 1), wider than a voxel: what is thinner than one (the flame of a torch) is not laid. */
+		Elemenx.Service('SceneModels').Define('probe-glow', {Parts: [{ID: 'glow', Shape: 'box', At: [0, 0.5, 0], Size: [1, 1, 1], Color: [4, 2, 1]}]});
+
+		scene.Add({ID: 'probe-torch', Kind: 'thing', Values: {Model: 'probe-glow', Size: 3, X: 5, Y: 5}});
+
+		try {
+			for (x = 0; x < 100; x++) {
+				frames(scene, 1);
+
+				await new Promise(function (done) {
+					setTimeout(done, 5);
+				});
+			}
+
+			await settled(scene);
+
+			voxels = scene.Engine().VoxelsRead();
+
+			for (y = 0; y < 32; y++) {
+				for (x = 0; x < 64; x++) {
+					for (z = 0; z < 64; z++) {
+						var place = [voxels.Corner[0] + x + 0.5, voxels.Corner[1] + y + 0.5, voxels.Corner[2] + z + 0.5];
+						var texel = (Math.floor(y / 8) * 64 + z) * 512 + (y % 8) * 64 + x;
+						var alpha = voxels.Data[texel * 4 + 3];
+						if (Math.hypot(place[0] - 5, place[2] - 5) < 2 && place[1] > field.Height(5, 5) + 1 && alpha > 127 && alpha < 245)
+							glowing++;
+					}
+				}
+			}
+
+			expect(glowing).toBeGreaterThan(0);
+		}
+		finally {
+			scene.Remove('probe-torch');
+
+			frames(scene, 2);
+
+			await settled(scene);
+		}
+	}, 120000);
+
+	/*
+	 * Regression: a model of a file has its color in the picture of its material: of the colors of its corners and its tint
+	 * alone, it was laid white, and lit the ground round it white.
+	 */
+	it('lays a model of a file in the color of the picture of its material', async function () {
+		var scene = await mount();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var gl = renderer.GL;
+		var draw = renderer.Draw;
+		var shaders = scene.Shaders(Elemenx.Service('Renderer'));
+		var program = renderer.Program([
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'out vec3 vColor;',
+			'out vec2 vUV;',
+			'out vec3 vTint;',
+			'void main() { vColor = vec3(1.0); vUV = vec2(0.5); vTint = vec3(1.0); gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n'), shaders.VoxelSurface);
+		var picture = document.createElement('canvas');
+		var target = renderer.Target(1, 1, {});
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+		var pixel = new Uint8Array(4);
+		var surfaced = [];
+		var red;
+
+		/* What the voxels of a model of a material are drawn with: as it says, its picture among it. */
+		renderer.Draw = function (mesh, given, uniforms, options) {
+			if (uniforms && uniforms.uSurfaceOn !== undefined && options && options.Depth === false)
+				surfaced.push(uniforms.uSurfaceOn === 1 ? !!uniforms.uColorMap && !!uniforms.uBaseColor : uniforms.uColorMap === undefined);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			/* One square more: the grid is laid again. */
+			scene.Scene().Ground.Nodes['test:square'] = scene.Scene().Ground.Nodes[Object.keys(scene.Scene().Ground.Nodes)[0]];
+
+			frames(scene, 1);
+
+			delete scene.Scene().Ground.Nodes['test:square'];
+
+			for (var i = 0; i < 200 && !surfaced.length; i++) {
+				frames(scene, 1);
+
+				await new Promise(function (done) {
+					setTimeout(done, 2);
+				});
+			}
+		}
+		finally {
+			renderer.Draw = draw;
+		}
+
+		/* The grid laid again of what stands as it was, before the next test. */
+		await settled(scene);
+
+		frames(scene, 2);
+
+		await settled(scene);
+
+		expect(surfaced.length).toBeGreaterThan(0);
+		expect(surfaced.every(Boolean)).toBe(true);
+
+		/* Its picture red, its color white, the colors of its corners white: laid red. */
+		picture.width = 4;
+		picture.height = 4;
+		picture.getContext('2d').fillStyle = 'rgb(220, 12, 12)';
+
+		picture.getContext('2d').fillRect(0, 0, 4, 4);
+
+		red = renderer.Texture(picture, {Srgb: true, Mipmaps: true, Repeat: true});
+
+		function laid (on) {
+			target.Begin();
+
+			renderer.Draw(quad, program, {uSurfaceOn: on, uBaseColor: [1, 1, 1, 1], uColorMap: red, uEmissive: [0, 0, 0], uEmissiveMap: red}, {Depth: false, Cull: 'none'});
+
+			gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+			target.End();
+
+			return Array.from(pixel);
+		}
+
+		expect(laid(1)[0]).toBeGreaterThan(laid(1)[1] * 4);
+		expect(laid(1)[3]).toBe(255);
+		/* Of the colors of its corners alone (as it was): white. */
+		expect(laid(0)[1]).toBeGreaterThan(200);
+	}, 120000);
+
+	/*
+	 * Regression: each square of the ground near the eye was drawn into each of the 160 slabs of the grid (200 draws more a
+	 * frame while it was laid, the frame twice as long). Now a square is drawn only into the slabs it reaches into.
+	 */
+	it('draws a square of the ground only into the slabs of the grid it reaches into', async function () {
+		var scene = await mount();
+		var ground = scene.Scene().Ground;
+		var engine = scene.Engine();
+		var draw = engine.Renderer.Draw;
+		var near;
+		var drawn = 0;
+		var i;
+
+		await settled(scene);
+
+		near = Object.keys(ground.Nodes).filter(function (key) {
+			var node = ground.Nodes[key];
+
+			return node.Used === ground.Frame && node.Mesh && Math.hypot(node.Center[0] - scene.Scene().Eye[0], node.Center[1] - scene.Scene().Eye[1], node.Center[2] - scene.Scene().Eye[2]) <= 120;
+		}).length;
+
+		engine.Renderer.Draw = function (mesh, program, uniforms, options) {
+			if (uniforms && uniforms.uOffset && options && options.Depth === false)
+				drawn++;
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			/* One square more: the grid is laid again, all its 160 slabs. */
+			ground.Nodes['test:square'] = ground.Nodes[Object.keys(ground.Nodes)[0]];
+
+			frames(scene, 1);
+
+			delete ground.Nodes['test:square'];
+
+			for (i = 0; i < 200 && scene.Engine().ProbesRead().Laying; i++) {
+				frames(scene, 1);
+
+				await new Promise(function (done) {
+					setTimeout(done, 2);
+				});
+			}
+		}
+		finally {
+			engine.Renderer.Draw = draw;
+		}
+
+		expect(scene.Engine().ProbesRead().Laying).toBe(false);
+		expect(near).toBeGreaterThan(2);
+		expect(drawn).toBeGreaterThan(0);
+		expect(drawn).toBeLessThan(near * 160 * 0.5);
+	}, 120000);
+
 	it('gathers less light in the hollow of the culvert than in the open beside it, and none of its probes stays in a wall', async function () {
 		var scene = await mount();
 		var read;
@@ -196,6 +396,48 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 		expect(inside.Walled).toBeLessThan(0.3);
 		expect(open.Light).toBeGreaterThan(0.2);
 		expect(inside.Light).toBeLessThan(open.Light * 0.35);
+	}, 120000);
+
+	/*
+	 * Regression: the grid had only the surfaces, and what was under the ground was air to it: the probes under it (in the
+	 * rock over a tunnel) saw the sky through the rock, and what hung from the roof of a tunnel shone white. Where the ground
+	 * is rock its voxels are solid now (SceneTerrainGenerator.Rock, of the workers), and a probe there is in a wall.
+	 */
+	it('takes what is under the ground for rock: its voxels solid, a probe there in a wall, with no sky', async function () {
+		var scene = await mount();
+		var field = scene.Scene().Ground.Field;
+		var voxels;
+		var read;
+		var under;
+		var y;
+
+		frames(scene, 20);
+
+		await settled(scene);
+
+		frames(scene, 40);
+
+		voxels = scene.Engine().VoxelsRead();
+		read = scene.Engine().ProbesRead();
+
+		function solid (x, yy, z) {
+			var texel = (Math.floor(yy / 8) * 64 + z) * 512 + (yy % 8) * 64 + x;
+
+			return voxels.Data[texel * 4 + 3] > 127;
+		}
+
+		/* The column at x 10, z 10: every voxel from the floor of the grid to the ground solid. */
+		y = Math.floor(field.Height(10, 10) - voxels.Corner[1]);
+
+		expect(y).toBeGreaterThan(4);
+		expect(Array.from({length: y}, function (unused, index) {
+			return solid(10 - voxels.Corner[0], index, 10 - voxels.Corner[2]);
+		}).every(Boolean)).toBe(true);
+
+		under = probeAt(read, [10, field.Height(10, 10) - 4, 10]);
+
+		expect(under.At[1]).toBeLessThan(field.Height(10, 10) - 2);
+		expect(under.Walled).toBeGreaterThan(0.3);
 	}, 120000);
 
 	/*
@@ -308,6 +550,12 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 		['Pbr', 'Solid', 'Land'].forEach(function (name) {
 			expect(shaders[name]).not.toContain('outNormal');
 		});
+		/*
+		 * Regression: a metal deep in a cave mirrored the whole sky (only the rooms of a ship darkened it). Now it mirrors the
+		 * sky as much as the light round it is of the light of the open there.
+		 */
+		expect(shaders.Pbr).toContain('vec3 mirrored = skyLight(reflected, roughness, uSkyLight, uFloorLight, uSkySun, 1.25) * skySeenHere;');
+		expect(shaders.Pbr).toContain('float skySeenHere = clamp(dot(around, vec3(0.3, 0.59, 0.11)) / max(dot(skyAround * skySeen(vWorld) + sunBounce(vWorld)');
 		expect(shaders.Normal).toContain('outColor = vec4(normalize(vNormal), 1.0);');
 		expect(shaders.Pbr).toContain('fresnel * mirrored * screened');
 
@@ -348,6 +596,50 @@ describe('Contract: the light that bounces, of probes round the eye, on high and
 		finally {
 			engine.Renderer.Draw = draw;
 			scene.Scene().Tuned = null;
+			scene.Quality = 'ultra';
+		}
+	}, 120000);
+
+	/*
+	 * Regression: on medium (a phone, most of them) nothing bounced: what stood in the shade was as grey all round. The light
+	 * of the field (a map of the whole ground: what it bounces, how much of the sky each place sees) is on medium too.
+	 */
+	it('gives each surface the light of the field on medium and low too', async function () {
+		var scene = await mount();
+		var engine = scene.Engine();
+		var draw = engine.Renderer.Draw;
+		var seen = [];
+		var i;
+
+		engine.Renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uGlowOn !== undefined && uniforms.uViewProjection)
+				seen.push(uniforms.uGlowOn);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			for (var quality of ['medium', 'low']) {
+				scene.Quality = quality;
+				seen = [];
+
+				for (i = 0; i < 300 && seen.indexOf(1) < 0; i++) {
+					seen = [];
+
+					frames(scene, 1);
+
+					await new Promise(function (done) {
+						setTimeout(done, 2);
+					});
+				}
+
+				expect(scene.Graphics(), quality).toMatchObject({Field: true});
+				expect(scene.Graphics().Probes, quality).toBeUndefined();
+				expect(seen.indexOf(1), quality).toBeGreaterThanOrEqual(0);
+			}
+		}
+		finally {
+			engine.Renderer.Draw = draw;
 			scene.Quality = 'ultra';
 		}
 	}, 120000);

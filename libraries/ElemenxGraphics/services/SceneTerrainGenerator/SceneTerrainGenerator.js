@@ -35,8 +35,8 @@
  *   of a game, trigger an area, triggerpoint a circle, triggerline a line (Height, Team, Kinds, Once, Blueprint), and the
  *   area zone (Tags, Team), objects of the scene of a Scene (the trait Triggers); and what cuts its volume (SketchCarves): the
  *   line cave (Width, Depth, Rough, Mouth), the circles hall (Radius, Depth) and overhang (Radius, Amount). Sketched(sketch, base,
- *   seed) makes one ({Height(x, z, h), Look(x, z), Waters(), Items}: Waters the rivers, a strip at their levels, and the
- *   lakes); SketchChanged(before, after) gives the bounds [x0, z0, x1, z1] where two differ, for a ground made again only there.
+ *   seed) makes one ({Height(x, z, h), Look(x, z), Waters(), Items, Within(x0, z0, x1, z1)}: Waters the rivers, a strip at
+ *   their levels, and the lakes; Within the box of the points asked next, whose items alone a point in it looks at, null: all); SketchChanged(before, after) gives the bounds [x0, z0, x1, z1] where two differ, for a ground made again only there.
  * - Sphere(options) returns the ground of a planet, the very one its baked surface shows: its land the land of the
  *   graph the shader of a Scene bakes it of (blueprints/shader/bake, what comes to its block BakeLand) made code in
  *   the page (BakeRun, BakeMake(graph), BakeCodeOf(graph); given to the workers by ShareGround): options Radius (units),
@@ -56,6 +56,7 @@
  *   made of the density (Volumetric, surface nets), and it is walked as a place of floors (Underground: Height(x, z, y),
  *   Blocked, CanStep, Stands), as a location is. Daylight(field, x0, z0, x1, z1, low, options): how much of the light of
  *   the sky comes to each point under it round a square (At(x, y, z, normal), 0 to 1), the same in every square.
+ *   Rock(field, args): where a box of it is rock, a byte a voxel of a metre (the grid of the light of probes).
  * - Work(): the workers of the ground (Workers.Pool), that run Piece and Grid off the main thread.
  * - Piece(shape, options, roads, args): a square of a ground of a shape (Flat or Sphere) of its options, as a worker
  *   makes it: of Flat, args [x, z, size, resolution] and the geometry of Chunk; of Sphere, args [face, u, v, size,
@@ -94,7 +95,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)', 'ReliefWasm(settings, plain)', 'WasmRun(made, input, count)', 'WasmExports(made)', 'PlainRelief(settings)', 'ShareGround(pool, options, made)', 'SketchDefaults(type)', 'SketchRun(type, own)', 'SketchMake(type, graph)', 'CarveRun(type, own)', 'CarveMake(type, graph)', 'GraphCodeOf(graphs)', 'SketchCodeOf(type, graph)', 'CarveCodeOf(type, graph)', 'BakeRun(own)', 'BakeMake(graph)', 'BakeCodeOf(graph)', 'OwnRun(code)', 'WasmShare(pool, key)']
+		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'Rock(field, args)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)', 'ReliefWasm(settings, plain)', 'WasmRun(made, input, count)', 'WasmExports(made)', 'PlainRelief(settings)', 'ShareGround(pool, options, made)', 'SketchDefaults(type)', 'SketchRun(type, own)', 'SketchMake(type, graph)', 'CarveRun(type, own)', 'CarveMake(type, graph)', 'GraphCodeOf(graphs)', 'SketchCodeOf(type, graph)', 'CarveCodeOf(type, graph)', 'BakeRun(own)', 'BakeMake(graph)', 'BakeCodeOf(graph)', 'OwnRun(code)', 'WasmShare(pool, key)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -694,7 +695,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 				return !(given.Blocked && given.Blocked(x, z));
 			},
 
-			/* The heights of a square of side by side points from x, z, step apart, made at once (by wasm); null: none kept. */
+			/*
+			 * The heights of a square of side by side points from x, z, step apart, made at once (by wasm); null: none kept. Its
+			 * sketch looks at the items over the square alone (Within), its normals' points too.
+			 */
 			Prefetch: function (x, z, step, side) {
 				var d = Math.max(0.5, scale / 200);
 				var input;
@@ -704,6 +708,9 @@ Elemenx.Service('SceneTerrainGenerator', {
 				var at = 0;
 
 				store = null;
+
+				if (field.Sketch)
+					field.Sketch.Within(x === null ? null : x - d, x === null ? null : z - d, x === null ? null : x + (side - 1) * step + d, x === null ? null : z + (side - 1) * step + d);
 
 				if (x === null || !wasm) return field;
 
@@ -3777,8 +3784,37 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return made.Main.apply(null, args);
 		}
 
+		/*
+		 * The items whose bounds touch a box (Within: the square of the ground being made), in their order, and the box: a point
+		 * in it looks at them alone, any other at all. Regression: each point of a square looked at all the items of the sketch
+		 * (119 in the world of the showcase, 2 of them over a square of 47 m), five times a vertex: half the time of the square.
+		 */
+		var near = null;
+		var box = null;
+
+		function listOf (x, z) {
+			return near && x >= box[0] && z >= box[1] && x <= box[2] && z <= box[3] ? near : items;
+		}
+
 		return {
 			Items: items,
+
+			/* Of a box [x0, z0, x1, z1] of the points asked next, the items that may change them; null: all again. */
+			Within: function (x0, z0, x1, z1) {
+				if (x0 === null || x0 === undefined) {
+					near = null;
+					box = null;
+
+					return;
+				}
+
+				box = [x0, z0, x1, z1];
+				near = items.filter(function (made) {
+					var b = made.Bounds;
+
+					return !(x1 < b[0] || z1 < b[1] || x0 > b[2] || z0 > b[3]);
+				});
+			},
 
 			/* The plans of its settlements (SettlementPlan), in the order of the sketch. */
 			Settlements: function () {
@@ -3809,10 +3845,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 			Height: function (x, z, h) {
 				var guard = 0;
+				var list = listOf(x, z);
 				var i;
 
-				for (i = 0; i < items.length; i++) {
-					var made = items[i];
+				for (i = 0; i < list.length; i++) {
+					var made = list[i];
 					var b = made.Bounds;
 					var w;
 					var frozen;
@@ -3843,10 +3880,11 @@ Elemenx.Service('SceneTerrainGenerator', {
 			/* The colors of a point: the palette of the last biome over it, and the color of what lies there (a road, a beach). */
 			Look: function (x, z) {
 				var look = null;
+				var list = listOf(x, z);
 				var i;
 
-				for (i = 0; i < items.length; i++) {
-					var made = items[i];
+				for (i = 0; i < list.length; i++) {
+					var made = list[i];
 					var b = made.Bounds;
 					var item = made.Item;
 					var w = 0;
@@ -5063,7 +5101,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 		if (typeof roads === 'string')
 			roads = this.$Shared(roads);
 
-		field = this.Field(shape === 'SpherePicture' || shape === 'SphereThings' ? 'Sphere' : shape === 'Daylight' ? 'Flat' : shape, options, named);
+		field = this.Field(shape === 'SpherePicture' || shape === 'SphereThings' ? 'Sphere' : shape === 'Daylight' || shape === 'Rock' ? 'Flat' : shape, options, named);
 
 		var made;
 
@@ -5108,6 +5146,10 @@ Elemenx.Service('SceneTerrainGenerator', {
 			return {Data: data, Width: args[3] * args[4], Height: args[5]};
 		}
 
+		/* Where a box of the ground is rock, a voxel of a metre a byte (Rock). */
+		if (shape === 'Rock')
+			return this.Rock(field, args);
+
 		/* The picture of a square of a globe alone (a face made at once, its picture after). */
 		if (shape === 'SpherePicture')
 			return {Picture: field.Picture ? field.Picture(args[0], args[1], args[2], args[3], args[4]) : null};
@@ -5115,6 +5157,42 @@ Elemenx.Service('SceneTerrainGenerator', {
 		field.Roads = roads || null;
 
 		return typed(field.Chunk(args[0], args[1], args[2], args[3]));
+	},
+
+	/*
+	 * Where a box of a field is rock, args [x, y, z of its first corner, nx, ny, nz], voxels of a metre: a byte each (255 rock,
+	 * 0 air), by the middle of the voxel; the layers of y 8 a row, each nx by nz, x along a row, z down ({Data, Width,
+	 * Height}): the grid of the light of probes (SceneProbes), which draws only the surfaces and took what is under the
+	 * ground for air. Under its height rock; where a carve (a cave, a tunnel) may change the density, of the density.
+	 */
+	Rock: function (field, args) {
+		var volume = field.Volume;
+		var nx = args[3];
+		var ny = args[4];
+		var nz = args[5];
+		var width = nx * 8;
+		var data = new Uint8Array(width * nz * Math.ceil(ny / 8));
+		var i;
+		var j;
+		var k;
+
+		for (k = 0; k < nz; k++) {
+			for (i = 0; i < nx; i++) {
+				var x = args[0] + i + 0.5;
+				var z = args[2] + k + 0.5;
+				var top = volume ? volume.Ground(x, z) : field.Height(x, z);
+				var span = volume ? volume.Span(x, z, top, 1, true) : null;
+
+				for (j = 0; j < ny; j++) {
+					var y = args[1] + j + 0.5;
+					var rock = span && y >= span[0] - 1 && y <= span[1] + 1 ? volume.Density(x, y, z) > 0 : y < top;
+					if (rock)
+						data[(Math.floor(j / 8) * nz + k) * width + (j % 8) * nx + i] = 255;
+				}
+			}
+		}
+
+		return {Data: data, Width: width, Height: nz * Math.ceil(ny / 8)};
 	},
 
 	/*

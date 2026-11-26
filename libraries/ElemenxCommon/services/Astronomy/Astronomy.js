@@ -31,12 +31,22 @@
  * - Blackbody(temperature): the colour of a body as hot (kelvins, 1000 to 40000), [r, g, b] of about 0 to 255, not
  *   clamped: of a star, of a lamp.
  * - Kinds: the kinds of planets of resources/astronomy/kinds.json, and those an application adds.
- * The same functions run in Node: they read no page.
+ * The same functions run in Node: they read no page. Their sin, cos, pow and log are of Math(), the own ones of Elemenx
+ * (docs/UNIVERSE-FORMAT.md): a seed makes the very same system everywhere.
  */
 Elemenx.Service('Astronomy', {
 	$Meta: {
 		Description: 'The numbers of a star system: Kepler orbits, stars and planets, their warmth, and whole systems of a seed.',
 		Methods: ['Length(value)', 'Period(distance, mass)', 'Position(orbit, time, mass)', 'Path(orbit, count)', 'Star(star)', 'Describe(body, context)', 'Color(temperature)', 'Generate(seed, options)', 'Blackbody(temperature)']
+	},
+
+	/*
+	 * The functions of Math its numbers are made by (sin, cos, exp, log, pow...): the own ones of the compiled code
+	 * (Elemenx.Compilers.Math), the very same in any browser, in Node and in another language after docs/UNIVERSE-FORMAT.md,
+	 * so a seed makes the same stars everywhere; the browser's where there is none (a worker).
+	 */
+	Math: function () {
+		return typeof Elemenx !== 'undefined' && Elemenx.Compilers && Elemenx.Compilers.Math ? Elemenx.Compilers.Math() : Math;
 	},
 
 	Units: {km: 1 / 149597870.7, mkm: 1e6 / 149597870.7, au: 1, ly: 63241.077, pc: 206264.806},
@@ -76,12 +86,13 @@ Elemenx.Service('Astronomy', {
 
 	/* The eccentric anomaly of a mean one (radians): the equation of Kepler, M = E - e sin E, by Newton. */
 	Eccentric: function (mean, e) {
+		var math = this.Math();
 		var E = e < 0.8 ? mean : Math.PI;
 		var step = 0;
 		var delta;
 
 		while (step < 30) {
-			delta = (E - e * Math.sin(E) - mean) / (1 - e * Math.cos(E));
+			delta = (E - e * math.sin(E) - mean) / (1 - e * math.cos(E));
 			E -= delta;
 
 			if (Math.abs(delta) < 1e-12) break;
@@ -94,16 +105,17 @@ Elemenx.Service('Astronomy', {
 
 	/* An orbit turned from its own plane to the one of the ecliptic: x along the periapsis, y ahead of it. */
 	Turn: function (orbit, x, y) {
+		var math = this.Math();
 		var rad = Math.PI / 180;
 		var i = (Number(orbit.Inclination) || 0) * rad;
 		var node = (Number(orbit.Node) || 0) * rad;
 		var w = (Number(orbit.Periapsis) || 0) * rad;
-		var cn = Math.cos(node);
-		var sn = Math.sin(node);
-		var cw = Math.cos(w);
-		var sw = Math.sin(w);
-		var ci = Math.cos(i);
-		var si = Math.sin(i);
+		var cn = math.cos(node);
+		var sn = math.sin(node);
+		var cw = math.cos(w);
+		var sw = math.sin(w);
+		var ci = math.cos(i);
+		var si = math.sin(i);
 
 		return [
 			(cn * cw - sn * sw * ci) * x + (-cn * sw - sn * cw * ci) * y,
@@ -113,6 +125,7 @@ Elemenx.Service('Astronomy', {
 	},
 
 	Position: function (orbit, time, mass) {
+		var math = this.Math();
 		var a = this.Length(orbit && orbit.Distance);
 		var e = Math.min(0.99, Math.max(0, Number(orbit && orbit.Eccentricity) || 0));
 		var period = Number(orbit && orbit.Period) || this.Period(a, mass);
@@ -125,10 +138,11 @@ Elemenx.Service('Astronomy', {
 		mean = ((Number(orbit.Anomaly) || 0) * Math.PI / 180 + Math.PI * 2 * (Number(time) || 0) / period) % (Math.PI * 2);
 		E = this.Eccentric(mean, e);
 
-		return this.Turn(orbit, a * (Math.cos(E) - e), a * Math.sqrt(1 - e * e) * Math.sin(E));
+		return this.Turn(orbit, a * (math.cos(E) - e), a * Math.sqrt(1 - e * e) * math.sin(E));
 	},
 
 	Path: function (orbit, count) {
+		var math = this.Math();
 		var a = this.Length(orbit && orbit.Distance);
 		var e = Math.min(0.99, Math.max(0, Number(orbit && orbit.Eccentricity) || 0));
 		var total = Math.max(8, count || 128);
@@ -139,7 +153,7 @@ Elemenx.Service('Astronomy', {
 		for (i = 0; i < total; i++) {
 			E = i / total * Math.PI * 2;
 
-			points.push(this.Turn(orbit, a * (Math.cos(E) - e), a * Math.sqrt(1 - e * e) * Math.sin(E)));
+			points.push(this.Turn(orbit, a * (math.cos(E) - e), a * Math.sqrt(1 - e * e) * math.sin(E)));
 		}
 
 		return points;
@@ -149,24 +163,25 @@ Elemenx.Service('Astronomy', {
 	Types: ['main', 'giant', 'supergiant', 'white-dwarf', 'neutron', 'pulsar', 'magnetar', 'brown-dwarf'],
 
 	Star: function (star) {
+		var math = this.Math();
 		var given = star || {};
 		var type = this.Types.indexOf(given.Type) !== -1 ? given.Type : 'main';
 		var mass = Number(given.Mass) || 1;
 		var compact = type === 'neutron' || type === 'pulsar' || type === 'magnetar';
-		var radius = Number(given.Radius) || (type === 'white-dwarf' ? 0.0126 * Math.pow(mass, -1 / 3) : compact ? 1.4e-5 : type === 'brown-dwarf' ? 0.1 : type === 'giant' ? 20 * Math.sqrt(mass) : type === 'supergiant' ? 400 * Math.sqrt(mass / 15) : mass < 1 ? Math.pow(mass, 0.8) : Math.pow(mass, 0.57));
+		var radius = Number(given.Radius) || (type === 'white-dwarf' ? 0.0126 * math.pow(mass, -1 / 3) : compact ? 1.4e-5 : type === 'brown-dwarf' ? 0.1 : type === 'giant' ? 20 * Math.sqrt(mass) : type === 'supergiant' ? 400 * Math.sqrt(mass / 15) : mass < 1 ? math.pow(mass, 0.8) : math.pow(mass, 0.57));
 		var luminosity = Number(given.Luminosity);
 		/* A star not of the main sequence: as warm as its kind is when not told (its light of its size and warmth). */
 		var temperature = Number(given.Temperature) || (luminosity || type === 'main' ? 0 : {giant: 4500, supergiant: 3800, 'white-dwarf': 15000, neutron: 1e6, pulsar: 1e6, magnetar: 1e6, 'brown-dwarf': 1300}[type]);
 		var classes = [[30000, 'O'], [10000, 'B'], [7500, 'A'], [6000, 'F'], [5200, 'G'], [3700, 'K'], [0, 'M']];
 		var kind;
 
-		if (!luminosity && temperature) luminosity = radius * radius * Math.pow(temperature / 5772, 4);
-		else if (!luminosity && mass < 0.43) luminosity = 0.23 * Math.pow(mass, 2.3);
-		else if (!luminosity && mass < 2) luminosity = Math.pow(mass, 4);
-		else if (!luminosity) luminosity = 1.4 * Math.pow(mass, 3.5);
+		if (!luminosity && temperature) luminosity = radius * radius * math.pow(temperature / 5772, 4);
+		else if (!luminosity && mass < 0.43) luminosity = 0.23 * math.pow(mass, 2.3);
+		else if (!luminosity && mass < 2) luminosity = math.pow(mass, 4);
+		else if (!luminosity) luminosity = 1.4 * math.pow(mass, 3.5);
 
 		if (!temperature)
-			temperature = 5772 * Math.pow(luminosity / (radius * radius), 0.25);
+			temperature = 5772 * math.pow(luminosity / (radius * radius), 0.25);
 
 		kind = classes.filter(function (each) {
 			return temperature >= each[0];
@@ -191,6 +206,7 @@ Elemenx.Service('Astronomy', {
 	},
 
 	Describe: function (body, context) {
+		var math = this.Math();
 		var given = body || {};
 		var place = context || {};
 		var kind = this.Kinds[given.Kind] || this.Kinds.rocky;
@@ -201,7 +217,7 @@ Elemenx.Service('Astronomy', {
 		var star = place.Star || this.Star({});
 		var distance = place.Distance === undefined ? this.Length(given.Orbit && given.Orbit.Distance) : place.Distance;
 		var orbit = given.Orbit || {};
-		var temperature = distance ? 278.6 * Math.pow(Math.max(0, 1 - albedo), 0.25) * Math.pow(star.Luminosity, 0.25) / Math.sqrt(distance) : 0;
+		var temperature = distance ? 278.6 * math.pow(Math.max(0, 1 - albedo), 0.25) * math.pow(star.Luminosity, 0.25) / Math.sqrt(distance) : 0;
 
 		return {
 			Kind: given.Kind || 'rocky',
@@ -224,11 +240,12 @@ Elemenx.Service('Astronomy', {
 	 * rounded (a fit of Tanner Helland). Color gives it as #rrggbb, the white balance of a camera as light.
 	 */
 	Blackbody: function (temperature) {
+		var math = this.Math();
 		var t = Math.max(1000, Math.min(40000, Number(temperature) || 5772)) / 100;
 		if (t <= 66)
-			return [255, 99.4708025861 * Math.log(t) - 161.1195681661, t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307];
+			return [255, 99.4708025861 * math.log(t) - 161.1195681661, t <= 19 ? 0 : 138.5177312231 * math.log(t - 10) - 305.0447927307];
 
-		return [329.698727446 * Math.pow(t - 60, -0.1332047592), 288.1221695283 * Math.pow(t - 60, -0.0755148492), 255];
+		return [329.698727446 * math.pow(t - 60, -0.1332047592), 288.1221695283 * math.pow(t - 60, -0.0755148492), 255];
 	},
 
 	Color: function (temperature) {

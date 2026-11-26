@@ -62,6 +62,6 @@ Many blocks are chosen at once: Shift or Ctrl and a press adds one or takes it a
 - [marks on a block of a Blueprint the errors its owner gives it, with their lines](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-shader-errors.test.js#L126) — `tests/regression/library-shader-errors.test.js`
 - [burns a star as its Blueprint says at each time: the prominences of the library rise and fall by a Curve of the Time, as much as its Activity](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js#L341) — `libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js`
 - [moves its prominences on by their speed a step at a time, however the speed changes, faster as the Speed of its Blueprint says](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js#L430) — `libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js`
-- [shows the blocks where they stand with their pins, the links between the pins, and the file it keeps](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L93) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
+- [draws its links to their pins again a little after its blocks, with no sizes told](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L97) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
 
-+16 more in the same files
++17 more in the same files

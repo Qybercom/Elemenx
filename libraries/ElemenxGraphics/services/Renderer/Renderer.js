@@ -597,12 +597,8 @@ Elemenx.Service('Renderer', {
 			'uniform sampler2D uProbe;',
 			'uniform vec4 uProbeBox;',
 			'uniform vec3 uProbeCount;',
-			/* What a surface gets round it (the mean of what comes over its side), half a voxel out along its normal; weight: 1 inside the voxels, to 0 over their last 4. */
-			'vec3 probeLight(vec3 position, vec3 normal, out float weight) {',
-			'	vec3 c = (position + normal * uProbeBox.w * 0.5 - uProbeBox.xyz) / uProbeBox.w;',
-			'	vec3 edge = min(c, uProbeCount - c);',
-			'	weight = clamp(min(min(edge.x, edge.y), edge.z) * 0.25, 0.0, 1.0);',
-			'	if (weight <= 0.0) return vec3(0.0);',
+			/* What comes round a point of the voxels (c, in voxels) over the side of a normal, and how free the voxels are there. */
+			'vec3 probeSeen(vec3 c, vec3 normal, out float free) {',
 			'	vec2 at = clamp(c.xz, vec2(0.5), uProbeCount.xz - 0.5);',
 			'	float y = clamp(c.y - 0.5, 0.0, uProbeCount.y - 1.001);',
 			'	float layer = floor(y);',
@@ -611,14 +607,27 @@ Elemenx.Service('Renderer', {
 			'	vec2 low = (at + vec2(mod(layer, 8.0) * uProbeCount.x, floor(layer / 8.0) * uProbeCount.z)) / size;',
 			'	vec2 high = (at + vec2(mod(layer + 1.0, 8.0) * uProbeCount.x, floor((layer + 1.0) / 8.0) * uProbeCount.z)) / size;',
 			'	vec2 block = vec2(0.0, 0.25);',
-			'	float free = mix(textureLod(uProbe, low + block * 3.0, 0.0).r, textureLod(uProbe, high + block * 3.0, 0.0).r, t);',
-			'	if (free < 0.02) {',
-			'		weight = 0.0;',
-			'		return vec3(0.0);',
-			'	}',
+			'	free = mix(textureLod(uProbe, low + block * 3.0, 0.0).r, textureLod(uProbe, high + block * 3.0, 0.0).r, t);',
+			'	if (free < 0.02) return vec3(0.0);',
 			'	vec4 lobe = vec4(0.886227, 1.023328 * normal.y, 1.023328 * normal.z, 1.023328 * normal.x) / free;',
 			'	vec3 seen = vec3(dot(mix(textureLod(uProbe, low, 0.0), textureLod(uProbe, high, 0.0), t), lobe), dot(mix(textureLod(uProbe, low + block, 0.0), textureLod(uProbe, high + block, 0.0), t), lobe), dot(mix(textureLod(uProbe, low + block * 2.0, 0.0), textureLod(uProbe, high + block * 2.0, 0.0), t), lobe));',
 			'	return max(seen, vec3(0.0)) / 3.14159265;',
+			'}',
+			/*
+			 * What a surface gets round it (the mean of what comes over its side), half a voxel out along its normal; weight: 1
+			 * inside the voxels, to 0 over their last 4. That point in a wall (what hangs from a roof, set in its rock): a voxel
+			 * further out; in one still, nothing. Regression: there the sky was taken, and the stones under the roof of a tunnel
+			 * shone white.
+			 */
+			'vec3 probeLight(vec3 position, vec3 normal, out float weight) {',
+			'	vec3 c = (position + normal * uProbeBox.w * 0.5 - uProbeBox.xyz) / uProbeBox.w;',
+			'	vec3 edge = min(c, uProbeCount - c);',
+			'	float free;',
+			'	weight = clamp(min(min(edge.x, edge.y), edge.z) * 0.25, 0.0, 1.0);',
+			'	if (weight <= 0.0) return vec3(0.0);',
+			'	vec3 seen = probeSeen(c, normal, free);',
+			'	if (free < 0.02) seen = probeSeen(c + normal, normal, free);',
+			'	return seen;',
 			'}',
 			/* What a surface gets round it: of the probes where they are, else the sky it sees (sky: of its side) and the bounce of the sun. */
 			/*

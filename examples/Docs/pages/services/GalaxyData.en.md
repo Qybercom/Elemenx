@@ -20,9 +20,11 @@ GalaxyData: a galaxy as data (docs/SPACE-FORMAT.md): its passport, its supermass
 - Code(), IR(): the arms of a galaxy of one source (Kernel, the kernel language: gx_turn, gx_bend, gx_wave, gx_arm on the noise of gradients of Noise) as js and as the IR of a graph of Blueprints; Spiral(data): the arms of a galaxy of its graph (data.Graph, a Scene gives it its own; SceneBlueprints.Galaxy), what its stars, its knots and its picture alike lie on; SeedNumber(manifest): the number of its seed for its noise.
 - Rename(data, id, name), Remove(data, id), AddBody(data, body), SetSystem(data, id, system): what is changed of it.
 - Use(key, data), DataOf(key); Open(source, callback), Write(data, store, callback, whole), Save(data), Pack(data, callback): as SystemData (parts {Kind: 'galaxy'}, {Kind: 'edits'}, those of a system written with System: id).
+- Math(): the functions of Math it makes its stars by, the own ones of Elemenx (docs/UNIVERSE-FORMAT.md): a seed makes the very same galaxy in any browser, in Node and in a port to another language (docs/universe-golden.json).
 
 ## Methods
 
+- `Math()`
 - `Make(options)`
 - `BulgeOf(manifest)`
 - `Code()`
@@ -71,4 +73,4 @@ GalaxyData: a galaxy as data (docs/SPACE-FORMAT.md): its passport, its supermass
 - [gives the stars round its black hole the planets and stations their room leaves them, and the swarm of its nuclear cluster](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L236) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L263) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 
-+18 more in the same files
++20 more in the same files

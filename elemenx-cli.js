@@ -570,6 +570,45 @@ command('native', 'Add what native programs need to a project: Electron (desktop
 	Text: ['Installs into the project, with npm: for desktop, electron and @electron/packager (development tools); for mobile, @capacitor/core, cli, android and ios, and the plugins app, browser and dialog. Without a platform, both. Then elemenx build --native makes the programs.']
 });
 
+command('universe', 'Bake a region of a universe into files, or serve all of it as it is asked for.', function (parsed) {
+	var action = parsed.Arguments.shift();
+	var source = parsed.Arguments.shift();
+	var Universe = require('./tools/universe.js');
+	var around = parsed.Options.around ? String(parsed.Options.around).split(',').map(Number) : null;
+	var made;
+
+	if (action === 'bake') {
+		if (!source || !parsed.Arguments[0])
+			fail('usage: elemenx universe bake <universe.json | seed> <folder> [--radius 20] [--around x,y,z]');
+
+		made = Universe.Bake(source, path.resolve(parsed.Arguments[0]), {Radius: Number(parsed.Options.radius) || 20, Around: around});
+
+		process.stdout.write('Elemenx universe: ' + made.Cubes + ' cubes, ' + made.Galaxies + ' galaxies in ' + path.resolve(parsed.Arguments[0]) + '\n');
+
+		return;
+	}
+
+	if (action !== 'serve' || !source)
+		fail('usage: elemenx universe bake|serve <universe.json | seed> ...');
+
+	Universe.Serve(source, {Port: Number(parsed.Options.port) || 4180, Host: parsed.Options.host || '127.0.0.1', Base: parsed.Options.base || '/'}, function (error) {
+		if (error)
+			fail(error.message);
+
+		process.stdout.write('Elemenx universe: http://' + (parsed.Options.host || '127.0.0.1') + ':' + (Number(parsed.Options.port) || 4180) + '/\n');
+	});
+}, {
+	Usage: ['elemenx universe bake <universe.json | seed> <folder> [--radius 20] [--around x,y,z]', 'elemenx universe serve <universe.json | seed> [--port 4180] [--host 127.0.0.1] [--base /]'],
+	Text: ['A universe is its passport (universe.json: options of UniverseData.Make, its seed, its galaxies of the author, its home) or a seed. bake writes a region of it for any static server: universe.json, edits.json, cubes/<x>.<y>.<z>.json (its galaxies), galaxies/<id>.json and galaxies/<id>/sky.json (of the galaxies of the author and the home one), index.json. serve answers the same paths, and galaxies/<id>/sectors/<x>.<y>.<z>.json (the stars of a sector, ?limit=), made as they are asked for: the whole universe, with no end (docs/UNIVERSE-FORMAT.md).'],
+	Options: [
+		['--radius <Mpc>', 'bake: the cubes within it of the place (20)'],
+		['--around <x,y,z>', 'bake: the place (Mpc; the home galaxy by default)'],
+		['--port <number>', 'serve: the port (4180)'],
+		['--host <address>', 'serve: the address it listens on (127.0.0.1)'],
+		['--base <path>', 'serve: the path it is served under (/)']
+	]
+});
+
 command('version', 'Print Elemenx version.', function () {
 	process.stdout.write(Package.version + '\n');
 });

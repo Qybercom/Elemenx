@@ -3,8 +3,11 @@
 
 Числа звёздной системы, как они нужны игре: где тело на орбите в данный момент (законы Кеплера), из чего состоят звезда и планета и насколько они тёплые, и целые системы из seed. Ничего не рисует. Единицы: расстояния в а. е., время в сутках, массы звёзд в массах Солнца, планет и лун — в массах Земли, радиусы звёзд в радиусах Солнца, планет — в км, углы в градусах; пространство эклиптики (X и Y в её плоскости, Z на север). Length(value) — длина в а. е. из числа или текста с единицей ('384400 km', '2.5 Mkm', '5.2 AU', '4.2 ly', '1.3 pc'); Period(distance, mass) — сутки оборота; Position(orbit, time, mass) — [x, y, z] в а. е. от того, вокруг чего тело обращается (orbit — {Distance, Eccentricity, Inclination, Node, Periapsis, Anomaly, Period}); Path(orbit, count) — точки всей орбиты; Star(star) — звезда, дополненная тем, чего не хватает, с Class, Color, Habitable ({Inner, Outer}) и Frost; Describe(body, context) — Radius, Mass, Gravity (м/с²), Escape (км/с), Density, Temperature (K), Period, Day, Habitable; Color(temperature) — цвет звезды; Kinds — виды планет и их цвета; Generate(seed, options) — целая система (всегда одна и та же для одного seed) с лунами, кольцами и поясами: options Name, Planets, Moons, Belts. Работает и в Node. Blackbody(temperature) — цвет тела такой температуры (кельвины, от 1000 до 40000), [r, g, b] примерно от 0 до 255 без обрезки: цвет звезды, лампы. Виды планет (Kinds) лежат в resources/astronomy/kinds.json; приложение может добавить свои.
 
+sin, cos, pow, log и прочие функции Math берутся из метода Math() — собственной математики Elemenx (Elemenx.Compilers.Math()): звезда, её класс и обитаемая зона, планеты системы одного seed одинаковы до последнего бита в любом браузере, в Node и в порте на другой язык (docs/UNIVERSE-FORMAT.md).
+
 ## Методы
 
+- `Math()`
 - `Length(value)`
 - `Period(distance, mass)`
 - `Position(orbit, time, mass)`

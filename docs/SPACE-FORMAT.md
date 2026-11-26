@@ -30,7 +30,7 @@ A system is a tree. Each node is `{ID, Kind, Name, Parent (the ID of what it goe
 
 A galaxy is the same idea one level up: its root is its supermassive black hole, its systems go round it (each an orbit, slow), and a body of no system (a rogue planet, an interstellar station, a wandering black hole) is a node of the galaxy itself, with a place and a velocity instead of an orbit.
 
-A universe has no tree: its galaxies stand at their coordinates.
+A universe has no tree: its galaxies stand at their coordinates, in cubes of its seed with no end (`docs/UNIVERSE-FORMAT.md`: its layout, and the rules of the numbers that make a seed the same world in any language).
 
 ## Generated and changed
 

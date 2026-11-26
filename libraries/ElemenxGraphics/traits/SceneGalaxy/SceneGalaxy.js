@@ -662,7 +662,10 @@ Elemenx.Trait('SceneGalaxy', {
 			var near = state.Follow ? starOf(state.Follow) : null;
 			var seen = {};
 			var place;
-			var centre = near ? screenOf(view.Matrix, now(near.Place)) : null;
+
+			/* Laid out by the marks of the scene (SceneMarks) each frame, by this view: off each other, a line to a body moved. */
+			state.MarkView = view;
+			state.MarkPlaces = state.MarkPlaces || {};
 
 			if (!box && root) {
 				box = state.Labels = document.createElement('div');
@@ -696,10 +699,10 @@ Elemenx.Trait('SceneGalaxy', {
 			}
 
 			wanted.forEach(function (mark) {
-				var at = screenOf(view.Matrix, mark.Place);
 				var element = box.querySelector('[data-key="' + mark.Key.replace(/"/g, '') + '"]');
 
 				seen[mark.Key] = true;
+				state.MarkPlaces[mark.Key] = mark.Place;
 
 				if (!element) {
 					element = document.createElement('div');
@@ -726,23 +729,40 @@ Elemenx.Trait('SceneGalaxy', {
 					}
 
 					box.appendChild(element);
+
+					/*
+					 * Regression: a body too near its star on the screen showed its dot alone, and two bodies near each other lay
+					 * their names over each other: now moved off each other, a line to each.
+					 */
+					if (engine.MarkSet)
+						engine.MarkSet('galaxy:' + mark.Key, {Element: element, Screen: markScreen(mark.Key), Align: 'left', Shift: [-4, 0], Declutter: mark.Kind === 'body', Occlude: false, Priority: mark.Kind === 'star' ? 1 : 0, Shown: function () {
+							return !box.hidden;
+						}});
 				}
 
 				element.lastChild.textContent = mark.Text;
-				element.hidden = !at;
-
-				/* A body too near its star on the screen: its dot alone, so their names do not lie over each other. */
-				if (at && mark.Kind === 'body')
-					element.lastChild.hidden = Math.abs(at[0] - (centre ? centre[0] : at[0])) + Math.abs(at[1] - (centre ? centre[1] : at[1])) < 28;
-
-				if (at)
-					element.style.transform = 'translate(' + Math.round(at[0]) + 'px, ' + Math.round(at[1]) + 'px)';
 			});
 
 			Array.prototype.slice.call(box.children).forEach(function (element) {
-				if (!seen[element.getAttribute('data-key')])
-					element.remove();
+				var key = element.getAttribute('data-key');
+				if (seen[key]) return;
+
+				if (engine.MarkDrop)
+					engine.MarkDrop('galaxy:' + key);
+
+				delete state.MarkPlaces[key];
+
+				element.remove();
 			});
+		}
+
+		/* Where a mark of the map is on the screen, by the view of the map now: [x, y], or null. */
+		function markScreen (key) {
+			return function () {
+				var place = state.MarkPlaces && state.MarkPlaces[key];
+
+				return place && state.MarkView ? screenOf(state.MarkView.Matrix, place) : null;
+			};
 		}
 
 		/* The star the view is near: itself, as large as it is or a few pixels, its corona round it (of numbers about the eye: sharp however near). */
@@ -990,7 +1010,13 @@ Elemenx.Trait('SceneGalaxy', {
 
 			if (!engine.CosmosCubeOf) return null;
 
-			return engine.CosmosCubeOf({Kind: 'galaxy', Seed: m.Seed + ':band', Pole: [0, 1, 0], Middle: [-place[0] / out, 0, -place[2] / out], Galaxy: galaxies.Cosmos(state.Data, 'centre').Galaxy, Place: place, Band: 1, Stars: 0.12, Galaxies: 0}, 'galaxy-band', 512);
+			if (state.FarKey !== m.ID) {
+				state.FarKey = m.ID;
+				state.Far = self.UniverseSky ? self.UniverseSky(m.ID) : null;
+			}
+
+			/* The galaxies round it seen too, as they are, when it is one of a universe shown (SceneUniverse). */
+			return engine.CosmosCubeOf(Object.assign({Kind: 'galaxy', Seed: m.Seed + ':band', Pole: [0, 1, 0], Middle: [-place[0] / out, 0, -place[2] / out], Galaxy: galaxies.Cosmos(state.Data, 'centre').Galaxy, Place: place, Band: 1, Stars: 0.12, Galaxies: 0}, state.Far ? {Far: state.Far} : {}), 'galaxy-band', 512);
 		}
 
 		/* What is under a point of the screen: a star near, the black hole ('centre'), or ''. */
@@ -2471,6 +2497,13 @@ Elemenx.Trait('SceneGalaxy', {
 
 		state.Picked = star.ID;
 
+		/* The galaxies round this one in its sky, as they are, when it is one of a universe shown (SceneUniverse). */
+		function farOf () {
+			var far = self.UniverseSky ? self.UniverseSky(state.Data.Manifest.ID) : null;
+
+			return far ? {Far: far} : {};
+		}
+
 		/* Near it already (the view came to it): into its system at once, no flight back out. */
 		function into () {
 			var key = 'galaxy:' + state.Data.Manifest.ID + ':' + star.ID;
@@ -2481,7 +2514,7 @@ Elemenx.Trait('SceneGalaxy', {
 			state.Follow = star.ID;
 			state.Into = {Frames: 0};
 
-			self.Cosmos = galaxies.Cosmos(state.Data, star.ID);
+			self.Cosmos = Object.assign(galaxies.Cosmos(state.Data, star.ID), farOf());
 			self.System = {Data: key};
 			self.Setting = 'space';
 

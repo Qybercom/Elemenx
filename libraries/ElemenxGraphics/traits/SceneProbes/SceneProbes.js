@@ -2,11 +2,13 @@
  * Probes: the light that bounces, worked out round the eye of a Scene with a ground, at high and ultra (Graphics().Probes).
  *
  * What stands round the eye, 64 metres a side and 32 high, is laid in voxels of a metre: slabs of a metre drawn along each
- * of the three axes in their colors (a floor in a slab across y, a wall in one across x or z), a few slabs a frame, then
- * joined (Merge). Each voxel is lit (Lit): the sun as far as the voxels let it to it, the lamps, and what the probes already
+ * of the three axes in their colors (a floor in a slab across y, a wall in one across x or z), a few slabs a frame (each
+ * square of the ground only into the slabs it reaches into), then joined (Merge), with rock where the ground is rock
+ * (SceneTerrainGenerator.Rock, of the workers: the slabs hold only the surfaces). Each voxel is lit (Lit): the sun as far as
+ * the voxels and the map of the sun let it to it, the lamps, and what the probes already
  * gather there, so light goes on bouncing frame after frame. A grid of probes two metres apart (32 by 16 by 32) sends 32
  * rays each through the voxels (Rays), from a free voxel of its block (a probe in a wall is moved out of it), a part of them each frame, each frame other ways: what a ray meets gives its light,
- * what meets nothing the sky. The probes keep what came to them from all round (Reduce: spherical harmonics of the first
+ * what meets nothing the sky, as much as the daylight of a cave lets come where it left the grid (engine.CaveDaylight). The probes keep what came to them from all round (Reduce: spherical harmonics of the first
  * band, mixed with what they had). Each voxel then gets what its eight probes round it give as far as they see it (Volume),
  * and each surface reads that of the voxels by it (aroundLight of Renderer): its programs pay nothing for it. A room is dark but
  * for its window, under a roof it is dim, a wall by a sunny meadow is green below. A probe in a wall takes what its
@@ -94,7 +96,8 @@ Elemenx.Trait('SceneProbes', {
 
 		/*
 		 * The view of a slab: its axis (0 y, 1 x, 2 z) and its number; the place relative to the eye goes to its tile in the
-		 * texture of that axis, the slab a metre deep (all else is clipped). [matrix, viewport].
+		 * texture of that axis, the slab a metre deep (all else is clipped). [matrix, viewport, its box in the world: what does
+		 * not reach into it is not drawn for it].
 		 */
 		function slab (axis, index, corner) {
 			var eye = scene.Eye;
@@ -112,7 +115,7 @@ Elemenx.Trait('SceneProbes', {
 				m[6] = 2;
 				m[14] = 2 * (eye[1] - corner[1] - index) - 1;
 
-				return [m, [col * 64, row * 64, 64, 64]];
+				return [m, [col * 64, row * 64, 64, 64], [corner[0], corner[1] + index, corner[2], corner[0] + size[0], corner[1] + index + 1, corner[2] + size[2]]];
 			}
 
 			m[5] = 2 / size[1];
@@ -131,7 +134,7 @@ Elemenx.Trait('SceneProbes', {
 				m[14] = 2 * (eye[2] - corner[2] - index) - 1;
 			}
 
-			return [m, [col * 64, row * 32, 64, 32]];
+			return [m, [col * 64, row * 32, 64, 32], axis === 1 ? [corner[0] + index, corner[1], corner[2], corner[0] + index + 1, corner[1] + size[1], corner[2] + size[2]] : [corner[0], corner[1], corner[2] + index, corner[0] + size[0], corner[1] + size[1], corner[2] + index + 1]];
 		}
 
 		/* A few slabs more of the grid being laid; when all are, it is joined and taken. */
@@ -155,7 +158,7 @@ Elemenx.Trait('SceneProbes', {
 				renderer.Viewport(made[1][0], made[1][1], made[1][2], made[1][3]);
 				renderer.Clear([0, 0, 0, 0]);
 
-				scene.Voxels(made[0]);
+				scene.Voxels(made[0], made[2]);
 
 				gl.disable(gl.SCISSOR_TEST);
 
@@ -168,13 +171,47 @@ Elemenx.Trait('SceneProbes', {
 
 			if (laying.Next < laying.Order.length) return;
 
-			pass(state.Grid, state.Programs.Merge, {uY: state.Slabs[0].Textures[0], uX: state.Slabs[1].Textures[0], uZ: state.Slabs[2].Textures[0]});
+			/* And where the ground is rock, once the workers made it (a while at most: else without it). */
+			if (!laying.Rock && ++laying.Waited < 600) return;
+
+			pass(state.Grid, state.Programs.Merge, {uY: state.Slabs[0].Textures[0], uX: state.Slabs[1].Textures[0], uZ: state.Slabs[2].Textures[0], uRock: laying.Rock && laying.Rock.Texture ? laying.Rock.Texture : state.Slabs[0].Textures[0], uRockOn: laying.Rock && laying.Rock.Texture ? 1 : 0});
+
+			if (state.Rock && state.Rock !== laying.Rock && state.Rock.Texture)
+				state.Rock.Texture.Destroy();
+
+			state.Rock = laying.Rock || null;
 
 			/* The probes move with the grid by whole steps of theirs. */
 			state.Shift = state.Laid ? [(laying.Corner[0] - state.Laid.Corner[0]) / 2, (laying.Corner[1] - state.Laid.Corner[1]) / 2, (laying.Corner[2] - state.Laid.Corner[2]) / 2] : [0, 0, 0];
 			state.Fresh = !state.Laid;
 			state.Laid = {Corner: laying.Corner, Time: scene.Seconds};
 			state.Laying = null;
+		}
+
+		/*
+		 * Where the ground is rock in the box of a laying (SceneTerrainGenerator.Rock, of the workers): the grid has only the
+		 * surfaces, and what is under them was air to it. The same box of the same ground again: the one it had.
+		 */
+		function rocky (laying) {
+			var key = laying.Corner.join(':') + ':' + (scene.Ground.Dug || 0);
+
+			if (state.Rock && state.Rock.Key === key) {
+				laying.Rock = state.Rock;
+
+				return;
+			}
+
+			if (!engine.GroundRock) {
+				laying.Rock = {Key: key, Texture: null};
+
+				return;
+			}
+
+			engine.GroundRock(laying.Corner, size, function (made) {
+				if (!state || state.Laying !== laying) return;
+
+				laying.Rock = {Key: key, Texture: made ? renderer.Texture({Width: made.Width, Height: made.Height, Data: made.Data}, {Single: true}) : null};
+			});
 		}
 
 		function pass (target, program, uniforms) {
@@ -219,6 +256,7 @@ Elemenx.Trait('SceneProbes', {
 			var common;
 			var lit;
 			var full;
+			var cave;
 
 			if (!each || !ground || !scene.Voxels || scene.Camera.Ortho || scene.Tuned && scene.Tuned.Probes === false) return {uProbeOn: 0};
 
@@ -250,7 +288,10 @@ Elemenx.Trait('SceneProbes', {
 			/* Laid again when the eye went into the next 16 metres, when what stands changed, and every thirty seconds. */
 			if (!state.Laying && (!state.Laid || String(corner) !== String(state.Laid.Corner) || state.Stands !== stands || scene.Seconds - state.Laid.Time > 30)) {
 				state.Stands = stands;
-				state.Laying = {Corner: corner, Next: 0, Order: []};
+				state.Laying = {Corner: corner, Next: 0, Order: [], Rock: null, Waited: 0};
+
+				rocky(state.Laying);
+
 				/* The box of the grid in the world: what is sown is drawn into its slabs of what is in it (ScatterVoxels). */
 				scene.VoxelBox = [corner[0], corner[1], corner[2], corner[0] + size[0], corner[1] + size[1], corner[2] + size[2]];
 
@@ -284,7 +325,9 @@ Elemenx.Trait('SceneProbes', {
 
 			lit = {uLit: state.Lit[0].Textures[0], uLit1: state.Lit[0].Textures[1], uLit2: state.Lit[0].Textures[2], uLit3: state.Lit[1].Textures[0], uLit4: state.Lit[1].Textures[1], uLit5: state.Lit[1].Textures[2]};
 
-			pass(state.Rays, state.Programs.Rays, Object.assign({}, lit, {uTurn: spin, uPhase: state.Phase, uSubset: subset, uRays: rays}, sky));
+			cave = engine.CaveDaylight ? engine.CaveDaylight(state.Laid.Corner) : null;
+
+			pass(state.Rays, state.Programs.Rays, Object.assign({}, lit, {uTurn: spin, uPhase: state.Phase, uSubset: subset, uRays: rays, uCave: cave ? cave.Texture : state.Grid.Textures[0], uCaveOn: cave ? 1 : 0, uCaveCount: cave ? cave.Count : [1, 1, 1]}, sky));
 
 			/* What is round the eye, for the mirrors, every other frame. */
 			if (state.Frame % 2 === 0)
@@ -383,8 +426,8 @@ Elemenx.Trait('SceneProbes', {
 		].join('\n');
 		/*
 		 * A ray through the voxels by their walls (Amanatides and Woo), from a point of the grid (voxels) along a way: what it
-		 * meets, [the light of the face it came in by, how far], nothing in the grid: alpha -1. The faces lit: uLit to uLit5
-		 * (+x, -x, +y, -y, +z, -z; alpha of uLit: solid).
+		 * meets, [the light of the face it came in by, how far], nothing in the grid: alpha -1 less how far it went in it (it
+		 * left the grid there). The faces lit: uLit to uLit5 (+x, -x, +y, -y, +z, -z; alpha of uLit: solid).
 		 */
 		var march = [
 			'uniform sampler2D uLit;',
@@ -420,7 +463,7 @@ Elemenx.Trait('SceneProbes', {
 			'			cell.z += stepping.z;',
 			'			face = stepping.z > 0 ? 5 : 4;',
 			'		}',
-			'		if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(64, 32, 64)))) break;',
+			'		if (any(lessThan(cell, ivec3(0))) || any(greaterThanEqual(cell, ivec3(64, 32, 64)))) return vec4(0.0, 0.0, 0.0, -1.0 - t);',
 			'		ivec2 at = gridTexel(cell);',
 			'		if (texelFetch(uLit, at, 0).a > 0.5) return vec4(face == 0 ? texelFetch(uLit, at, 0).rgb : face == 1 ? texelFetch(uLit1, at, 0).rgb : face == 2 ? texelFetch(uLit2, at, 0).rgb : face == 3 ? texelFetch(uLit3, at, 0).rgb : face == 4 ? texelFetch(uLit4, at, 0).rgb : texelFetch(uLit5, at, 0).rgb, t);',
 			'	}',
@@ -429,11 +472,16 @@ Elemenx.Trait('SceneProbes', {
 		].join('\n');
 
 		return {
-			/* The slabs of the three axes joined: a voxel is there if any saw it, of the mean of their colors. */
+			/*
+			 * The slabs of the three axes joined: a voxel is there if any saw it, of the mean of their colors and of how much they
+			 * glow (alpha under 1); and where the ground is rock (uRock, a byte a voxel, uRockOn), a voxel of rock under them.
+			 */
 			Merge: head + [
 				'uniform sampler2D uY;',
 				'uniform sampler2D uX;',
 				'uniform sampler2D uZ;',
+				'uniform sampler2D uRock;',
+				'uniform float uRockOn;',
 				'out vec4 outColor;',
 				'void main() {',
 				'	ivec2 f = ivec2(gl_FragCoord.xy);',
@@ -443,15 +491,20 @@ Elemenx.Trait('SceneProbes', {
 				'	vec4 a = texelFetch(uY, f, 0);',
 				'	vec4 b = texelFetch(uX, ivec2((x % 8) * 64 + z, (x / 8) * 32 + y), 0);',
 				'	vec4 c = texelFetch(uZ, ivec2((z % 8) * 64 + x, (z / 8) * 32 + y), 0);',
-				'	float w = a.a + b.a + c.a;',
-				'	outColor = w > 0.0 ? vec4((a.rgb * a.a + b.rgb * b.a + c.rgb * c.a) / w, 1.0) : vec4(0.0);',
+				/* There where alpha is over a quarter; how much it glows, of alpha under 1 (Voxel of Scene). */
+				'	vec3 w = step(vec3(0.25), vec3(a.a, b.a, c.a));',
+				'	vec3 glow = w * (1.0 - vec3(a.a, b.a, c.a)) / 0.45;',
+				'	float seen = w.x + w.y + w.z;',
+				'	float rock = uRockOn > 0.5 ? texelFetch(uRock, f, 0).r : 0.0;',
+				'	outColor = seen > 0.0 ? vec4((a.rgb * w.x + b.rgb * w.y + c.rgb * w.z) / seen, 1.0 - 0.45 * clamp((glow.x + glow.y + glow.z) / seen, 0.0, 1.0)) : rock > 0.5 ? vec4(0.3, 0.27, 0.24, 1.0) : vec4(0.0);',
 				'}'
 			].join('\n'),
 
 			/*
 			 * The faces of a voxel lit, three a pass (uFaces 0: +x, -x, +y; 1: -y, +z, -z), each by itself: none where the voxel
 			 * beside covers it, the sun if nothing of the grid stands between it and the face, the lamps, and what the probes
-			 * gather on that side; its color times all that. A thin wall is lit outside and dark inside. Alpha: the voxel is solid.
+			 * gather on that side; its color times all that, and what it gives of itself (it glows). A thin wall is lit outside and
+			 * dark inside. Alpha: the voxel is solid.
 			 */
 			Lit: head + [
 				'uniform sampler2D uGrid;',
@@ -465,7 +518,23 @@ Elemenx.Trait('SceneProbes', {
 				'layout(location = 2) out vec4 outThird;',
 				graphics.Chunks.Shadow,
 				grid,
-				'vec3 faceLight(ivec3 v, vec3 albedo, int face, vec3 place) {',
+				/*
+				 * The shadow of the sun of what is out of the grid too (a mountain, the hill over a valley): the map of the sun
+				 * where the voxel is, one read. Regression: the voxels knew only what stood in the grid, and a valley in the shadow
+				 * of a mountain bounced the sun.
+				 */
+				'float voxelSun(vec3 position, vec3 normal) {',
+				'	if (uShadowOn < 0.5) return 1.0;',
+				'	int i = -1;',
+				'	if (uCascadeOn > 0.5) {',
+				'		float d = length(position);',
+				'		if (d >= uCascadeSplits.w) return 1.0;',
+				'		i = d < uCascadeSplits.x ? 0 : d < uCascadeSplits.y ? 1 : d < uCascadeSplits.z ? 2 : 3;',
+				'	}',
+				'	vec4 place = farPlace(i, position, normal);',
+				'	return place.w > 0.0 ? mix(1.0, texture(uShadowMap, place.xyz), place.w) : 1.0;',
+				'}',
+				'vec3 faceLight(ivec3 v, vec3 albedo, vec3 glow, int face, vec3 place) {',
 				'	vec3 n = face == 0 ? vec3(1.0, 0.0, 0.0) : face == 1 ? vec3(-1.0, 0.0, 0.0) : face == 2 ? vec3(0.0, 1.0, 0.0) : face == 3 ? vec3(0.0, -1.0, 0.0) : face == 4 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 0.0, -1.0);',
 				'	if (solid(uGrid, v + ivec3(n)) > 0.5) return vec3(0.0);',
 				'	float seen = uSunUp * step(0.0, dot(n, uSun));',
@@ -475,17 +544,20 @@ Elemenx.Trait('SceneProbes', {
 				'		if (any(lessThan(p, ivec3(0))) || any(greaterThanEqual(p, ivec3(64, 32, 64)))) break;',
 				'		if (texelFetch(uGrid, gridTexel(p), 0).a > 0.5) seen = 0.0;',
 				'	}',
+				'	if (seen > 0.0) seen *= voxelSun(place + n * 0.5, n);',
 				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * seen + localLight(place + n * 0.5, n);',
 				'	if (uProbeOn > 0.5) {',
 				'		float weight;',
 				'		light += probeLight(place + n * 0.5, n, weight) * weight * 0.9;',
 				'	}',
-				'	return albedo * light;',
+				'	return albedo * light + glow;',
 				'}',
 				'void main() {',
 				'	ivec2 f = ivec2(gl_FragCoord.xy);',
 				'	ivec3 v = ivec3(f.x % 64, (f.y / 64) * 8 + f.x / 64, f.y % 64);',
 				'	vec4 c = texelFetch(uGrid, f, 0);',
+				/* What it gives of itself (a flame, a lamp, a sign of neon, lava): its hue as bright as alpha under 1 tells. */
+				'	vec3 glow = c.rgb * clamp((1.0 - c.a) / 0.45, 0.0, 1.0) * 4.0;',
 				'	if (c.a < 0.5) {',
 				'		outFirst = vec4(0.0);',
 				'		outSecond = vec4(0.0);',
@@ -494,9 +566,9 @@ Elemenx.Trait('SceneProbes', {
 				'	}',
 				'	vec3 place = uCorner + vec3(v) + 0.5;',
 				'	int first = int(uFaces) * 3;',
-				'	outFirst = vec4(faceLight(v, c.rgb, first, place), 1.0);',
-				'	outSecond = vec4(faceLight(v, c.rgb, first + 1, place), 1.0);',
-				'	outThird = vec4(faceLight(v, c.rgb, first + 2, place), 1.0);',
+				'	outFirst = vec4(faceLight(v, c.rgb, glow, first, place), 1.0);',
+				'	outSecond = vec4(faceLight(v, c.rgb, glow, first + 1, place), 1.0);',
+				'	outThird = vec4(faceLight(v, c.rgb, glow, first + 2, place), 1.0);',
 				'}'
 			].join('\n'),
 
@@ -504,7 +576,9 @@ Elemenx.Trait('SceneProbes', {
 			 * The rays of the probes of this frame (those whose row of z is of the phase): a texel for each ray of each probe,
 			 * through the voxels by their walls (Amanatides and Woo); what it meets, the light of the face it came in by and how far
 			 * ([light, metres]),
-			 * nothing the sky of its way (far: 10000), started in a wall (-1).
+			 * nothing the sky of its way (far: 10000), as much of it as the daylight of a cave lets come where it left the grid
+			 * (uCave: Daylight of SceneTerrainGenerator over the grid, uCaveOn), started in a wall (-1). Regression: a ray that
+			 * went out of the grid along a tunnel under a hill brought the whole sky into it.
 			 */
 			Rays: head + [
 				'uniform mat3 uTurn;',
@@ -514,10 +588,22 @@ Elemenx.Trait('SceneProbes', {
 				'uniform vec3 uSkyLight;',
 				'uniform vec3 uFloorLight;',
 				'uniform vec3 uSkySun;',
+				'uniform sampler2D uCave;',
+				'uniform float uCaveOn;',
+				'uniform vec3 uCaveCount;',
 				'out vec4 outColor;',
 				grid,
 				graphics.Chunks.SkyLight,
 				march,
+				/* The daylight at a point of the grid (voxels): the points of the cave a cell of 2 m apart, the layers of y side by side along x. */
+				'float caveAt(vec3 at) {',
+				'	if (uCaveOn < 0.5) return 1.0;',
+				'	vec3 c = clamp(at / 2.0, vec3(0.0), uCaveCount - 1.0);',
+				'	float j = min(floor(c.y), uCaveCount.y - 2.0);',
+				'	float wide = uCaveCount.x * uCaveCount.y;',
+				'	vec2 a = vec2((j * uCaveCount.x + c.x + 0.5) / wide, (c.z + 0.5) / uCaveCount.z);',
+				'	return mix(texture(uCave, a).r, texture(uCave, a + vec2(uCaveCount.x / wide, 0.0)).r, clamp(c.y - j, 0.0, 1.0));',
+				'}',
 				'void main() {',
 				'	ivec2 f = ivec2(gl_FragCoord.xy);',
 				'	int total = int(uRays);',
@@ -542,7 +628,7 @@ Elemenx.Trait('SceneProbes', {
 				'	}',
 				'	vec3 way = rayWay(f.y % total, total, uTurn);',
 				'	vec4 hit = march(vec3(cell) + 0.5, way);',
-				'	outColor = hit.a >= 0.0 ? hit : vec4(skyLight(way, 0.0, uSkyLight, uFloorLight, uSkySun, 1.25), 10000.0);',
+				'	outColor = hit.a >= 0.0 ? hit : vec4(skyLight(way, 0.0, uSkyLight, uFloorLight, uSkySun, 1.25) * caveAt(vec3(cell) + 0.5 + way * (-1.0 - hit.a)), 10000.0);',
 				'}'
 			].join('\n'),
 

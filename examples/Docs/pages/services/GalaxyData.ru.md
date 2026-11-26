@@ -27,8 +27,11 @@ GalaxyData: галактика как данные (docs/SPACE-FORMAT.md) — п
 
 Плотность звёзд в точке (Density) считает граф blueprints/galaxy/density по виду галактики и её форме; рукава (Arm), сгустки (Clumps) и бар (Along, Across) подаются в него на вход. Свой граф — DensityGraph паспорта галактики.
 
+Всё, что решает факты мира (сколько звёзд в секторе, их места, массы, типы и классы, туманности, скопления, системы), считается собственной математикой Elemenx (метод Math(): Elemenx.Compilers.Math(), OwnMath ядра), а не Math браузера: одно зерно даёт ту же галактику до последнего бита в любом браузере, в Node и в порте на другой язык. Правила чисел и эталоны — docs/UNIVERSE-FORMAT.md и docs/universe-golden.json (их пишет node scripts/universe-golden.js). Свечение (Glow) — только картинка, ему точность не нужна.
+
 ## Методы
 
+- `Math()`
 - `Make(options)`
 - `BulgeOf(manifest)`
 - `Code()`
@@ -77,4 +80,4 @@ GalaxyData: галактика как данные (docs/SPACE-FORMAT.md) — п
 - [gives the stars round its black hole the planets and stations their room leaves them, and the swarm of its nuclear cluster](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L236) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 - [makes star clusters of three kinds of a seed: open ones loose and young, globular ones old and packed, nuclear ones round a black hole](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js#L263) — `libraries/ElemenxGraphics/services/GalaxyData/GalaxyData.test.js`
 
-+18 ещё в тех же файлах
++20 ещё в тех же файлах

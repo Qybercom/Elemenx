@@ -70,6 +70,187 @@
 			}
 		},
 		{
+			"Name": "SceneMark",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "map-pin",
+			"Description": "What it holds over a place of the scene, laid out each frame with the other marks: off each other, hidden behind bodies, at the edge with an arrow.",
+			"Props": [
+				{
+					"Name": "Key",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name among the marks (its own one else)."
+				},
+				{
+					"Name": "For",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the object it stands over."
+				},
+				{
+					"Name": "Part",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A socket of the model of that object (by Name or ID)."
+				},
+				{
+					"Name": "Point",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A point of the world [x, y, z] (with no For)."
+				},
+				{
+					"Name": "Up",
+					"Type": "number",
+					"Default": 1.15,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many sizes of the object over its middle (1.15)."
+				},
+				{
+					"Name": "Offset",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Added to the point, [x, y, z]."
+				},
+				{
+					"Name": "Shift",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Moved on the screen, [x, y] pixels."
+				},
+				{
+					"Name": "Align",
+					"Type": "select",
+					"Default": "bottom",
+					"Options": [
+						"bottom",
+						"top",
+						"center"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What of it stands on the point."
+				},
+				{
+					"Name": "Line",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"true",
+						"false"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "A line from the point to it: always, when it was moved (auto) or never."
+				},
+				{
+					"Name": "Occlude",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Hidden behind bodies and the ground (true for an object)."
+				},
+				{
+					"Name": "Edge",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "At the edge of the view with an arrow when its place is off it."
+				},
+				{
+					"Name": "Declutter",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Moved off the marks before it (true)."
+				},
+				{
+					"Name": "Cluster",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A name: marks of it near each other show as one with a badge +N."
+				},
+				{
+					"Name": "ClusterRadius",
+					"Type": "number",
+					"Default": 36,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How near, in pixels (36)."
+				},
+				{
+					"Name": "Near",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Fully seen nearer than this, in metres."
+				},
+				{
+					"Name": "Far",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Gone this far, in metres (0: never)."
+				},
+				{
+					"Name": "Priority",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Laid out before those of less (0)."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"For": "ship",
+				"Line": "true"
+			}
+		},
+		{
 			"Name": "ViewActions",
 			"Kind": "Component",
 			"Group": "game",
@@ -302,11 +483,12 @@
 					"Options": [
 						"space",
 						"terrain",
-						"galaxy"
+						"galaxy",
+						"universe"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy)."
+					"Description": "The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers; galaxy: a galaxy of Galaxy, SceneGalaxy; universe: the galaxies of Universe, SceneUniverse)."
 				},
 				{
 					"Name": "Galaxy",
@@ -316,6 +498,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The galaxy of Setting galaxy (SceneGalaxy, GalaxyData): a key of GalaxyData.Use, the URL of its file, its data, or options of GalaxyData.Make ({Seed, Kind, Radius, Arms})."
+				},
+				{
+					"Name": "Universe",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The universe of Setting universe (SceneUniverse, UniverseData): a key of UniverseData.Use, the URL of its file, its data, or options of UniverseData.Make ({Seed, Galaxies, Home}); the systems of its galaxies see the galaxies round them in their skies."
 				},
 				{
 					"Name": "GalaxyTime",
@@ -918,6 +1109,24 @@
 					"Description": "Which gaits a model goes in at a speed (Speed, Walk, Jog, Sprint: the speeds of its walk, jog and sprint at their own pace -> Low, High: 0 walk, 1 jog, 2 sprint; Weight of the high one, blended as one cycle): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/animation/blend). An object of Blend false keeps the gait it is given."
 				},
 				{
+					"Name": "LookbackGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the weather of hours ago left on the ground, a step of it (Wet, Snow, Warm, Hours, Was -> Wetness, Cover): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/weather/lookback)."
+				},
+				{
+					"Name": "LocalWeatherGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The weather of a place of a planet of its forecast there (Cover, Kind, Cirrus, Rain, Warm -> Clouds, Kind, High, Wind, Fog, Rain, Snow, Wet, Storm: the numbers of the weather of a scene): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/weather/local)."
+				},
+				{
 					"Name": "BodyGraph",
 					"Type": "json",
 					"Default": null,
@@ -1317,6 +1526,7 @@
 				"autopilot",
 				"eva",
 				"boarding",
+				"influence",
 				"ground",
 				"shoulder",
 				"arrive",
@@ -1340,6 +1550,12 @@
 				"through",
 				"galaxy",
 				"galaxyready",
+				"universe",
+				"universeready",
+				"entergalaxy",
+				"leavegalaxy",
+				"entervoid",
+				"markcluster",
 				"hover",
 				"cutscene",
 				"cue",
@@ -1364,6 +1580,7 @@
 				"autopilot": "The autopilot of a ship took it, brought it there, or let it go (SceneVehicles Autopilot): {ID, Mode (hold, approach, follow), Phase (on, arrived, off), Reason (hand, asked, target)}.",
 				"eva": "A step of going out of a ship in space and in again (SceneAboard: G by its airlock): {Actor, Vehicle, Step (cycle, out, in), Out}.",
 				"boarding": "A step of getting in or out of a vehicle step by step (Board and Leave with Animate, G by a car): {Actor, Vehicle, Seat, Step (approach, open, enter, sit, exit, close, done), Out}.",
+				"influence": "An influence on the weather of a planet began (Influence): {ID, Kind, Body, Direction, Radius, Start, Length, Strength}.",
 				"ground": "A ground came, its field made (a ground of the scene, of a location, of a planet landed on): {Key (its shape: location:<id>:<model> for a location), ID (the object it is of), Location (true for a location)}.",
 				"shoulder": "B took the view over another shoulder: right or left.",
 				"arrive": "An object reached where it was sent: {ID, At}.",
@@ -1387,6 +1604,12 @@
 				"through": "A ship flew into the mouth of a wormhole (SceneDeepSpace): {ID, Wormhole, Leads, To (the mouth it comes out of, empty: none)}.",
 				"galaxy": "A star of the galaxy was picked (Setting galaxy, SceneGalaxy): {ID (empty: none or the black hole), Centre (the black hole), Star}.",
 				"galaxyready": "The galaxy of Galaxy came: {ID, Data}.",
+				"universe": "A galaxy of the universe was picked (Setting universe, SceneUniverse): {ID (empty: none), Galaxy}.",
+				"universeready": "The universe of Universe came: {ID, Data, Home}.",
+				"entergalaxy": "The view went into a galaxy of the universe (EnterGalaxy): {ID, Galaxy, Key (of GalaxyData.Use)}.",
+				"leavegalaxy": "The view went out of a galaxy to its universe (LeaveGalaxy): {ID}.",
+				"entervoid": "The scene stands between the galaxies of its universe, out of a warp on its way (EnterVoid): {Place (Mpc)}.",
+				"markcluster": "A badge +N of a cluster of marks was pressed (Mark, Cluster): {Cluster, Keys}; the view goes to them.",
 				"hover": "The pointer came over a selectable object, or left it: {ID (empty: none), Object, Info}.",
 				"cutscene": "A cutscene started, ended or was stopped (SceneCinema): {Name, State: start, end or stop}.",
 				"cue": "A cue of a cutscene came: {Cutscene, Name, Data, At}.",
@@ -1431,6 +1654,8 @@
 				"Unprobe(id)",
 				"Environment(id)",
 				"WeatherOver(id, direction)",
+				"Influence(kind, place, options)",
+				"Influences()",
 				"BoltShape()",
 				"LibraryWater()",
 				"EffectGraph(name)",
@@ -1542,7 +1767,10 @@
 				"Flares(id)",
 				"Defence(id, on)",
 				"Incoming(id)",
-				"ArmsOf(id)"
+				"ArmsOf(id)",
+				"Mark(key, options)",
+				"Unmark(key)",
+				"MarksOnScreen()"
 			],
 			"Sample": {
 				"Seed": "kepler"
@@ -2828,6 +3056,7 @@
 				"Border(options)",
 				"Passages(carve, height)",
 				"Daylight(field, x0, z0, x1, z1, low, options)",
+				"Rock(field, args)",
 				"SketchCarves(sketch, height, seed)",
 				"PassageRoute(graph, from, to)",
 				"Relief(settings)",
@@ -3435,7 +3664,30 @@
 				"Heaps(p, sun, warm, moist, ground, climb, streams, mid, humid, storm, sheet, cloudiness, fairLow, fairHigh)",
 				"Cirrus(streams, py, sheet, low, high)",
 				"Rain(sheet, humid, storm, heaps, kind, from, to)",
-				"Shroud(sheet, heaps, kind, cirrus, rain, cloudiness)"
+				"Shroud(sheet, heaps, kind, cirrus, rain, cloudiness)",
+				"Wind(p, days, seed, radiusKm, eddy, cells)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "WeatherInfluences",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What is done to the weather of a planet in a place for a while (a storm seeded, a rocket against hail, clouds seeded or dispersed, fog): data of no state over its forecast, each kind a graph, drifting with the wind, leaving others.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Kinds()",
+				"Make(kind, way, days, options)",
+				"Center(one, days, wind)",
+				"Expand(list, days, wind)",
+				"Apply(over, way, days, list, wind, radiusKm)"
 			],
 			"Sample": {}
 		},
@@ -3634,6 +3886,47 @@
 			"Sample": {}
 		},
 		{
+			"Name": "UniverseData",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "A universe as data: its galaxies made of its seed cube by cube with no end, those of its author, the one one starts in, what was changed of it.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(options)",
+				"Cube(data, x, y, z)",
+				"CubeOf(data, place)",
+				"Near(data, place, radius, limit)",
+				"Find(data, id)",
+				"Galaxy(data, id)",
+				"Home(data)",
+				"Distance(a, b)",
+				"Pole(galaxy)",
+				"Frame(galaxy)",
+				"Into(frame, way)",
+				"Sky(data, id, count)",
+				"SkyFrom(data, place, count)",
+				"Rename(data, id, name)",
+				"Remove(data, id)",
+				"Add(data, galaxy)",
+				"SetGalaxy(data, id, galaxy)",
+				"Use(key, data)",
+				"DataOf(key)",
+				"Open(source, callback)",
+				"Write(data, store, callback, whole)",
+				"Save(data)",
+				"Pack(data, callback)",
+				"Fetch(data, x, y, z, callback)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "SceneLocations",
 			"Kind": "Service",
 			"Group": "",
@@ -3760,6 +4053,7 @@
 		"elemenx-scene-axes-end": [
 			"other"
 		],
+		"elemenx-scene-mark": [],
 		"elemenx-view-actions": [],
 		"elemenx-view-actions-hand": [],
 		"elemenx-scene": [
@@ -3820,6 +4114,11 @@
 			"own"
 		],
 		"elemenx-scene-hud": [],
+		"elemenx-scene-marks": [],
+		"elemenx-scene-marks-lines": [],
+		"elemenx-scene-marks-line": [],
+		"elemenx-scene-marks-arrow": [],
+		"elemenx-scene-mark-cluster": [],
 		"elemenx-scene-levels": [],
 		"elemenx-scene-screens": [],
 		"elemenx-scene-galaxy-marks": [],

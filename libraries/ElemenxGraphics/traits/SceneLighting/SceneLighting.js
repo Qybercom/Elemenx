@@ -351,6 +351,11 @@ Elemenx.Trait('SceneLighting', {
 		 * A step of the light of a field, before a frame is drawn: what stands is mapped again when it changed (a forest
 		 * grows for seconds: once in a while), and the light is worked out in strips, three times over for the bounces.
 		 */
+		/* The light of the field still being worked out (strips of it a frame): a frame now draws more than a still one. */
+		engine.FieldPending = function () {
+			return !!(state.Field && state.Field.Rounds > 0);
+		};
+
 		engine.FieldLight = function (view) {
 			var ground = scene.Ground;
 			var gl = renderer.GL;
@@ -392,7 +397,8 @@ Elemenx.Trait('SceneLighting', {
 
 				light.Key = ground.Key;
 				light.Stands = stands;
-				light.Wait = 120;
+				/* What stands is mapped again at most this often (frames): less often on low (FieldWait of the quality). */
+				light.Wait = sets[level()].FieldWait || 120;
 				light.Rounds = 3;
 				light.Row = 0;
 
@@ -467,20 +473,25 @@ Elemenx.Trait('SceneLighting', {
 			var changing = named === 'changing';
 			var front = given(self.Front, changing ? 40 : 1.1);
 
-			/* Changing: one weather after the other, each for a few minutes. */
+			/*
+			 * Changing: one weather after the other, each for a few minutes, as long as the seed of the scene and the number of
+			 * the turn tell (Random.Hash): the same turns each time, for everyone. Regression: of Math.random, another each time.
+			 */
 			if (changing) {
-				state.Turn = state.Turn || {Index: 0, Left: 90};
+				state.Turn = state.Turn || {Index: 0, Count: 0, Left: 90};
 				state.Turn.Left -= elapsed;
 
 				if (state.Turn.Left <= 0) {
 					state.Turn.Index = (state.Turn.Index + 1) % turns.length;
-					state.Turn.Left = 60 + Math.random() * 120;
+					state.Turn.Count++;
+					state.Turn.Left = 60 + self.$Service('Random').Hash('weather-turn:' + (self.Seed === undefined || self.Seed === null ? '' : self.Seed) + ':' + state.Turn.Count) / 4294967296 * 120;
 				}
 
 				named = turns[state.Turn.Index];
 			}
 
-			var wanted = kinds[named] || calm;
+			/* Of a place of a planet, of its forecast there (engine.WeatherWanted); else of its name. */
+			var wanted = !changing && engine.WeatherWanted && engine.WeatherWanted() || kinds[named] || calm;
 			var now = state.Now2 = state.Now2 || Object.assign({}, calm, wanted);
 			var way = given(self.WindWay, 70) * Math.PI / 180;
 			var wind;
@@ -489,9 +500,18 @@ Elemenx.Trait('SceneLighting', {
 				now[name] += (wanted[name] - now[name]) * Math.min(1, elapsed / front);
 			});
 
-			/* What the weather leaves on the ground stays: it gets wet in half a minute, dries and melts in minutes. */
-			now.Wet += (wanted.Wet - now.Wet) * Math.min(1, elapsed / (wanted.Wet > now.Wet ? 14 : 30));
-			now.Cover += ((wanted.Snow > 0.3 ? 1 : 0) - now.Cover) * Math.min(1, elapsed / (wanted.Snow > 0.3 ? 30 : 16));
+			/*
+			 * What the weather leaves on the ground stays: it gets wet in half a minute, dries and melts in minutes; of a place of
+			 * a planet (Looked) what the weather of the hours before left there, reached in a few seconds.
+			 */
+			if (wanted.Looked) {
+				now.Wet += (wanted.Wet - now.Wet) * Math.min(1, elapsed / 3);
+				now.Cover += (wanted.Cover - now.Cover) * Math.min(1, elapsed / 3);
+			}
+			else {
+				now.Wet += (wanted.Wet - now.Wet) * Math.min(1, elapsed / (wanted.Wet > now.Wet ? 14 : 30));
+				now.Cover += ((wanted.Snow > 0.3 ? 1 : 0) - now.Cover) * Math.min(1, elapsed / (wanted.Snow > 0.3 ? 30 : 16));
+			}
 
 			wind = given(self.Wind, now.Wind);
 
@@ -1111,8 +1131,8 @@ Elemenx.Trait('SceneLighting', {
 
 				pass(state.Dark, frame.Run.Dark, {uDepth: inputs.Depth, uInverse: frame.Inverse, uMatrix: view.Matrix, uReach: view.Reach || 2, uSeed: scene.Frames = (scene.Frames || 0) + 1});
 				pass(state.Soft, frame.Run.Soft, {uColor: state.Dark.Textures[0], uDepth: inputs.Depth, uPixel: [1 / state.Dark.Width, 1 / state.Dark.Height]});
-				/* At the size of the picture: the darkened corners in red, the contact shadows of the sun in green. */
-				pass(state.Touch, frame.Run.Touch, Object.assign({}, view.Shade, {uDepth: inputs.Depth, uDark: state.Soft.Textures[0], uInverse: frame.Inverse, uMatrix: view.Matrix, uSunWay: frame.Sun, uSunOn: frame.Set.Contact && view.Shade && view.Shade.uShadowOn ? Math.min(1, ((view.SunColor || [0, 0, 0])[0] + (view.SunColor || [0, 0, 0])[1]) * 1.2) : 0, uSteady: 0}));
+				/* At the size of the picture: the darkened corners in red, the contact shadows of the sun in green, the part of the light that is the sun in blue. */
+				pass(state.Touch, frame.Run.Touch, Object.assign({}, view.Shade, {uDepth: inputs.Depth, uDark: state.Soft.Textures[0], uInverse: frame.Inverse, uMatrix: view.Matrix, uSunWay: frame.Sun, uSunOn: frame.Set.Contact && view.Shade && view.Shade.uShadowOn ? Math.min(1, ((view.SunColor || [0, 0, 0])[0] + (view.SunColor || [0, 0, 0])[1]) * 1.2) : 0, uSunLight: view.SunColor || [0, 0, 0], uSkyLight: view.SkyLight || [0, 0, 0], uFloorLight: view.FloorLight || [0, 0, 0], uSteady: 0}));
 
 				frame.Touched = true;
 
@@ -2266,8 +2286,13 @@ Elemenx.Trait('SceneLighting', {
 				'		outColor = vec4(pow(max(color, vec3(0.0)), vec3(1.0 / 2.2)), given.a);',
 				'		return;',
 				'	}',
-				/* The darkened corners (red) and the contact shadows of the sun (green). */
-				'	if (uDarkOn > 0.5 && depth < 1.0) color *= mix(1.0, texture(uDark, uv).r, 0.85) * texture(uDark, uv).g;',
+				/*
+				 * The darkened corners (red), on the light that comes round alone: the sun that falls into a fold is not darkened
+				 * by what stands by it (its shadow is the maps' and the contact shadows'), only the part of the light that is not
+				 * the sun (blue: the part that is). Regression: the corners darkened the sun too, and every fold in the sun looked
+				 * drawn round. The contact shadows of the sun (green).
+				 */
+				'	if (uDarkOn > 0.5 && depth < 1.0) color *= mix(1.0, texture(uDark, uv).r, 0.85 * (1.0 - texture(uDark, uv).b)) * texture(uDark, uv).g;',
 				/* scene.Tuned.Show dark: the darkened corners and the contact shadows alone, to look at them. */
 				'	if (uDarkShow > 0.5) {',
 				'		outColor = vec4(vec3(depth < 1.0 ? texture(uDark, uv).r * texture(uDark, uv).g : 1.0), 1.0);',
@@ -2665,7 +2690,9 @@ Elemenx.Trait('SceneLighting', {
 			 * Contact shadows of the sun, at the size of the picture: from each point lit by the sun (facing it, out of the shadow of
 			 * its maps) a short way toward it over the depth of the screen, as long as a fiftieth of its distance (8 cm to 3 m): what
 			 * the maps are too coarse for, a pebble on the ground, a foot on a floor, a crease, grass at its root. What it meets
-			 * takes away the part of the sun in its light; the light of the sky stays. The darkened corners go along in red.
+			 * takes away the part of the sun in its light; the light of the sky stays. The darkened corners go along in red; in
+			 * blue the part of the light of the point that is the sun (as the maps of the sun let it, of the light of the sky
+			 * on that side: what is lit round it is the rest), so the corners darken the rest alone.
 			 */
 			Touch: head + [
 				'in vec2 vQuad;',
@@ -2675,6 +2702,9 @@ Elemenx.Trait('SceneLighting', {
 				'uniform mat4 uMatrix;',
 				'uniform vec3 uSunWay;',
 				'uniform float uSunOn;',
+				'uniform vec3 uSunLight;',
+				'uniform vec3 uSkyLight;',
+				'uniform vec3 uFloorLight;',
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
 				'vec3 place(vec2 uv) {',
@@ -2686,14 +2716,17 @@ Elemenx.Trait('SceneLighting', {
 				'	float dark = texture(uDark, uv).r;',
 				'	float depth = texture(uDepth, uv).r;',
 				'	outColor = vec4(dark, 1.0, 0.0, 1.0);',
-				'	if (depth >= 1.0 || uSunOn < 0.02) return;',
+				'	if (depth >= 1.0) return;',
 				'	vec3 p = place(uv);',
 				'	vec3 n = normalize(cross(dFdx(p), dFdy(p)));',
 				'	if (dot(n, p) > 0.0) n = -n;',
 				'	float facing = dot(n, uSunWay);',
 				'	if (facing <= 0.0) return;',
-				'	float lit = sunShadow(p, n);',
-				'	if (lit < 0.02) return;',
+				'	float lit = sunLit(p, n);',
+				'	float sun = dot(uSunLight, vec3(0.3, 0.59, 0.11)) * 1.35 * facing * lit;',
+				'	float sky = dot(mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5), vec3(0.3, 0.59, 0.11));',
+				'	outColor.b = sun / max(sun + sky, 0.0001);',
+				'	if (uSunOn < 0.02 || lit < 0.02) return;',
 				'	float far = length(p);',
 				'	float reach = clamp(far * 0.02, 0.08, 3.0);',
 				'	float near = far * 0.003 + 0.01;',

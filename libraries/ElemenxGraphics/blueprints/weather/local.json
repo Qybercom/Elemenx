@@ -1,0 +1,472 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "weather-local",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "weather-local-input-cover",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cover"
+				}
+			]
+		},
+		{
+			"id": "weather-local-input-kind",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "weather-local-input-cirrus",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Cirrus"
+				}
+			]
+		},
+		{
+			"id": "weather-local-input-rain",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Rain"
+				}
+			]
+		},
+		{
+			"id": "weather-local-input-warm",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Warm"
+				}
+			]
+		},
+		{
+			"id": "weather-local-input-fog",
+			"type": "Input",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Fog"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-clouds",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.3 + 0.6 * Cover"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-clouds",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Clouds"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-kind",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-kind",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-high",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Cirrus * (1 - Cover)"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-high",
+			"type": "Result",
+			"x": 760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "High"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-wind",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.6 + 0.6 * Cover + 0.8 * smoothstep(0.15, 0.45, Rain) + 1.6 * (smoothstep(0.15, 0.45, Rain) * smoothstep(0.65, 0.85, Kind))"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-wind",
+			"type": "Result",
+			"x": 760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Wind"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-fog",
+			"type": "Formula",
+			"x": 320,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.35 * smoothstep(0.15, 0.45, Rain) * (1 - (smoothstep(0.15, 0.45, Rain) * smoothstep(0.65, 0.85, Kind))) + 0.5 * (smoothstep(0.15, 0.45, Rain) * smoothstep(0.65, 0.85, Kind)) + 0.15 * smoothstep(0.7, 1, Cover) * (1 - smoothstep(0.15, 0.45, Rain)) + Fog"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-fog",
+			"type": "Result",
+			"x": 760,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Fog"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-rain",
+			"type": "Formula",
+			"x": 320,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.15, 0.45, Rain) * (1 - (1 - smoothstep(0.2, 0.4, Warm))) * (0.8 + 0.5 * (smoothstep(0.15, 0.45, Rain) * smoothstep(0.65, 0.85, Kind)))"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-rain",
+			"type": "Result",
+			"x": 760,
+			"y": 590,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rain"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-snow",
+			"type": "Formula",
+			"x": 320,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.15, 0.45, Rain) * (1 - smoothstep(0.2, 0.4, Warm))"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-snow",
+			"type": "Result",
+			"x": 760,
+			"y": 700,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Snow"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-wet",
+			"type": "Formula",
+			"x": 320,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "smoothstep(0.15, 0.45, Rain) * (1 - (1 - smoothstep(0.2, 0.4, Warm)))"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-wet",
+			"type": "Result",
+			"x": 760,
+			"y": 810,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Wet"
+				}
+			]
+		},
+		{
+			"id": "weather-local-formula-storm",
+			"type": "Formula",
+			"x": 320,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(smoothstep(0.15, 0.45, Rain) * smoothstep(0.65, 0.85, Kind))"
+				}
+			]
+		},
+		{
+			"id": "weather-local-result-storm",
+			"type": "Result",
+			"x": 760,
+			"y": 920,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Storm"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "weather-local-link-0",
+			"p1": "weather-local-input-cover-out-Value",
+			"p2": "weather-local-formula-clouds-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-1",
+			"p1": "weather-local-formula-clouds-out-Value",
+			"p2": "weather-local-result-clouds-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-2",
+			"p1": "weather-local-input-kind-out-Value",
+			"p2": "weather-local-formula-kind-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-3",
+			"p1": "weather-local-formula-kind-out-Value",
+			"p2": "weather-local-result-kind-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-4",
+			"p1": "weather-local-input-cirrus-out-Value",
+			"p2": "weather-local-formula-high-in-Cirrus",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-5",
+			"p1": "weather-local-input-cover-out-Value",
+			"p2": "weather-local-formula-high-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-6",
+			"p1": "weather-local-formula-high-out-Value",
+			"p2": "weather-local-result-high-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-7",
+			"p1": "weather-local-input-cover-out-Value",
+			"p2": "weather-local-formula-wind-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-8",
+			"p1": "weather-local-input-rain-out-Value",
+			"p2": "weather-local-formula-wind-in-Rain",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-9",
+			"p1": "weather-local-input-kind-out-Value",
+			"p2": "weather-local-formula-wind-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-10",
+			"p1": "weather-local-formula-wind-out-Value",
+			"p2": "weather-local-result-wind-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-11",
+			"p1": "weather-local-input-rain-out-Value",
+			"p2": "weather-local-formula-fog-in-Rain",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-12",
+			"p1": "weather-local-input-kind-out-Value",
+			"p2": "weather-local-formula-fog-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-13",
+			"p1": "weather-local-input-cover-out-Value",
+			"p2": "weather-local-formula-fog-in-Cover",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-14",
+			"p1": "weather-local-input-fog-out-Value",
+			"p2": "weather-local-formula-fog-in-Fog",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-15",
+			"p1": "weather-local-formula-fog-out-Value",
+			"p2": "weather-local-result-fog-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-16",
+			"p1": "weather-local-input-rain-out-Value",
+			"p2": "weather-local-formula-rain-in-Rain",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-17",
+			"p1": "weather-local-input-warm-out-Value",
+			"p2": "weather-local-formula-rain-in-Warm",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-18",
+			"p1": "weather-local-input-kind-out-Value",
+			"p2": "weather-local-formula-rain-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-19",
+			"p1": "weather-local-formula-rain-out-Value",
+			"p2": "weather-local-result-rain-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-20",
+			"p1": "weather-local-input-rain-out-Value",
+			"p2": "weather-local-formula-snow-in-Rain",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-21",
+			"p1": "weather-local-input-warm-out-Value",
+			"p2": "weather-local-formula-snow-in-Warm",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-22",
+			"p1": "weather-local-formula-snow-out-Value",
+			"p2": "weather-local-result-snow-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-23",
+			"p1": "weather-local-input-rain-out-Value",
+			"p2": "weather-local-formula-wet-in-Rain",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-24",
+			"p1": "weather-local-input-warm-out-Value",
+			"p2": "weather-local-formula-wet-in-Warm",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-25",
+			"p1": "weather-local-formula-wet-out-Value",
+			"p2": "weather-local-result-wet-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-26",
+			"p1": "weather-local-input-rain-out-Value",
+			"p2": "weather-local-formula-storm-in-Rain",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-27",
+			"p1": "weather-local-input-kind-out-Value",
+			"p2": "weather-local-formula-storm-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "weather-local-link-28",
+			"p1": "weather-local-formula-storm-out-Value",
+			"p2": "weather-local-result-storm-in-Value",
+			"kind": "value"
+		}
+	]
+}

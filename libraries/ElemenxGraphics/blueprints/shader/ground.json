@@ -864,6 +864,24 @@
 			"p1": "air-out-Color",
 			"p2": "end-in-Color",
 			"kind": "value"
+		},
+		{
+			"id": "ground-link-light-at",
+			"p1": "picture-out-At",
+			"p2": "light-in-At",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-light-dx",
+			"p1": "picture-out-DX",
+			"p2": "light-in-DX",
+			"kind": "value"
+		},
+		{
+			"id": "ground-link-light-dy",
+			"p1": "picture-out-DY",
+			"p2": "light-in-DY",
+			"kind": "value"
 		}
 	]
 }

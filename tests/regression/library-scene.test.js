@@ -4755,6 +4755,24 @@ describe('Contract: Scene and SceneObject, the objects of a game in 3D', functio
 		})).toEqual([]);
 	});
 
+	/*
+	 * Regression: the light round the ground of a planet was the same everywhere (a gorge as a plain, a slope turned from the
+	 * sky as a ridge). It is as much as its side sees of the sky and as the hills round it leave (Closed of its picture, in
+	 * the green of uSnowMap, read where its picture is).
+	 */
+	it('darkens the light round the ground of a planet in its valleys and on what is turned from the sky', function () {
+		var made = Elemenx.Service('Blueprints').Compile(Elemenx.Service('SceneBlueprints').LibraryGround());
+		var picture = /vec4 (d\d+_)painted = textureGrad\(uColorMap, \1at, \1x, \1y\);/.exec(made.Function);
+		var shut = /float (\w+)shut = uTiled > 0\.5 \? textureGrad\(uSnowMap, ([^,]+), ([^,]+), ([^)]+)\)\.g : 0\.0;/.exec(made.Function);
+
+		expect(picture).toBeTruthy();
+		expect(shut).toBeTruthy();
+		expect(shut.slice(2)).toEqual(['At', 'DX', 'DY'].map(function (pin) {
+			return 'b' + picture[1].replace(/\D/g, '') + '_' + pin;
+		}));
+		expect(made.Function).toContain(shut[1] + 'around *= (1.0 - ');
+	});
+
 	/* Regression: the woods of a planet read where its texel is, its colors aside of it: steps of texels along their edges from far. */
 	it('reads the woods of a planet aside, as its colors, no steps along their edges', function () {
 		var made = Elemenx.Service('Blueprints').Compile(Elemenx.Service('SceneBlueprints').LibraryGround());

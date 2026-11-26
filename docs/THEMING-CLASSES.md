@@ -1150,6 +1150,12 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-scene-levels`
 - `elemenx-scene-loading`: `own`
 - `elemenx-scene-lock`: `locked`, `off`
+- `elemenx-scene-mark`
+- `elemenx-scene-mark-cluster`
+- `elemenx-scene-marks`
+- `elemenx-scene-marks-arrow`
+- `elemenx-scene-marks-line`
+- `elemenx-scene-marks-lines`
 - `elemenx-scene-screens`
 - `elemenx-scene-sight`
 - `elemenx-scene-sight-arrow`

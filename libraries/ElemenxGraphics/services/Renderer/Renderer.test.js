@@ -130,6 +130,66 @@ describe('Contract: the Renderer, its textures and what it drew', function () {
 		})).toEqual([0, 128, 255, 255, 64, 0]);
 		expect(gl.getParameter(gl.UNPACK_ALIGNMENT)).toBe(4);
 	});
+	/*
+	 * Regression: a surface whose point half a voxel out along its normal was in a wall (what hangs from a roof of rock, set
+	 * in it) got no light of the probes (weight 0), and took the sky in its place: the stones under the roof of a tunnel shone
+	 * white. Now it takes what the probes give a voxel further out.
+	 */
+	it('gives a surface whose point by it is in a wall the light of the probes a voxel further out', function () {
+		var gl = renderer.GL;
+		var chunks = Elemenx.Service('Renderer').Chunks;
+		var program = renderer.Program([
+			'#version 300 es',
+			'in vec3 aPosition;',
+			'void main() { gl_Position = vec4(aPosition.xy, 0.0, 1.0); }'
+		].join('\n'), [
+			'#version 300 es',
+			'precision highp float;',
+			chunks.Lights,
+			chunks.Shadow,
+			'out vec4 outColor;',
+			'void main() {',
+			'	float weight;',
+			'	vec3 light = probeLight(vec3(0.5, 0.0, 0.5), vec3(0.0, 1.0, 0.0), weight);',
+			'	outColor = vec4(light, weight);',
+			'}'
+		].join('\n'));
+		/* 4 by 8 by 4 voxels: four blocks over each other (red, green, blue, free), each a row of the 8 layers of y, 4 by 4. */
+		var data = new Float32Array(32 * 16 * 4);
+		var target = renderer.Target(1, 1, {});
+		var quad = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+		var pixel = new Uint8Array(4);
+		var probes;
+		var x;
+		var y;
+
+		/* Every voxel free but the one the surface reads first (layer 2, x 2, z 2); the red of the one over it 1. */
+		for (y = 12; y < 16; y++) {
+			for (x = 0; x < 32; x++)
+				data[(y * 32 + x) * 4] = 1;
+		}
+
+		data[((12 + 2) * 32 + 2 * 4 + 2) * 4] = 0;
+		data[(2 * 32 + 3 * 4 + 2) * 4] = 1;
+
+		probes = renderer.Texture({Width: 32, Height: 16, Data: data}, {Float: true, Nearest: true});
+
+		target.Begin();
+
+		renderer.Draw(quad, program, {uProbeOn: 1, uProbe: probes, uProbeBox: [-2, -2, -2, 1], uProbeCount: [4, 8, 4]}, {Depth: false, Cull: 'none'});
+
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		target.End();
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+		/* Of the voxel over it: the mean of the light over its side (0.886 / pi), as much as the edge of the voxels lets (0.375). */
+		expect(pixel[0]).toBeGreaterThan(65);
+		expect(pixel[0]).toBeLessThan(80);
+		expect(pixel[3]).toBeGreaterThan(90);
+		expect(pixel[3]).toBeLessThan(100);
+	});
+
 	/* What a frame costs: the draws and the triangles since the renderer was made, the copies of a mesh counted. */
 	it('counts its draws and the triangles of them, each copy of an instanced mesh, and no triangle of a line', function () {
 		var program = renderer.Program([

@@ -163,6 +163,7 @@
 		{"When": ["mountains"], "ID": "cave-torch-post-fork", "Kind": "thing", "Name": "", "Model": "torch", "X": -542.5, "Y": -992, "Z": 48, "Size": 1.7, "Scaled": ["X", "Y"]},
 		{"When": ["mountains"], "ID": "cave-torch-hall", "Kind": "light", "Name": "Torch", "X": -496, "Y": -1034, "Z": 47, "Height": 1.75, "Color": "#ff9a48", "Power": 1.1, "Radius": 13, "Flicker": 0.22, "Scaled": ["X", "Y"]},
 		{"When": ["mountains"], "ID": "cave-torch-post-hall", "Kind": "thing", "Name": "", "Model": "torch", "X": -496, "Y": -1034, "Z": 47, "Size": 1.7, "Scaled": ["X", "Y"]},
+		{"When": ["mountains"], "ID": "cave-crystal-hall", "Kind": "thing", "Name": "Glowing crystal", "Model": "cave-crystal", "X": -501, "Y": -1042, "Z": 47, "Size": 3.2, "Scaled": ["X", "Y"]},
 		{"When": ["mountains"], "ID": "cave-torch-hall-far", "Kind": "light", "Name": "Torch", "X": -484, "Y": -1046, "Z": 47, "Height": 1.75, "Color": "#ff9a48", "Power": 1.1, "Radius": 13, "Flicker": 0.22, "Scaled": ["X", "Y"]},
 		{"When": ["mountains"], "ID": "cave-torch-post-hall-far", "Kind": "thing", "Name": "", "Model": "torch", "X": -484, "Y": -1046, "Z": 47, "Size": 1.7, "Scaled": ["X", "Y"]},
 		{"When": ["mountains"], "ID": "cave-torch-deep", "Kind": "light", "Name": "Torch", "X": -586, "Y": -1048, "Z": 34, "Height": 1.75, "Color": "#ff9a48", "Power": 1.1, "Radius": 13, "Flicker": 0.22, "Scaled": ["X", "Y"]},

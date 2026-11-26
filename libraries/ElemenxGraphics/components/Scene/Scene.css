@@ -624,6 +624,71 @@
 	pointer-events: auto;
 }
 
+/* The marks (SceneMarks): moved by a transform from the top left corner each frame; their lines, arrows and badges under the HUD. */
+.elemenx-scene [data-elemenx-mark] {
+	position: absolute;
+	top: 0;
+	left: 0;
+	will-change: transform;
+}
+
+.elemenx-scene [data-elemenx-mark][hidden] {
+	display: none !important;
+}
+
+.elemenx-scene-marks {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+}
+
+.elemenx-scene-marks[hidden] {
+	display: none;
+}
+
+.elemenx-scene-marks-lines {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.elemenx-scene-marks-line {
+	fill: none;
+	stroke: var(--elemenx-scene-label);
+	stroke-width: 1;
+	opacity: 0.7;
+}
+
+.elemenx-scene-marks-arrow {
+	fill: var(--elemenx-scene-selection);
+	stroke: var(--elemenx-scene-shadow);
+	stroke-width: 1;
+}
+
+.elemenx-scene-mark-cluster[hidden] {
+	display: none;
+}
+
+.elemenx-scene-mark-cluster {
+	position: absolute;
+	top: 0;
+	left: 0;
+	min-width: 20px;
+	padding: 0 5px;
+	font: inherit;
+	font-size: 11px;
+	line-height: 16px;
+	color: var(--elemenx-scene-background);
+	background: var(--elemenx-scene-selection);
+	border: 0;
+	border-radius: var(--elemenx-radius-pill);
+	cursor: pointer;
+	pointer-events: auto;
+}
+
 /* The numbers of Levels: in the lower left corner, small, over the world, the presses through it. */
 .elemenx-scene-levels {
 	position: absolute;
@@ -674,7 +739,6 @@
 	display: flex;
 	align-items: center;
 	gap: 4px;
-	margin: -4px 0 0 -4px;
 	color: var(--elemenx-scene-label);
 	font-size: 11px;
 	line-height: 16px;

@@ -1911,13 +1911,20 @@ Elemenx.Service('SceneBlueprints', {
 		 * thick part only), by Shadow. Day: how much the sun is up for its lights at night (DayFrom, DayTo of its rise).
 		 * Regression: what looked away from the sun was nearly black, a hole in the ground.
 		 */
-		node('GroundLight', [number('Sky', 0.42), number('Dusk', 0.35), number('Shadow', 0.5), number('DayFrom', -0.05), number('DayTo', 0.12)], [albedo, normal, up, pin('World', 'vec3', 'vWorld'), pin('Ring', 'float', '1.0')], [out('Color', 'vec3'), out('Rise'), out('Light'), out('Dusk'), out('Around', 'vec3'), out('Toward', 'vec3'), out('Day')], function (context, name, inputs, value, line) {
+		/*
+		 * The light round a point of the ground: the sky as much as its side sees of it (Facing: a slope turned from the sky
+		 * less) and as much as the hills round it leave (Hollow: of the Closed of its picture, uSnowMap green): valleys and
+		 * gorges darker than ridges. Regression: the same all round on any land, a plain and a gorge alike.
+		 */
+		node('GroundLight', [number('Sky', 0.42), number('Dusk', 0.35), number('Shadow', 0.5), number('DayFrom', -0.05), number('DayTo', 0.12), number('Facing', 0.45), number('Hollow', 0.85)], [albedo, normal, up, pin('World', 'vec3', 'vWorld'), pin('Ring', 'float', '1.0'), at, dx, dy], [out('Color', 'vec3'), out('Rise'), out('Light'), out('Dusk'), out('Around', 'vec3'), out('Toward', 'vec3'), out('Day')], function (context, name, inputs, value, line) {
 			var u = inputs.Up;
 
 			line('float ' + name + 'rise = dot(' + u + ', uSun);');
 			line('float ' + name + 'light = clamp(' + name + 'rise * 3.0 + 0.3, 0.0, 1.0);');
 			line('float ' + name + 'dusk = 1.0 - smoothstep(0.0, 0.35, abs(' + name + 'rise));');
 			line('vec3 ' + name + 'around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * ' + value('Sky') + ' * smoothstep(-0.25, 0.3, ' + name + 'rise) + vec3(0.5, 0.25, 0.15) * ' + name + 'dusk * uAir.a * ' + value('Dusk') + ';');
+			line('float ' + name + 'shut = uTiled > 0.5 ? textureGrad(uSnowMap, ' + inputs.At + ', ' + inputs.DX + ', ' + inputs.DY + ').g : 0.0;');
+			line(name + 'around *= (1.0 - ' + value('Facing') + ' * (0.5 - 0.5 * dot(' + inputs.Normal + ', ' + u + '))) * (1.0 - ' + value('Hollow') + ' * ' + name + 'shut);');
 			line('float ' + name + 'day = max(dot(' + inputs.Normal + ', uSun), 0.0) * sunShadow(' + inputs.World + ', ' + inputs.Normal + ') * ' + inputs.Ring + ';');
 			line('vec3 ' + name + 'toward = normalize(uSun - ' + u + ' * ' + name + 'rise + vec3(1e-6));');
 			line('if (uWeatherOn > 0.5) {');

@@ -23,6 +23,13 @@
  * it. Each ship on its way tells the Ether (travel: {Kind, Phase, Step, Speed km/s, Tunnel, To, Left km, Reason, By, Passing:
  * [{ID, Name, Pass km, Seconds, Distance km}]}) once a frame; the event travel tells each phase, refused (Reason well,
  * blocked, relay), joined, and why it came out (Reason arrived, command, blocked, body, released, leader).
+ * A ship sets its step by itself up to Most of its Warp (6; 7 and 8 are the steps of relays). Between galaxies (To
+ * galaxy:<ID>, one of the far galaxies of the sky of a universe: Far of SceneCosmos, SceneUniverse) it goes at the steps 9
+ * to its Far (12: some 8 000 light-years a second, five or six minutes across the 2.5 million light-years to a neighbour;
+ * 13 and 14, for tests and demos, ten to twenty seconds and two), at FarStep (Far by default), out of the well of every
+ * body (HyperWell); a ship of a Far under 9 cannot (refused: step). It comes out at the edge of that galaxy, in the system
+ * of the star there nearest the way it came (event travel arrived {Universe, Galaxy}); out of it on the way (H again) it
+ * stands between the galaxies, in empty space with all of them round it (SceneUniverse.EnterVoid; arrived {Void}).
  * Aiming (Aim(id), AimAlign(on)): T takes what lies nearest the nose of the ship driven, G turns it there by itself; its
  * lead is where that will be when it gets there at its step of warp; marks over the view (.elemenx-scene-sight) and the
  * Ether aim tell it; H with no place of its own goes there.
@@ -1767,7 +1774,7 @@ Elemenx.Trait('SceneVehicles', {
 
 			/* H goes into warp, J jumps: each once a press. */
 			if (!hero.Travel && keys.KeyH && !hero.Pressed) engine.Travel(hero, 'warp');
-			else if (hero.Travel && hero.Travel.Kind === 'warp' && keys.KeyH && !hero.Pressed) engine.TravelStop(hero);
+			else if (hero.Travel && (hero.Travel.Kind === 'warp' || hero.Travel.Universe) && keys.KeyH && !hero.Pressed) engine.TravelStop(hero);
 
 			if (!hero.Travel && keys.KeyJ && !hero.Pressed)
 				engine.Travel(hero, 'jump', {Hold: true});
@@ -2283,10 +2290,10 @@ Elemenx.Trait('SceneVehicles', {
 			/* Its step of warp up and down on the way ([ and ]); H again, out of it where it is. */
 			if (warp && travel.Phase === 'inside' && !travel.Relay) {
 				if (keys.BracketRight && !travel.Keyed)
-					travel.Step = Math.min(6, travel.Step + 1);
+					travel.Step = Math.min(travel.Most || 6, travel.Step + 1);
 
 				if (keys.BracketLeft && !travel.Keyed)
-					travel.Step = Math.max(1, travel.Step - 1);
+					travel.Step = Math.max(travel.Least || 1, travel.Step - 1);
 
 				travel.Keyed = !!(keys.BracketRight || keys.BracketLeft);
 			}
@@ -2333,7 +2340,8 @@ Elemenx.Trait('SceneVehicles', {
 				var goal = travel.Ahead ? vectors.Add(origin, travel.Ahead) : goalOf(hero, travel);
 				var axis = goal && vectors.Distance(goal, world) > 1e-9 ? vectors.Normalize(vectors.Subtract(goal, world)) : travel.Axis;
 				var left = goal ? vectors.Distance(goal, world) : Infinity;
-				var aim = warp ? stepSpeed(travel, top) : top * given(travel.Pace, 5);
+				/* Between galaxies its way in the scene is of a step of a galaxy (6 at most): its steps past it are of light-years (lightOf). */
+				var aim = warp ? stepSpeed(travel.Universe ? Object.assign({}, travel, {Step: Math.min(6, travel.Step)}) : travel, top) : top * given(travel.Pace, 5);
 				var leader = travel.Leader ? scene.Objects[travel.Leader] : null;
 				var end = '';
 				var step;
@@ -2393,7 +2401,7 @@ Elemenx.Trait('SceneVehicles', {
 
 				/* Of light-years: as many as it goes a second (HyperSpeed, ramped as its speed is), arrived where none are left. */
 				if (travel.Kind === 'hyper') {
-					travel.Light = Math.max(0, travel.Light - travel.HyperSpeed * Math.min(1, travel.Speed / Math.max(1e-9, aim)) * elapsed);
+					travel.Light = Math.max(0, travel.Light - (travel.Universe ? lightOf(travel) : travel.HyperSpeed) * Math.min(1, travel.Speed / Math.max(1e-9, aim)) * elapsed);
 
 					if (travel.Light <= 0)
 						end = end || 'arrived';
@@ -2429,6 +2437,10 @@ Elemenx.Trait('SceneVehicles', {
 
 					/* At the star it jumped to: its system, at once (the ship of a game made there again: event travel Phase arrived). */
 					if (travel.Kind === 'hyper' && end === 'arrived' && self.EnterSystem)
+						arrive(hero, travel);
+
+					/* Out of a jump between galaxies on its way: between them, where it got to. */
+					if (travel.Universe && end === 'command' && self.EnterVoid)
 						arrive(hero, travel);
 				}
 			}
@@ -2517,6 +2529,33 @@ Elemenx.Trait('SceneVehicles', {
 		}
 
 		function arrived (id, travel) {
+			var done = function (error, made) {
+				self.$Emit('travel', Object.assign({ID: id, Kind: 'hyper', Phase: 'arrived', To: travel.To, Universe: travel.Universe, Error: error ? error.message : ''}, made || {}));
+
+				if (travel.Callback)
+					travel.Callback(error || null, Object.assign({ID: id, Kind: 'hyper', Universe: travel.Universe, Reason: travel.Reason}, made || {}));
+			};
+			var part;
+
+			/* Between galaxies: at its edge (arrived), or where it got to on the way (command). */
+			if (travel.Universe && travel.Reason === 'arrived') {
+				self.EnterUniverseGalaxy(travel.Universe, travel.From, function (error, star) {
+					done(error, {Galaxy: star || ''});
+				});
+
+				return;
+			}
+
+			if (travel.Universe) {
+				part = travel.Total ? 1 - travel.Light / travel.Total : 0;
+
+				self.EnterVoid(vectors.Lerp(travel.From, travel.Toward, part), function (error, place) {
+					done(error, {Void: place});
+				});
+
+				return;
+			}
+
 			self.EnterSystem(travel.Galaxy, function (error) {
 				self.$Emit('travel', {ID: id, Kind: 'hyper', Phase: 'arrived', To: travel.To, Galaxy: travel.Galaxy, Error: error ? error.message : ''});
 
@@ -2578,6 +2617,9 @@ Elemenx.Trait('SceneVehicles', {
 			/* To a star of the galaxy: an interstellar jump (hyper), out of its well far enough (HyperWell). */
 			if (kind === 'warp' && /^star:/.test(String(made.To || ''))) return hyper(hero, settings, made, callback);
 
+			/* To another galaxy of the universe: the steps past those of a galaxy (9 to its Far). */
+			if (kind === 'warp' && /^galaxy:/.test(String(made.To || ''))) return intergalactic(hero, made, callback);
+
 			relay = made.Relay ? scene.Objects[made.Relay] : null;
 
 			/* By a relay: from within its reach to the one it is joined to, by a tunnel of the two and its step. */
@@ -2595,7 +2637,7 @@ Elemenx.Trait('SceneVehicles', {
 			if (blocker)
 				return refused(hero, kind, 'blocked', blocker.ID);
 
-			hero.Travel = {Kind: kind, Phase: 'enter', Time: 0, Flow: 0, Speed: 0, Gone: 0, To: relay ? relay.Traits.WarpRelay.To : made.To || '', Relay: relay ? relay.ID : '', Join: made.Join || '', Hold: !!made.Hold, Step: relay ? given(relay.Traits.WarpRelay.Step, 8) : given(made.Step, 3), Steps: made.Steps || [], Ramp: given(made.Ramp, 2), Brake: given(made.Brake, 1.2), Pace: given(made.Speed, 5), Capture: given(made.Capture, 50), Length: given(made.Length, 0), Lengths: {enter: given(made.Enter, 1), exit: given(made.Exit, 1)}, Tint: engine.Paint(made.Tint).slice(0, 3), Callback: callback || null};
+			hero.Travel = {Kind: kind, Phase: 'enter', Time: 0, Flow: 0, Speed: 0, Gone: 0, To: relay ? relay.Traits.WarpRelay.To : made.To || '', Relay: relay ? relay.ID : '', Join: made.Join || '', Hold: !!made.Hold, Step: relay ? given(relay.Traits.WarpRelay.Step, 8) : Math.min(given(made.Most, 6), given(made.Step, 3)), Most: given(made.Most, 6), Steps: made.Steps || [], Ramp: given(made.Ramp, 2), Brake: given(made.Brake, 1.2), Pace: given(made.Speed, 5), Capture: given(made.Capture, 50), Length: given(made.Length, 0), Lengths: {enter: given(made.Enter, 1), exit: given(made.Exit, 1)}, Tint: engine.Paint(made.Tint).slice(0, 3), Callback: callback || null};
 
 			/* Out of it, it goes on at many times its top speed, falling as the square of what is left: a third of that way. */
 			hero.Travel.Drift = given(real(settings, settings.Around ? scene.Objects[settings.Around] : null, hero.Ship).Top, 1) * (kind === 'warp' ? 12 : 5) * hero.Travel.Lengths.exit / 3;
@@ -2669,6 +2711,49 @@ Elemenx.Trait('SceneVehicles', {
 			return true;
 		}
 
+		/*
+		 * A jump to another galaxy (To galaxy:<ID>): a tunnel of warp out of the well of every body (HyperWell) at the steps
+		 * between galaxies (9 to Far: Steps, km/s), its way along the way to it in the sky; as it comes to its edge, the system
+		 * of the star there nearest the way it came. From where the scene lies in its universe (SceneUniverse.UniversePlace).
+		 */
+		function intergalactic (hero, made, callback) {
+			var galaxy = targetById(hero, made.To);
+			var well = wellOf(hero, given(made.HyperWell, 0.0005));
+			var blocker = blockedAt(hero.World);
+			var far = given(made.Far, 12);
+			/* From the edge of the galaxy it is in on the side of the other (a stop on the way is out of both). */
+			var from = galaxy && galaxy.Place && self.UniverseDeparture ? self.UniverseDeparture(galaxy.Place) : null;
+			var light;
+
+			if (!galaxy || !from)
+				return refused(hero, 'warp', 'galaxy', made.To);
+
+			if (far < 9)
+				return refused(hero, 'warp', 'step', made.To);
+
+			if (well)
+				return refused(hero, 'warp', 'well', well.Body.ID);
+
+			if (blocker)
+				return refused(hero, 'warp', 'blocked', blocker.ID);
+
+			/* Light-years to its edge, the place it goes to in its universe (Mpc). */
+			light = Math.max(0, self.$Service('UniverseData').Distance(from, galaxy.Place) * self.$Service('UniverseData').Units.ly - galaxy.Radius);
+
+			hero.Travel = {Kind: 'hyper', Universe: galaxy.Universe, Phase: 'enter', Time: 0, Flow: 0, Speed: 0, To: made.To, Galaxy: galaxy.Universe, Light: light, Total: light, From: from, Toward: galaxy.Place, Way: galaxy.Way, Step: Math.max(9, Math.min(far, given(made.FarStep, far))), Least: 9, Most: far, Steps: made.Steps || [], Ramp: given(made.Ramp, 2), Brake: given(made.Brake, 1.2), Pace: 5, Capture: 0, Length: 0, Lengths: {enter: given(made.Enter, 1), exit: given(made.Exit, 1)}, Tint: engine.Paint(made.HyperTint || '#b07cff').slice(0, 3), Callback: callback || null, Drift: 0};
+
+			self.$Emit('travel', {ID: hero.ID, Kind: 'hyper', Phase: 'enter', To: made.To});
+
+			return true;
+		}
+
+		/* Light-years a second of a step of warp (Steps: km/s). */
+		function lightOf (travel) {
+			var steps = travel.Steps || [];
+
+			return (steps[Math.max(1, Math.min(steps.length, Math.round(travel.Step))) - 1] || 0) / 9.4607e12;
+		}
+
 		/* Out of its way far at once where it is (a command of its own, or of the game). */
 		engine.TravelStop = function (hero) {
 			if (!hero || !hero.Travel) return false;
@@ -2695,7 +2780,29 @@ Elemenx.Trait('SceneVehicles', {
 				var traits = object.Traits || {};
 
 				return object !== hero && object.World && !object.Hidden && (traits.Body || traits.Star || object.Values.Model || traits.WarpRelay || traits.WarpBlocker);
-			}).concat(farStars(hero));
+			}).concat(farStars(hero), farGalaxies(hero));
+		}
+
+		/*
+		 * The far galaxies of the sky of a universe (Far of the Cosmos of the scene: SceneUniverse), each a target far along its
+		 * way in the sky (ID galaxy:<its ID>): what a jump between galaxies goes to. Light: light-years to its middle.
+		 */
+		function farGalaxies (hero) {
+			var far = (scene.Camera && scene.Camera.Far || 1e6) * 0.4;
+			var list = self.Cosmos && self.Cosmos.Far;
+			var universes = self.$Service('UniverseData');
+
+			if (!Array.isArray(list) || !hero.World) return [];
+
+			return list.map(function (one) {
+				var way = (engine.GalaxySky ? engine.GalaxySky(one.Way) : null) || one.Way;
+				var data = self.UniverseData ? self.UniverseData() : null;
+				var galaxy = data ? universes.Find(data, one.ID) : null;
+
+				return {ID: 'galaxy:' + one.ID, Values: {Name: one.Name}, Traits: {}, World: vectors.Add(hero.World, vectors.Scale(way, far)), Size: 0, Universe: one.ID, Light: one.Distance * universes.Units.ly, Radius: galaxy ? galaxy.Radius : 0, Place: galaxy ? galaxy.Place : null, Way: way};
+			}).filter(function (one) {
+				return !!one.Place;
+			});
 		}
 
 		/*
@@ -2716,6 +2823,12 @@ Elemenx.Trait('SceneVehicles', {
 		function targetById (hero, id) {
 			if (scene.Objects[id])
 				return scene.Objects[id];
+
+			if (/^galaxy:/.test(String(id))) {
+				return farGalaxies(hero).filter(function (one) {
+					return one.ID === id;
+				})[0] || null;
+			}
 
 			if (!/^star:/.test(String(id))) return null;
 
@@ -2950,9 +3063,9 @@ Elemenx.Trait('SceneVehicles', {
 
 		/* Its step of warp on the way (1 to 6; a relay keeps its own). */
 		engine.TravelStep = function (hero, step) {
-			if (!hero || !hero.Travel || hero.Travel.Kind !== 'warp' || hero.Travel.Relay) return false;
+			if (!hero || !hero.Travel || !(hero.Travel.Kind === 'warp' || hero.Travel.Universe) || hero.Travel.Relay) return false;
 
-			hero.Travel.Step = Math.max(1, Math.min(6, Math.round(Number(step) || 1)));
+			hero.Travel.Step = Math.max(hero.Travel.Least || 1, Math.min(hero.Travel.Most || 6, Math.round(Number(step) || 1)));
 
 			return true;
 		};
@@ -3854,9 +3967,11 @@ Elemenx.Trait('SceneVehicles', {
 		var scene = this.Scene();
 
 		scene.Aim = scene.Aim || {Target: '', Align: false, Keys: {}, Past: {}, Seen: {}};
-		/* An object of the scene, or a star near of the galaxy (star:<its ID>: GalaxyNear). */
+		/* An object of the scene, a star near of the galaxy (star:<its ID>: GalaxyNear), or a galaxy of its sky (galaxy:<its ID>: Far). */
 		scene.Aim.Target = id && (scene.Objects[id] || /^star:/.test(String(id)) && this.GalaxyNear && this.GalaxyNear(30, 12).some(function (star) {
 			return 'star:' + star.ID === id;
+		}) || /^galaxy:/.test(String(id)) && this.Cosmos && Array.isArray(this.Cosmos.Far) && this.Cosmos.Far.some(function (galaxy) {
+			return 'galaxy:' + galaxy.ID === id;
 		})) ? id : '';
 
 		return scene.Aim.Target;

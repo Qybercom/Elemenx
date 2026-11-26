@@ -1720,6 +1720,140 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(off).toBeLessThan(asked * 0.15);
 		expect(scene.WeatherOver('sun')).toBe(null);
 
+		/*
+		 * Regression: the weather of a location of a planet was one of 8 names (the one it had as the ship came down, for
+		 * ever). It is the numbers of the forecast at its place (LocalWeatherGraph, blueprints/weather/local), every shade of it.
+		 */
+		var wettest = null;
+
+		for (y = 8; y < 256; y += 12) {
+			for (x = 8; x < 256; x += 12) {
+				var way = [-1 + (x + 0.5) * 2 / 256, -(-1 + (y + 0.5) * 2 / 256), 1];
+				var there = scene.WeatherOver('terra', way);
+				if (!wettest || there.Rain > wettest.Over.Rain)
+					wettest = {Way: way, Over: there};
+			}
+		}
+
+		var surfaced = inner.Surface;
+		var located = inner.Location;
+		var length = Math.hypot(wettest.Way[0], wettest.Way[1], wettest.Way[2]);
+		var wanted;
+
+		inner.Surface = null;
+		inner.Location = {Planet: true, Body: 'terra', Frame: {Middle: wettest.Way.map(function (value) {
+			return value / length;
+		})}};
+		inner.WeatherWanted = null;
+
+		try {
+			wanted = engine.WeatherWanted();
+
+			expect(wettest.Over.Rain).toBeGreaterThan(0.45);
+			expect(wanted.Clouds).toBeCloseTo(0.3 + 0.6 * wettest.Over.Cover, 5);
+			expect(wanted.Rain + wanted.Snow).toBeGreaterThan(0.5);
+
+			/*
+			 * What the hours before left on the ground (LookbackGraph): of the time alone, so a day passed and back again leaves
+			 * it the same. Regression: wet in half a minute of frames, dry minutes after, a day passed in a moment left no trace.
+			 */
+			expect(wanted.Looked).toBe(true);
+			expect(wanted.Wet).toBeGreaterThan(0.3);
+			expect(wanted.Cover).toBeGreaterThanOrEqual(0);
+			expect(wanted.Cover).toBeLessThanOrEqual(1);
+
+			inner.Time += 1.5;
+			inner.WeatherWanted = null;
+
+			engine.WeatherWanted();
+
+			inner.Time -= 1.5;
+			inner.WeatherWanted = null;
+
+			expect(engine.WeatherWanted()).toEqual(wanted);
+
+			/* The weather of the scene goes to them, whatever its name says. */
+			scene.Weather = 'clear';
+
+			engine.WeatherStep(1000);
+
+			expect(engine.WeatherStep(0).Clouds).toBeCloseTo(wanted.Clouds, 3);
+		}
+		finally {
+			inner.Surface = surfaced;
+			inner.Location = located;
+			inner.WeatherWanted = null;
+		}
+
+		/*
+		 * An influence on the weather of a planet (Influence, WeatherInfluences): a storm seeded where it is dry rains there
+		 * for its hours (the forecast there with it), told by an event, kept by Save and Load.
+		 */
+		var driest = null;
+		var told = [];
+
+		for (y = 8; y < 256; y += 12) {
+			for (x = 8; x < 256; x += 12) {
+				var dryWay = [-1 + (x + 0.5) * 2 / 256, -(-1 + (y + 0.5) * 2 / 256), 1];
+				var dry = scene.WeatherOver('terra', dryWay);
+				if (!driest || dry.Rain + dry.Cover < driest.Over.Rain + driest.Over.Cover)
+					driest = {Way: dryWay, Over: dry, X: x, Y: y};
+			}
+		}
+
+		var dryLength = Math.hypot(driest.Way[0], driest.Way[1], driest.Way[2]);
+		var seeded;
+		var stormy;
+		var saved;
+
+		scene.$On('influence', function (one) {
+			told.push(one);
+		});
+
+		seeded = scene.Influence('storm-seed', {Body: 'terra', Direction: driest.Way.map(function (value) {
+			return value / dryLength;
+		})}, {Radius: 400});
+
+		expect(seeded).toMatchObject({Kind: 'storm-seed', Body: 'terra', Radius: 400, Start: inner.Time});
+		expect(told.map(function (one) {
+			return one.ID;
+		})).toEqual([seeded.ID]);
+		expect(scene.Influence('no-such-kind', {Body: 'terra', Direction: [0, 1, 0]})).toBe(null);
+
+		inner.Time += 3 / 24;
+		stormy = scene.WeatherOver('terra', driest.Way);
+		inner.Time -= 3 / 24;
+
+		expect(stormy.Rain).toBeGreaterThan(driest.Over.Rain + 0.4);
+		expect(stormy.Cover).toBeGreaterThan(driest.Over.Cover + 0.3);
+
+		/* Its map baked again of it (InfluencesGLSL): the cloud the storm makes seen from space, as the forecast there tells. */
+		inner.Time += 3 / 24;
+
+		frames(14);
+
+		var seen = face(4)[(driest.Y * 256 + driest.X) * 4] / 255;
+
+		inner.Time -= 3 / 24;
+
+		expect(seen).toBeGreaterThan(driest.Over.Cover + 0.3);
+		expect(Math.abs(seen - stormy.Cover)).toBeLessThan(0.25);
+		expect(Elemenx.Service('SceneForecast').Wind([0, 1, 0], 0, 1, 6371, 1, 0).length).toBe(4);
+
+		saved = scene.Save();
+		inner.Influences = [];
+
+		expect(scene.Influences()).toEqual([]);
+		expect(saved.Influences.map(function (one) {
+			return one.ID;
+		})).toEqual([seeded.ID]);
+
+		inner.Influences = JSON.parse(JSON.stringify(saved.Influences));
+
+		expect(scene.Influences()).toEqual(saved.Influences);
+
+		inner.Influences = [];
+
 		/* Over its surface: the shell of its weather, the sky with no wisps of its own. */
 		engine.Renderer.Draw = function (mesh, program, uniforms) {
 			if (uniforms && uniforms.uShell)

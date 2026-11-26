@@ -13,7 +13,7 @@
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
  *   Bundle                   Elemenx.Bundle: production bundle registry, resolved before Discovery
  *   Resource                 Elemenx.Resource: files embedded by a bundle, fetched otherwise
- *   Resources                Elemenx.Resources: groups of named data ($Resources of Libraries and Applications), read at once
+ *   Resources                Elemenx.Resources: groups of named data ($Resources of Libraries and Applications), read at once; Elemenx.Need of the lazy ones
  *   Locale                   Elemenx.Locale: phrases by key in the language of the page, $T of the templates
  *   Style                    Elemenx.Style: the stylesheets of the document and of the shadow roots of Applications
  *   Discovery                development loading of index.js graphs and entity scripts
@@ -1240,7 +1240,10 @@
 		'use strict';
 
 		var own = Runtime.Own;
-		/* group: {name: {Text, Application}}, the text of each kept to give a copy at each read. */
+		/*
+		 * group: {name: {Text, Application, URL, Waiting}}, the text of each kept to give a copy at each read; a lazy one
+		 * (Lazy of $Resources) has its URL and no Text till Elemenx.Need loads it, Waiting what waits for it then.
+		 */
 		var groups = {};
 
 		function define (group, name, text, application) {
@@ -1248,8 +1251,153 @@
 			var entries = groups[group] = groups[group] || {};
 			if (!application && own(entries, name) && entries[name].Application) return;
 
-			entries[name] = {Text: text, Application: !!application};
+			entries[name] = {Text: text, Application: !!application, URL: null, Waiting: null};
 		}
+
+		/* A lazy one: its name known, its text loaded when needed. What is defined or loaded already stays. */
+		function defineLazy (group, name, url, application) {
+			var entries = groups[group] = groups[group] || {};
+			if (own(entries, name) && (entries[name].Text !== null || entries[name].Application && !application)) return;
+
+			entries[name] = {Text: null, Application: !!application, URL: url, Waiting: null};
+		}
+
+		/* Loads the text of a lazy one, once however many wait: callback(error). */
+		function loadLazy (group, name, callback) {
+			var entry = groups[group][name];
+
+			if (entry.Waiting) {
+				entry.Waiting.push(callback);
+
+				return;
+			}
+
+			entry.Waiting = [callback];
+
+			Elemenx.Resource.Load(entry.URL, function (error, text) {
+				var waiting = entry.Waiting;
+				var failed = error;
+
+				entry.Waiting = null;
+
+				if (!failed) {
+					try {
+						JSON.parse(text);
+
+						if (entry.Text === null)
+							entry.Text = text;
+					}
+					catch (parseError) {
+						failed = new Error('Elemenx Resource is not JSON: ' + entry.URL + ': ' + parseError.message);
+					}
+				}
+
+				waiting.forEach(function (each) {
+					each(failed || null);
+				});
+			});
+		}
+
+		/* The names a list of $Needs names in a group: a name, or all those that begin so for one that ends with *. */
+		function namesOf (group, list, unknown) {
+			var entries = groups[group] || {};
+			var found = [];
+
+			list.forEach(function (name) {
+				var prefix = name.charAt(name.length - 1) === '*' ? name.substring(0, name.length - 1) : null;
+
+				if (prefix === null) {
+					if (own(entries, name)) found.push(name);
+					else unknown.push(group + ' ' + name);
+
+					return;
+				}
+
+				Object.keys(entries).forEach(function (one) {
+					if (one.indexOf(prefix) === 0 && found.indexOf(one) === -1)
+						found.push(one);
+				});
+			});
+
+			return found;
+		}
+
+		/* Whether what a spec ({Group: [names]}) names is all here (a name not known counts as here: Need tells of it). */
+		function needed (spec) {
+			return Object.keys(spec).every(function (group) {
+				return namesOf(group, spec[group], []).every(function (name) {
+					return groups[group][name].Text !== null;
+				});
+			});
+		}
+
+		function checkNeeds (spec, what) {
+			if (!spec || typeof spec !== 'object' || Array.isArray(spec) || Object.keys(spec).some(function (group) {
+				return !Array.isArray(spec[group]) || spec[group].some(function (name) {
+					return typeof name !== 'string' || !name;
+				});
+			}))
+				throw new Error(what + ' expects {Group: [names]}');
+		}
+
+		/*
+		 * Elemenx.Need({Group: [names]}, callback): loads the lazy resources named (a name that ends with * names all that
+		 * begin so), then calls back (error), always after it returns. One not known is the error 'Elemenx.Need: unknown
+		 * resource <group> <name>'; what is here already is not loaded again.
+		 */
+		function need (spec, callback) {
+			var unknown = [];
+			var jobs = [];
+			var done;
+
+			if (typeof callback !== 'function')
+				throw new Error('Elemenx.Need expects ({Group: [names]}, callback)');
+
+			checkNeeds(spec, 'Elemenx.Need');
+
+			Object.keys(spec).forEach(function (group) {
+				namesOf(group, spec[group], unknown).forEach(function (name) {
+					if (groups[group][name].Text === null)
+						jobs.push({Group: group, Name: name});
+				});
+			});
+
+			if (unknown.length) {
+				setTimeout(function () {
+					callback(new Error('Elemenx.Need: unknown resource ' + unknown.join(', ')));
+				}, 0);
+
+				return;
+			}
+
+			if (!jobs.length) {
+				setTimeout(function () {
+					callback(null);
+				}, 0);
+
+				return;
+			}
+
+			done = Runtime.Countdown(jobs.length, function (error) {
+				/* Always after it returns, even for what was embedded (Elemenx.Resource.Load calls back at once then). */
+				setTimeout(function () {
+					callback(error);
+				}, 0);
+			});
+
+			jobs.forEach(function (job) {
+				loadLazy(job.Group, job.Name, done);
+			});
+		}
+
+		/* For $Needs of the Components and Traits: whether a spec is all here, and loading what it misses. */
+		Runtime.Needed = function (spec) {
+			checkNeeds(spec, 'Elemenx $Needs');
+
+			return needed(spec);
+		};
+
+		Runtime.Need = need;
 
 		/*
 		 * Elemenx.Resources(group): the names of the resources of a group (Blueprints, Data...), sorted.
@@ -1269,8 +1417,9 @@
 			if (arguments.length === 1)
 				return Object.keys(entries).sort();
 
+			/* A lazy one not loaded yet (Elemenx.Need) is null as one not known. */
 			if (arguments.length === 2)
-				return own(entries, name) ? JSON.parse(entries[name].Text) : null;
+				return own(entries, name) && entries[name].Text !== null ? JSON.parse(entries[name].Text) : null;
 
 			text = typeof data === 'string' ? data : JSON.stringify(data);
 
@@ -1284,9 +1433,11 @@
 		/*
 		 * Loads what $Resources names: {Group: folder or list}. A folder (a path, blueprints) takes every .json file under
 		 * it that the graphs of the owner list or a bundle embeds, named by its path in the folder without .json; a list
-		 * takes paths (named by the file without .json) or {Name, URL}. options: Resolve(path) (an absolute URL),
-		 * Namespace (put before the names: the name of a Library; none for an Application), Files (the URLs its graphs
-		 * list), Application (what it defines stays over what a Library defines). callback(error) once all are in.
+		 * takes paths (named by the file without .json) or {Name, URL}. A folder may be {Folder, Lazy}: Lazy true, or the
+		 * paths in it that begin so (['models/']), are named and not loaded till Elemenx.Need asks for them. options:
+		 * Resolve(path) (an absolute URL), Namespace (put before the names: the name of a Library; none for an
+		 * Application), Files (the URLs its graphs list), Application (what it defines stays over what a Library defines).
+		 * callback(error) once all are in.
 		 */
 		Runtime.LoadResources = function (spec, options, callback) {
 			var jobs = [];
@@ -1300,6 +1451,19 @@
 			Object.keys(spec || {}).forEach(function (group) {
 				var value = spec[group];
 				var folder;
+				var lazy = false;
+
+				if (value && typeof value === 'object' && !Array.isArray(value)) {
+					lazy = value.Lazy === true ? [''] : Array.isArray(value.Lazy) ? value.Lazy : false;
+
+					if (typeof value.Folder !== 'string' || value.Lazy !== undefined && !lazy) {
+						wrong = group;
+
+						return;
+					}
+
+					value = value.Folder;
+				}
 
 				if (typeof value === 'string') {
 					folder = options.Resolve(value.replace(/\/+$/, '') + '/');
@@ -1310,7 +1474,9 @@
 							return job.URL === url;
 						});
 						if (/\.json$/i.test(path) && !twice)
-							jobs.push({Group: group, Name: named(path), URL: url});
+							jobs.push({Group: group, Name: named(path), URL: url, Lazy: !!lazy && lazy.some(function (start) {
+								return path.indexOf(start) === 0;
+							})});
 					});
 
 					return;
@@ -1328,6 +1494,14 @@
 
 				return;
 			}
+
+			/* The lazy ones only named now. */
+			jobs = jobs.filter(function (job) {
+				if (job.Lazy)
+					defineLazy(job.Group, job.Name, job.URL, options.Application);
+
+				return !job.Lazy;
+			});
 
 			if (!jobs.length) {
 				callback(null);
@@ -1362,6 +1536,7 @@
 		};
 
 		Elemenx.Resources = resources;
+		Elemenx.Need = need;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Locale */
@@ -2456,13 +2631,15 @@
 
 		/*
 		 * The system Libraries, each on the ones before it: ElemenxCommon (algorithms that need no page), ElemenxUI (the
-		 * Components of a page), ElemenxGraphics (scenes in 3D), ElemenxGaming (what makes a scene a game).
+		 * Components of a page), ElemenxGraphics (scenes in 3D), ElemenxGaming (what makes a scene a game). lazy: the paths
+		 * of its blueprints loaded only when needed (Elemenx.Need, $Needs): the graphs of the models of ElemenxGraphics come
+		 * with the first Scene, not with the page.
 		 */
-		function system (name, uses) {
-			return {$Root: systemRoot(name), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}, $Resources: {Blueprints: 'blueprints', Data: 'resources'}, $Use: uses};
+		function system (name, uses, lazy) {
+			return {$Root: systemRoot(name), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}, $Resources: {Blueprints: lazy ? {Folder: 'blueprints', Lazy: lazy} : 'blueprints', Data: 'resources'}, $Use: uses};
 		}
 
-		var definitions = {ElemenxCommon: system('ElemenxCommon', []), ElemenxUI: system('ElemenxUI', ['ElemenxCommon']), ElemenxGraphics: system('ElemenxGraphics', ['ElemenxUI']), ElemenxGaming: system('ElemenxGaming', ['ElemenxGraphics'])};
+		var definitions = {ElemenxCommon: system('ElemenxCommon', []), ElemenxUI: system('ElemenxUI', ['ElemenxCommon']), ElemenxGraphics: system('ElemenxGraphics', ['ElemenxUI'], ['models/']), ElemenxGaming: system('ElemenxGaming', ['ElemenxGraphics'])};
 		var applications = new WeakMap();
 
 		function list (value) {
@@ -7094,7 +7271,52 @@
 
 			traitNames(name, definition).forEach(needTrait);
 
+			/* The resources its layers need ($Needs), once the layers are all here: loaded before it is made. */
+			if (!missing.length)
+				needsOf(definition).forEach(function (spec) {
+					if (!Runtime.Needed(spec))
+						missing.push({Type: 'Needs', Spec: spec});
+				});
+
 			return missing;
+		}
+
+		/* The $Needs of two layers added up, group by group. */
+		function mergeNeeds (under, over) {
+			var result = {};
+
+			[under, over].forEach(function (spec) {
+				Object.keys(spec && typeof spec === 'object' ? spec : {}).forEach(function (group) {
+					result[group] = union(result[group] || [], Array.isArray(spec[group]) ? spec[group] : []);
+				});
+			});
+
+			return result;
+		}
+
+		/* The $Needs of a definition, of its base and of its Traits (each layer its own). */
+		function needsOf (definition) {
+			var specs = [];
+			var seen = [];
+
+			function add (layer) {
+				if (!layer || seen.indexOf(layer) !== -1) return;
+
+				seen.push(layer);
+
+				if (layer.$Needs !== undefined)
+					specs.push(layer.$Needs);
+
+				add(layer.$Extends ? Runtime.ComponentDefinition(layer.$Extends) : null);
+
+				(Array.isArray(layer.$Traits) ? layer.$Traits : []).forEach(function (trait) {
+					add(resolveTrait(trait));
+				});
+			}
+
+			add(definition);
+
+			return specs;
 		}
 
 		/* A base that waits for its own base, back to the name: a cycle, told before anything waits for ever. */
@@ -7300,6 +7522,7 @@
 					value = source[key];
 
 					if (key === '$Meta') result.$Meta = mergeMeta(result.$Meta, value);
+					else if (key === '$Needs') result.$Needs = mergeNeeds(result.$Needs, value);
 					else if (/^\$On[A-Z]/.test(key) && typeof value === 'function') (hooks[key] = hooks[key] || []).push(value);
 					else if (typeof value === 'function' && key.charAt(0) !== '$') (methods[key] = methods[key] || []).push(value);
 					else result[key] = value;
@@ -7397,6 +7620,12 @@
 			missing.forEach(function (item) {
 				var factory;
 
+				if (item.Type === 'Needs') {
+					Runtime.Need(item.Spec, done);
+
+					return;
+				}
+
 				if (item.Type === 'Trait') {
 					if (Runtime.Bundle.Deferred('Trait', item.Name)) Runtime.Bundle.Fetch('Trait', item.Name, done);
 					else if (Runtime.Discovery && application) Runtime.Discovery.Load(application, 'Trait', item.Name, false, done);
@@ -7452,6 +7681,16 @@
 						}
 
 						delete waiting[name];
+
+						/*
+						 * Made again meanwhile (a Trait of it came: reinherit) as another placeholder, which waits for its
+						 * $Needs: that one is waited for. Regression: this one called back with no Component (Scene unknown).
+						 */
+						if (componentRegistry[name] && componentRegistry[name] !== lazy && componentRegistry[name].ElemenxResolve) {
+							componentRegistry[name].ElemenxResolve(application, callback);
+
+							return;
+						}
 
 						if (componentRegistry[name] === lazy)
 							CreateComponentFactory(name, definition);
@@ -7629,6 +7868,13 @@
 				delete waiting[name];
 
 				definition = composeDefinition(name, definition);
+			}
+			/* Of no base nor Traits, the resources it needs ($Needs): a placeholder till they are loaded. */
+			else if (definition.$Needs !== undefined) {
+				inherited = missingLayers(name, definition);
+
+				if (inherited.length)
+					return createInheritingFactory(name, definition, inherited);
 			}
 
 			if (generationOverride === undefined && name && previousFactory && !previousFactory.ElemenxLazy)

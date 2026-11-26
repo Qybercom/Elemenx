@@ -1,0 +1,250 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "weather-influence-anti-hail",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "weather-influence-anti-hail-input-near",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Near"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-input-age",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Age"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-input-strength",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Strength"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-formula-cover",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 * Near"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-result-cover",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cover"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-formula-rain",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "-0.2 * ((1 - smoothstep(0.55, 1, Near)) * smoothstep(0, 0.15, Age) * (1 - smoothstep(0.75, 1, Age)) * Strength)"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-result-rain",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rain"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-formula-kind",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "-0.6 * ((1 - smoothstep(0.55, 1, Near)) * smoothstep(0, 0.15, Age) * (1 - smoothstep(0.75, 1, Age)) * Strength)"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-result-kind",
+			"type": "Result",
+			"x": 760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-formula-cirrus",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 * Near"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-result-cirrus",
+			"type": "Result",
+			"x": 760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cirrus"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-formula-fog",
+			"type": "Formula",
+			"x": 320,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 * Near"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-anti-hail-result-fog",
+			"type": "Result",
+			"x": 760,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Fog"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "weather-influence-anti-hail-link-0",
+			"p1": "weather-influence-anti-hail-input-near-out-Value",
+			"p2": "weather-influence-anti-hail-formula-cover-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-1",
+			"p1": "weather-influence-anti-hail-formula-cover-out-Value",
+			"p2": "weather-influence-anti-hail-result-cover-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-2",
+			"p1": "weather-influence-anti-hail-input-near-out-Value",
+			"p2": "weather-influence-anti-hail-formula-rain-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-3",
+			"p1": "weather-influence-anti-hail-input-age-out-Value",
+			"p2": "weather-influence-anti-hail-formula-rain-in-Age",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-4",
+			"p1": "weather-influence-anti-hail-input-strength-out-Value",
+			"p2": "weather-influence-anti-hail-formula-rain-in-Strength",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-5",
+			"p1": "weather-influence-anti-hail-formula-rain-out-Value",
+			"p2": "weather-influence-anti-hail-result-rain-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-6",
+			"p1": "weather-influence-anti-hail-input-near-out-Value",
+			"p2": "weather-influence-anti-hail-formula-kind-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-7",
+			"p1": "weather-influence-anti-hail-input-age-out-Value",
+			"p2": "weather-influence-anti-hail-formula-kind-in-Age",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-8",
+			"p1": "weather-influence-anti-hail-input-strength-out-Value",
+			"p2": "weather-influence-anti-hail-formula-kind-in-Strength",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-9",
+			"p1": "weather-influence-anti-hail-formula-kind-out-Value",
+			"p2": "weather-influence-anti-hail-result-kind-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-10",
+			"p1": "weather-influence-anti-hail-input-near-out-Value",
+			"p2": "weather-influence-anti-hail-formula-cirrus-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-11",
+			"p1": "weather-influence-anti-hail-formula-cirrus-out-Value",
+			"p2": "weather-influence-anti-hail-result-cirrus-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-12",
+			"p1": "weather-influence-anti-hail-input-near-out-Value",
+			"p2": "weather-influence-anti-hail-formula-fog-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-anti-hail-link-13",
+			"p1": "weather-influence-anti-hail-formula-fog-out-Value",
+			"p2": "weather-influence-anti-hail-result-fog-in-Value",
+			"kind": "value"
+		}
+	]
+}

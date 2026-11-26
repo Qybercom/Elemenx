@@ -7,6 +7,8 @@
 
 Блоки графа (генератор): ForecastStorms, ForecastFronts, ForecastHeaps, ForecastCirrus, ForecastRain, ForecastShroud; их пороги и масштабы — свойства. `Code()` — ядро в js (собирается на странице); `IR()` — его модуль IR вместе с функциями шума (для Blueprints.Numeric). `Air`, `Fronts`, `Heaps`, `Cirrus`, `Rain`, `Shroud` — то же на странице.
 
+Wind(p, days, seed, radiusKm, eddy, cells) — ветер над направлением тела в момент: [x, y, z — касательное направление, куда идёт воздух, в радианах в сутки, сила бури там]. По нему сносятся влияния на погоду (WeatherInfluences).
+
 ## Методы
 
 - `Code()`
@@ -15,5 +17,6 @@
 
 ## Тесты
 
+- [bakes the weather of a planet as its time goes, and draws its clouds over the surface as a shell of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L1623) — `tests/regression/library-scene-landing.test.js`
 - [makes the weather of a planet a graph of numbers: its shader and the page give the same cover, kind, cirrus and rain](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L336) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`
 - [takes blocks of numbers of other Libraries into a graph of numbers (Numeric of a definition, its Kernel once)](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js#L419) — `libraries/ElemenxGraphics/services/SceneBlueprints/SceneBlueprints.test.js`

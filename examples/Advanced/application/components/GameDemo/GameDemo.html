@@ -44,12 +44,28 @@
 				<Button *if="GameLevel === 'orbit'" Label="To orbit" Icon="refresh" Variant="ghost" Size="small" [title]="'Round the body the ship is near, in its parking orbit'" (click)="GameToOrbit" />
 				<Button *if="GameLevel !== 'orbit'" Label="Take off" Icon="upload" Variant="ghost" Size="small" [title]="'Up to the orbit again, whoever is in the ship walking in it'" (click)="GameTakeOff" />
 			</RibbonGroup>
+			<RibbonGroup Title="Weather" Icon="cloud" Keep="true">
+				<Button Label="Storm" Icon="zap" Variant="ghost" Size="small" [title]="'A storm seeded under the ship: clouds tower and rain for six hours, seen from space too; it leaves a fog'" (click)="GameInfluence('storm-seed')" />
+				<Button Label="Anti-hail" Icon="arrow-up" Variant="ghost" Size="small" [title]="'A rocket against hail under the ship: the storm there calms for two hours'" (click)="GameInfluence('anti-hail')" />
+				<Button Label="Seed" Icon="cloud" Variant="ghost" Size="small" [title]="'Clouds seeded under the ship: it rains there for four hours'" (click)="GameInfluence('seeding')" />
+				<Button Label="Disperse" Icon="sun" Variant="ghost" Size="small" [title]="'The clouds under the ship dispersed for four hours'" (click)="GameInfluence('dispersal')" />
+				<Button Label="Fog" Icon="eye-off" Variant="ghost" Size="small" [title]="'A fog under the ship for six hours'" (click)="GameInfluence('fog')" />
+				<Button Label="+3 h" Icon="clock" Variant="ghost" Size="small" [title]="'Three hours later: what the rain of them left (wet, snow) on the ground at once'" (click)="GameLater(0.125)" />
+				<Button Label="+1 day" Icon="calendar" Variant="ghost" Size="small" [title]="'A day later'" (click)="GameLater(1)" />
+			</RibbonGroup>
 		</RibbonTab>
 		<RibbonTab ID="galaxy" Title="Galaxy">
 			<RibbonGroup Title="Galaxy" Icon="map" Keep="true">
 				<Button Label="Galaxy map" Icon="map" Variant="ghost" Size="small" [disabled]="!GameEntered || GameLevel !== 'orbit'" [title]="'Out of the system to the map of the galaxy: a star pressed is picked'" (click)="GameMap" />
 				<Button Label="Enter the system" Icon="arrow-right" Variant="ghost" Size="small" [disabled]="!!GameEntered || !GamePicked" (click)="GameEnter" />
 				<Button Label="Home" Icon="home" Variant="ghost" Size="small" [disabled]="!GameHome || GameEntered === GameHome || GameLevel !== 'orbit'" [title]="'Back to the system of Terra'" (click)="GameGoHome" />
+			</RibbonGroup>
+			<RibbonGroup Title="Universe" Icon="globe" Keep="true">
+				<Button Label="Universe map" Icon="globe" Variant="ghost" Size="small" [disabled]="!!GameEntered" [title]="'From the map of the galaxy out to its universe: the galaxies round it as they are, a galaxy pressed is picked'" (click)="GameUniverseMap" />
+				<Button Label="Enter the galaxy" Icon="arrow-right" Variant="ghost" Size="small" [disabled]="!GameGalaxyPicked" (click)="GameGalaxyEnter" />
+				<Select Label="Neighbour" Size="small" [options]="GameNeighbours" [value]="GameNeighbour" (change)="GameNeighbourChosen" />
+				<Select Label="Galaxy step" Size="small" [options]="GameFarSteps" [value]="GameFarStep" (change)="GameFarStepChosen" />
+				<Button Label="Warp to galaxy" Icon="send" Variant="ghost" Size="small" [disabled]="!GameEntered || !GameNeighbour || GameLevel !== 'orbit'" [title]="'A jump to the galaxy chosen at the step chosen, out at its edge in the system of a star there; H on the way: out between the galaxies'" (click)="GameWarpGalaxy" />
 			</RibbonGroup>
 			<RibbonGroup Title="Bodies" Icon="code" Keep="true">
 				<Button Label="Envelope graph" Icon="code" Variant="ghost" Size="small" [pressed]="GameGraphOpen === 'planet/envelope'" [title]="'What lies over and under the surface of the bodies as blocks: pressure, temperature, the deck and the light at a height; their skies, clouds, light and lands, and the inside of the giants, come of it'" (click)="GameGraphOpened('planet/envelope')" />
@@ -94,7 +110,7 @@
 		<Blueprint [value]="GameGaitGraph" (change)="GameGaitChanged" />
 	</div>
 	<div class="scene-demo-scene">
-		<Scene [graphs]="GameGraphs" ShipButtons="false" Setting="galaxy" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [galaxy]="GameGalaxy" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="GameReady" (galaxy)="GamePick" (enter)="GameIn" (leave)="GameOut" (travel)="GameTravelled" (landing)="GameLanding" (hit)="GameHit" (context)="GameContext" (eva)="GameEva" (agent)="GameAgent" (missile)="GameMissile"><DemoLoading slot="loading" Title="Game" />
+		<Scene [graphs]="GameGraphs" ShipButtons="false" Setting="galaxy" Scale="real" Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [galaxy]="GameGalaxy" [universe]="GameUniverse" (universe)="GameUniversePick" (entergalaxy)="GameGalaxyIn" (entervoid)="GameVoid" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="GameReady" (galaxy)="GamePick" (enter)="GameIn" (leave)="GameOut" (travel)="GameTravelled" (landing)="GameLanding" (hit)="GameHit" (context)="GameContext" (eva)="GameEva" (agent)="GameAgent" (missile)="GameMissile"><DemoLoading slot="loading" Title="Game" />
 			<VirtualGamepad slot="hud" Floating="true" Right="true" Buttons="a,b,x,y,rb,dpad" Label="Play" />
 			<GameTargets slot="hud" *if="GameEntered" />
 			<div slot="hud" *if="GameEntered" class="scene-demo-tactics"><GameTactics /><GameRadar Shape="bubble" Size="220" Range="400" Zoomable="true" /></div>

@@ -40,4 +40,4 @@
 - [takes lists of numbers (float\[\]): in js arrays, in wasm the memory, the same numbers; a vector by an index](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L273) — `tests/regression/compilers-wasm.test.js`
 - [says a list of numbers of a module is not for wasm, and keeps it once in js](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/compilers-wasm.test.js#L322) — `tests/regression/compilers-wasm.test.js`
 
-+51 ещё в тех же файлах
++52 ещё в тех же файлах

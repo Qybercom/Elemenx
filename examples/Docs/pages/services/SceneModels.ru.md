@@ -96,4 +96,4 @@ PieceList(name) перечисляет части для редактора: {ID
 - [reads a catalogue of cars, each of a file of its own or in it, their models of their roles, their files from their folders](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-cars.test.js#L26) — `tests/regression/library-cars.test.js`
 - [reads a catalogue: its sets of clips, its characters in their order, their files from its folder](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-characters.test.js#L26) — `tests/regression/library-characters.test.js`
 
-+50 ещё в тех же файлах
++51 ещё в тех же файлах

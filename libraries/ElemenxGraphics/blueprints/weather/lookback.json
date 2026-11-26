@@ -1,0 +1,160 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "weather-lookback",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "weather-lookback-input-wet",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Wet"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-input-snow",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Snow"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-input-warm",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Warm"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-input-hours",
+			"type": "Input",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hours"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-input-was",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Was"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-formula-wetness",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Wet * exp(0 - Hours / 4)"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-result-wetness",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Wetness"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-formula-cover",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "clamp(Was + Snow * 0.6 - max(0, Warm - 0.35) * 0.8, 0, 1)"
+				}
+			]
+		},
+		{
+			"id": "weather-lookback-result-cover",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cover"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "weather-lookback-link-0",
+			"p1": "weather-lookback-input-wet-out-Value",
+			"p2": "weather-lookback-formula-wetness-in-Wet",
+			"kind": "value"
+		},
+		{
+			"id": "weather-lookback-link-1",
+			"p1": "weather-lookback-input-hours-out-Value",
+			"p2": "weather-lookback-formula-wetness-in-Hours",
+			"kind": "value"
+		},
+		{
+			"id": "weather-lookback-link-2",
+			"p1": "weather-lookback-formula-wetness-out-Value",
+			"p2": "weather-lookback-result-wetness-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-lookback-link-3",
+			"p1": "weather-lookback-input-was-out-Value",
+			"p2": "weather-lookback-formula-cover-in-Was",
+			"kind": "value"
+		},
+		{
+			"id": "weather-lookback-link-4",
+			"p1": "weather-lookback-input-snow-out-Value",
+			"p2": "weather-lookback-formula-cover-in-Snow",
+			"kind": "value"
+		},
+		{
+			"id": "weather-lookback-link-5",
+			"p1": "weather-lookback-input-warm-out-Value",
+			"p2": "weather-lookback-formula-cover-in-Warm",
+			"kind": "value"
+		},
+		{
+			"id": "weather-lookback-link-6",
+			"p1": "weather-lookback-formula-cover-out-Value",
+			"p2": "weather-lookback-result-cover-in-Value",
+			"kind": "value"
+		}
+	]
+}

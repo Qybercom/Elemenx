@@ -1,6 +1,6 @@
 {
 	"low": {
-		"Post": false, "Cascades": 1, "Bounce": false, "Occlusion": 0, "Rays": false, "Samples": 0, "Reach": 0.6, "Grass": false,
+		"Post": false, "Cascades": 1, "Bounce": false, "Occlusion": 0, "Rays": false, "Samples": 0, "Reach": 0.6, "Grass": false, "Field": true, "FieldWait": 240,
 		"Splashes": false, "Effects": {"Steps": 10}, "Mirrors": {"Most": 1, "Scatter": "none"}, "Shadow": {"Side": 1024, "Whole": 0},
 		"Galaxy": {"Glow": 70000, "Plane": 1024, "Part": 0.3, "Steps": 20, "FinePart": 0.5, "FineSteps": 32, "Field": 40000, "Near": 120},
 		"Cosmos": {"Sky": 256, "Band": 128, "BandSteps": 200},
@@ -8,7 +8,7 @@
 		"Screens": {"Most": 0}
 	},
 	"medium": {
-		"Post": true, "Cascades": 1, "Bounce": false, "Occlusion": 0, "Rays": false, "Samples": 4, "Reach": 0.8, "Clouds": 9,
+		"Post": true, "Cascades": 1, "Bounce": false, "Occlusion": 0, "Rays": false, "Samples": 4, "Reach": 0.8, "Field": true, "Clouds": 9,
 		"Splashes": true, "Effects": {"Steps": 14}, "Mirrors": {"Most": 1, "Scatter": "large"}, "Shadow": {"Side": 2048, "Whole": 4096},
 		"Galaxy": {"Glow": 130000, "Plane": 1536, "Part": 0.35, "Steps": 24, "FinePart": 0.75, "FineSteps": 40, "Field": 80000, "Near": 240},
 		"Cosmos": {"Sky": 512, "Band": 256, "BandSteps": 400},

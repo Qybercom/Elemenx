@@ -1,0 +1,262 @@
+{
+	"version": 1,
+	"type": "generator",
+	"name": "weather-influence-fog",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "weather-influence-fog-input-near",
+			"type": "Input",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Near"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-input-age",
+			"type": "Input",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Age"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-input-strength",
+			"type": "Input",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Strength"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-formula-cover",
+			"type": "Formula",
+			"x": 320,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.1 * ((1 - smoothstep(0.55, 1, Near)) * smoothstep(0, 0.15, Age) * (1 - smoothstep(0.75, 1, Age)) * Strength)"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-result-cover",
+			"type": "Result",
+			"x": 760,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cover"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-formula-rain",
+			"type": "Formula",
+			"x": 320,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 * Near"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-result-rain",
+			"type": "Result",
+			"x": 760,
+			"y": 150,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rain"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-formula-kind",
+			"type": "Formula",
+			"x": 320,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "-0.2 * ((1 - smoothstep(0.55, 1, Near)) * smoothstep(0, 0.15, Age) * (1 - smoothstep(0.75, 1, Age)) * Strength)"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-result-kind",
+			"type": "Result",
+			"x": 760,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-formula-cirrus",
+			"type": "Formula",
+			"x": 320,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 * Near"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-result-cirrus",
+			"type": "Result",
+			"x": 760,
+			"y": 370,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Cirrus"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-formula-fog",
+			"type": "Formula",
+			"x": 320,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.8 * ((1 - smoothstep(0.55, 1, Near)) * smoothstep(0, 0.15, Age) * (1 - smoothstep(0.75, 1, Age)) * Strength)"
+				}
+			]
+		},
+		{
+			"id": "weather-influence-fog-result-fog",
+			"type": "Result",
+			"x": 760,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Fog"
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "weather-influence-fog-link-0",
+			"p1": "weather-influence-fog-input-near-out-Value",
+			"p2": "weather-influence-fog-formula-cover-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-1",
+			"p1": "weather-influence-fog-input-age-out-Value",
+			"p2": "weather-influence-fog-formula-cover-in-Age",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-2",
+			"p1": "weather-influence-fog-input-strength-out-Value",
+			"p2": "weather-influence-fog-formula-cover-in-Strength",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-3",
+			"p1": "weather-influence-fog-formula-cover-out-Value",
+			"p2": "weather-influence-fog-result-cover-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-4",
+			"p1": "weather-influence-fog-input-near-out-Value",
+			"p2": "weather-influence-fog-formula-rain-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-5",
+			"p1": "weather-influence-fog-formula-rain-out-Value",
+			"p2": "weather-influence-fog-result-rain-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-6",
+			"p1": "weather-influence-fog-input-near-out-Value",
+			"p2": "weather-influence-fog-formula-kind-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-7",
+			"p1": "weather-influence-fog-input-age-out-Value",
+			"p2": "weather-influence-fog-formula-kind-in-Age",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-8",
+			"p1": "weather-influence-fog-input-strength-out-Value",
+			"p2": "weather-influence-fog-formula-kind-in-Strength",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-9",
+			"p1": "weather-influence-fog-formula-kind-out-Value",
+			"p2": "weather-influence-fog-result-kind-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-10",
+			"p1": "weather-influence-fog-input-near-out-Value",
+			"p2": "weather-influence-fog-formula-cirrus-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-11",
+			"p1": "weather-influence-fog-formula-cirrus-out-Value",
+			"p2": "weather-influence-fog-result-cirrus-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-12",
+			"p1": "weather-influence-fog-input-near-out-Value",
+			"p2": "weather-influence-fog-formula-fog-in-Near",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-13",
+			"p1": "weather-influence-fog-input-age-out-Value",
+			"p2": "weather-influence-fog-formula-fog-in-Age",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-14",
+			"p1": "weather-influence-fog-input-strength-out-Value",
+			"p2": "weather-influence-fog-formula-fog-in-Strength",
+			"kind": "value"
+		},
+		{
+			"id": "weather-influence-fog-link-15",
+			"p1": "weather-influence-fog-formula-fog-out-Value",
+			"p2": "weather-influence-fog-result-fog-in-Value",
+			"kind": "value"
+		}
+	]
+}

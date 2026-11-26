@@ -112,12 +112,12 @@ Chunks.SkyLight — свет неба вдоль направления: `skyLig
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L155) — `tests/regression/library-scene.test.js`
 - [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L186) — `tests/regression/library-scene.test.js`
 - [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L227) — `tests/regression/library-scene.test.js`
-- [Renderer waits for a program not made after its Patience, once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5622) — `tests/regression/library-scene.test.js`
-- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5655) — `tests/regression/library-scene.test.js`
-- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5766) — `tests/regression/library-scene.test.js`
+- [Renderer waits for a program not made after its Patience, once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5640) — `tests/regression/library-scene.test.js`
+- [Renderer makes programs behind the page for who is patient, and sets in a program only what changed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5673) — `tests/regression/library-scene.test.js`
+- [Renderer sets the state of the context only where it changes, and only the uniforms a program has](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5784) — `tests/regression/library-scene.test.js`
 - [is put by a Scene in place of SkyLight of the Renderer, a function of GLSL of the graph](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/sky-light.test.js#L74) — `tests/regression/sky-light.test.js`
 - [lets go of all its meshes with it, one let go twice taking no other off its list](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L21) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [gives the contexts of renderers let go back only past MostContexts of the page, the oldest first](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L54) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 - [makes a texture of one byte a texel with Single, its rows as long as they are](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/Renderer/Renderer.test.js#L100) — `libraries/ElemenxGraphics/services/Renderer/Renderer.test.js`
 
-+69 ещё в тех же файлах
++72 ещё в тех же файлах

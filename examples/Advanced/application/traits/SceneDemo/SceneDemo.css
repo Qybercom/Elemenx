@@ -67,3 +67,25 @@
 	align-items: flex-start;
 	gap: 8px;
 }
+
+/* The marks of the Space demo over its bodies (SceneMark): small cards, the names of the moons, the target. */
+.space-demo-mark {
+	width: 190px;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.space-demo-moon,
+.space-demo-target {
+	display: inline-block;
+	padding: 1px 6px;
+	color: var(--elemenx-scene-label);
+	font-size: 11px;
+	white-space: nowrap;
+	background: var(--elemenx-scene-shadow);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.space-demo-target {
+	color: var(--elemenx-scene-selection);
+	font-weight: 600;
+}

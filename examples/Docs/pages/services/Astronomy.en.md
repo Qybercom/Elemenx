@@ -17,10 +17,11 @@ Units: distances in astronomical units (AU), times in days, the masses of stars 
 - Blackbody(temperature): the colour of a body as hot (kelvins, 1000 to 40000), [r, g, b] of about 0 to 255, not clamped: of a star, of a lamp.
 - Kinds: the kinds of planets of resources/astronomy/kinds.json, and those an application adds.
 
-The same functions run in Node: they read no page.
+The same functions run in Node: they read no page. Their sin, cos, pow and log are of Math(), the own ones of Elemenx (docs/UNIVERSE-FORMAT.md): a seed makes the very same system everywhere.
 
 ## Methods
 
+- `Math()`
 - `Length(value)`
 - `Period(distance, mass)`
 - `Position(orbit, time, mass)`

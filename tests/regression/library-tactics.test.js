@@ -224,6 +224,17 @@ describe('Contract: the modes of a seat by its role, the turrets, contacts and t
 
 		expect(space.$Element().querySelector('.elemenx-game-radar .elemenx-game-marker.enemy')).toBeTruthy();
 
+		/* The frames on the contacts are marks of the scene (SceneMarks): laid out by it, each on its contact. */
+		await waitFor(function () {
+			frames(1);
+
+			return space.$Element().querySelectorAll('.elemenx-game-target[data-elemenx-mark]').length > 0;
+		}, 4000);
+
+		expect(space.MarksOnScreen().some(function (mark) {
+			return mark.Key.indexOf('target:') === 0;
+		})).toBe(true);
+
 		/* The marks over the view let the presses through to it. Regression: a hud of the scene gave them the pointer, and a press never reached the view (no turret took the mouse). */
 		var later = document.createElement('style');
 

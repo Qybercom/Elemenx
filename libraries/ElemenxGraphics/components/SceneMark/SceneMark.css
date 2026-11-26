@@ -1,0 +1,6 @@
+/* A mark over a place of a scene: its size of what it holds, the presses on it its own. */
+.elemenx-scene-mark {
+	display: block;
+	max-width: 360px;
+	pointer-events: auto;
+}

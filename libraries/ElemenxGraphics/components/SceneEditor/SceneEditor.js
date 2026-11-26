@@ -35,6 +35,8 @@
 Elemenx.Component('SceneEditor', {
 	$TemplateURL: 'SceneEditor.html',
 	$StyleURL: 'SceneEditor.css',
+	/* The graphs of the models of the library (lazy in ElemenxGraphics): here before it is made. */
+	$Needs: {Blueprints: ['ElemenxGraphics/models/*']},
 	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',

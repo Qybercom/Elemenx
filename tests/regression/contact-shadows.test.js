@@ -190,6 +190,20 @@ describe('Contract: contact shadows of the sun on high and ultra', function () {
 		expect(lighter, 'darker ' + darker + ', lighter ' + lighter).toBeLessThan(darker * 0.2);
 	}, 120000);
 
+	/*
+	 * Regression: the darkened corners darkened the sun too (what fell into a fold in the sun went dark, every fold looked
+	 * drawn round). Now they darken the light that comes round alone: the pass of the contact shadows tells the part of the
+	 * light of each point that is the sun (blue), and the corners leave that part.
+	 */
+	it('darkens the folds on the light that comes round alone, not on the sun', async function () {
+		var scene = await mount('ultra');
+		var shaders = scene.LightingShaders(Elemenx.Service('Renderer'));
+
+		expect(shaders.Touch).toContain('float sun = dot(uSunLight, vec3(0.3, 0.59, 0.11)) * 1.35 * facing * lit;');
+		expect(shaders.Touch).toContain('outColor.b = sun / max(sun + sky, 0.0001);');
+		expect(shaders.Air).toContain('color *= mix(1.0, texture(uDark, uv).r, 0.85 * (1.0 - texture(uDark, uv).b)) * texture(uDark, uv).g;');
+	}, 120000);
+
 	it('darkens the folds by the horizons round each point (GTAO), the open ground hardly', async function () {
 		var scene = await mount('ultra');
 		var shown;

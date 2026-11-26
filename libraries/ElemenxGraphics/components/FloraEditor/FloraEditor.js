@@ -12,6 +12,8 @@
 Elemenx.Component('FloraEditor', {
 	$TemplateURL: 'FloraEditor.html',
 	$StyleURL: 'FloraEditor.css',
+	/* The graphs of the models of the library (lazy in ElemenxGraphics): here before it is made. */
+	$Needs: {Blueprints: ['ElemenxGraphics/models/*']},
 	$Traits: ['EditorPanes'],
 	$Meta: {
 		Group: 'game',

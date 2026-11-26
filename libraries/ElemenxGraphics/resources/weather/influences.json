@@ -1,0 +1,9 @@
+{
+	"Kinds": {
+		"storm-seed": {"Graph": "weather/influence/storm-seed", "Hours": 6, "Radius": 30, "Strength": 1, "Spawns": [{"Kind": "fog", "At": 1, "Hours": 6, "Radius": 1.2, "Strength": 0.6}]},
+		"anti-hail": {"Graph": "weather/influence/anti-hail", "Hours": 2, "Radius": 15, "Strength": 1, "Spawns": []},
+		"seeding": {"Graph": "weather/influence/seeding", "Hours": 4, "Radius": 20, "Strength": 1, "Spawns": []},
+		"dispersal": {"Graph": "weather/influence/dispersal", "Hours": 4, "Radius": 25, "Strength": 1, "Spawns": []},
+		"fog": {"Graph": "weather/influence/fog", "Hours": 6, "Radius": 15, "Strength": 1, "Spawns": []}
+	}
+}

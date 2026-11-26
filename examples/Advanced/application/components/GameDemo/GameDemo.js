@@ -13,7 +13,11 @@
  * (GameRace). Squads puts a squad of the player by the walker and robots of the red team across from it; Command takes
  * the view over them as a strategy (GameStrategy: a press selects, a right press orders), the walker standing, and gives
  * it back. The mannequin walks of the gaits graphs of the library: Gait graph opens the one chosen, a change of it on the
- * walker at once. Its commands in the tabs of a Ribbon: Flight, Character, Combat, Racing, Strategy. Keys of Orbit in the seat (W and S the speed, A and D yaw, R and F pitch, Q
+ * walker at once. Its galaxy is one of a universe (GameUniverse, SceneUniverse): Universe map shows the galaxies round it,
+ * a galaxy pressed is picked and Enter the galaxy shows it; from a system, Warp to galaxy jumps to the neighbour chosen
+ * at the step between galaxies chosen (12: some five minutes; 13 and 14, of tests, seconds), out at its edge in the system
+ * of a star there; H on the way out between the galaxies, all of them round the ship. Its commands in the tabs of a Ribbon:
+ * Flight, Galaxy, Character, Combat, Racing, Strategy. Keys of Orbit in the seat (W and S the speed, A and D yaw, R and F pitch, Q
  * and E roll, H warps), of a walker on foot (WASD, Shift runs, Space jumps, E takes a seat or a console).
  */
 Elemenx.Component('GameDemo', {
@@ -39,6 +43,18 @@ Elemenx.Component('GameDemo', {
 	GameStep: '2',
 	/* The galaxy of the game (Setting galaxy): its home the star of the system of Terra, the system entered, the star picked on the map. */
 	GameGalaxy: {Seed: 'orbit', Kind: 'spiral'},
+	/* The universe of the game: its galaxy (home) at its place, the others of its seed round it (UniverseData). */
+	GameUniverse: {Seed: 'game', Galaxies: [{ID: 'home', Name: 'Orbit', Seed: 'orbit', Kind: 'spiral', Coordinates: [123.4, -5, 60]}], Home: 'home'},
+	/* The steps of a jump between galaxies (travel.json): 12 is the one of a ship, 13 and 14 of tests and demonstrations. */
+	GameFarSteps: [{Value: '9', Label: 'Step 9 · 1 ly/s'}, {Value: '10', Label: 'Step 10 · 21 ly/s'}, {Value: '11', Label: 'Step 11 · 420 ly/s'}, {Value: '12', Label: 'Step 12 · ~5 min'}, {Value: '13', Label: 'Step 13 · ~16 s (test)'}, {Value: '14', Label: 'Step 14 · ~2 s (test)'}],
+	GameFarStep: '13',
+	/* The galaxies round the one the ship is in (its sky: Far), the one chosen to jump to, the one picked on the map. */
+	GameNeighbours: [],
+	GameNeighbour: '',
+	GameGalaxyPicked: '',
+	/* Out of the well of a body first, by a warp of its own, before a jump between galaxies (GameWellOut). */
+	GameLeaving: false,
+	GameWellTried: false,
 	GameHome: '',
 	GameEntered: '',
 	GamePicked: '',
@@ -156,11 +172,21 @@ Elemenx.Component('GameDemo', {
 				self.GameShips = ships;
 
 				/* Its pilot is one of the walkers: they are read first. */
+				/* Its galaxy the home one of its universe (its skies of it), then the system of Terra in it. */
 				data.CharactersRead(function () {
 					self.GameWait(function () {
-						return scene.GalaxyData();
+						return scene.UniverseData();
 					}, function () {
-						self.GameHomeMade(scene);
+						scene.EnterGalaxy('home', function (failed, key) {
+							if (!failed)
+								self.GameGalaxy = key;
+
+							self.GameWait(function () {
+								return scene.GalaxyData() && scene.GalaxyData().Manifest.ID === 'home';
+							}, function () {
+								self.GameHomeMade(scene);
+							});
+						}, {Now: true});
 					});
 				});
 			});
@@ -212,12 +238,26 @@ Elemenx.Component('GameDemo', {
 		scene.EnterSystem(best.ID);
 	},
 
+	/* The galaxies of the sky of where the ship is, to jump to: the largest to the eye first. */
+	GameNeighboursOf: function () {
+		var scene = this.GameScene();
+		var far = scene.Cosmos && scene.Cosmos.Far || [];
+
+		this.GameNeighbours = far.map(function (one) {
+			return {Value: one.ID, Label: one.Name + ' · ' + one.Kind + ' · ' + (one.Distance * 3.2616).toFixed(1) + ' Mly'};
+		});
+		this.GameNeighbour = this.GameNeighbours.length ? this.GameNeighbours[0].Value : '';
+	},
+
 	/* In a system (the event enter): the ship of the game round its first planet (Terra at home), the pilot in its seat. */
 	GameIn: function (event) {
 		var self = this;
 		var scene = this.GameScene();
 
 		this.GameEntered = event.ID;
+
+		this.GameNeighboursOf();
+
 		this.GameNote = event.ID === this.GameHome ? '' : 'the system of ' + (event.Star && event.Star.Name || event.ID) + ': T aims, G turns to it, H warps, J jumps';
 
 		this.GameWait(function () {
@@ -226,6 +266,132 @@ Elemenx.Component('GameDemo', {
 			});
 		}, function () {
 			self.GameShipPut();
+		});
+	},
+
+	/* Between galaxies (the event entervoid, out of a jump on its way): the ship there, the galaxies round it to jump to. */
+	GameVoid: function (event) {
+		var given = event && event.detail ? event.detail : event;
+
+		this.GameEntered = 'void';
+		this.GameArriving = true;
+		this.GameNote = 'between the galaxies, ' + given.Place.map(function (value) {
+			return value.toFixed(2);
+		}).join(', ') + ' Mpc: Warp to galaxy jumps to one of them';
+
+		this.GameNeighboursOf();
+		this.GameShipPut();
+	},
+
+	/* Into a galaxy of the universe (the event entergalaxy): its key the Galaxy of the scene. */
+	GameGalaxyIn: function (event) {
+		var given = event && event.detail ? event.detail : event;
+
+		this.GameGalaxy = given.Key;
+		this.GameGalaxyPicked = '';
+
+		if (given.ID !== 'home')
+			this.GameNote = 'the galaxy ' + (given.Galaxy && given.Galaxy.Name || given.ID);
+	},
+
+	GameUniversePick: function (event) {
+		var given = event && event.detail ? event.detail : event;
+
+		this.GameGalaxyPicked = given && given.ID || '';
+	},
+
+	/* From the map of the galaxy to the one of its universe, and into the galaxy picked there. */
+	GameUniverseMap: function () {
+		var scene = this.GameScene ? this.GameScene() : null;
+
+		if (scene && scene.Setting === 'galaxy') {
+			scene.LeaveGalaxy();
+
+			this.GameNote = 'the universe: press a galaxy to pick it, then Enter the galaxy';
+		}
+	},
+
+	GameGalaxyEnter: function () {
+		var scene = this.GameScene ? this.GameScene() : null;
+		if (scene && this.GameGalaxyPicked)
+			scene.EnterGalaxy(this.GameGalaxyPicked);
+	},
+
+	GameFarStepChosen: function (value) {
+		this.GameFarStep = String(value && value.detail !== undefined ? value.detail : value);
+
+		if (this.GameScene && this.GameScene().Get('me'))
+			this.GameScene().TravelStep('me', Number(this.GameFarStep));
+	},
+
+	GameNeighbourChosen: function (value) {
+		this.GameNeighbour = String(value && value.detail !== undefined ? value.detail : value);
+	},
+
+	/* A jump to the galaxy chosen at the step chosen: out at its edge, in the system of a star there. */
+	GameWarpGalaxy: function () {
+		var self = this;
+		var scene = this.GameScene ? this.GameScene() : null;
+		var me = scene ? scene.Scene().Objects.me : null;
+		if (!scene || !this.GameNeighbour || !me) return;
+
+		scene.Travel('me', 'warp', {To: 'galaxy:' + this.GameNeighbour, FarStep: Number(this.GameFarStep)}, function (error) {
+			/* Once out of its well by a warp of its own (GameWellOut): not again, the jump refused then is told. */
+			if (error && me.Refused && me.Refused.Reason === 'well' && !self.GameLeaving && !self.GameWellTried) {
+				self.GameWellOut();
+
+				return;
+			}
+
+			if (error)
+				self.GameNote = error.message;
+
+			self.GameWellTried = false;
+		});
+	},
+
+	/*
+	 * Too deep in the well of a body for a jump between galaxies (HyperWell: a pull of 0.0005 of its surface, some 45 of
+	 * its radii): out of it by a warp of step 6 straight ahead, stopped once every body is far enough, then the jump.
+	 */
+	GameWellOut: function () {
+		var self = this;
+		var scene = this.GameScene();
+		var me = scene.Scene().Objects.me;
+
+		function out () {
+			return me.World && scene.Scene().Order.every(function (object) {
+				var traits = object.Traits || {};
+				if (object === me || !object.World || !object.Size || !traits.Body && !traits.Star) return true;
+
+				return Math.hypot(object.World[0] - me.World[0], object.World[1] - me.World[1], object.World[2] - me.World[2]) > object.Size * 50;
+			});
+		}
+
+		this.GameLeaving = true;
+		this.GameWellTried = true;
+		this.GameNote = 'out of the well of ' + me.Refused.By + ' first, then the jump';
+
+		scene.Aim('');
+		scene.Travel('me', 'warp', {Step: 6, To: ''}, function (error) {
+			if (error) {
+				self.GameLeaving = false;
+				self.GameNote = error.message;
+			}
+		});
+
+		this.GameWait(function () {
+			return !me.Travel || me.Travel.Phase === 'inside' && out();
+		}, function () {
+			scene.TravelStop('me');
+
+			self.GameWait(function () {
+				return !me.Travel;
+			}, function () {
+				self.GameLeaving = false;
+
+				self.GameWarpGalaxy();
+			});
 		});
 	},
 
@@ -252,9 +418,23 @@ Elemenx.Component('GameDemo', {
 			this.GameScene().EnterSystem(this.GamePicked);
 	},
 
+	/* Home: the system of Terra, in its galaxy (back into it first from another galaxy or from between them). */
 	GameGoHome: function () {
-		if (this.GameHome && this.GameLevel === 'orbit')
-			this.GameScene().EnterSystem(this.GameHome, null, {Now: !!this.GameEntered});
+		var self = this;
+		var scene = this.GameScene();
+
+		if (!this.GameHome || this.GameLevel !== 'orbit') return;
+
+		if (scene.UniverseEntered() === 'home') {
+			scene.EnterSystem(this.GameHome, null, {Now: !!this.GameEntered});
+
+			return;
+		}
+
+		scene.EnterGalaxy('home', function () {
+			scene.Engine().Galaxy.Wanted();
+			scene.EnterSystem(self.GameHome, null, {Now: true});
+		}, {Now: true});
 	},
 
 	/* The view from the seat of the ship (Person first). */
@@ -398,7 +578,7 @@ Elemenx.Component('GameDemo', {
 		if (scene.Get('pilot'))
 			scene.Remove('pilot');
 
-		scene.Add('ship', this.$Service('DemoData').Ship(ship, {ID: 'me', Name: '', Model: name, Size: ship.Size || 0.012, Parent: around, Missiles: 'ship-missile', Hunters: 'ship-hunter', Torpedoes: 'ship-torpedo', Driver: 'ship-massdriver', Lance: 'ship-lance', Railgun: 'ship-ftl', Flares: 24, Defence: 'ship-pd', Vehicle: {Top: 0.09, Speed: 3000, Around: around, From: arriving ? [0, 6, -150] : [-2.6, 0.3, 1.5], Facing: arriving ? [0, -0.04, 1] : [1, -0.08, -0.5], Follow: [4.6, 1.1], Warp: {To: around === 'terra' ? this.GamePlace : '', Step: Number(this.GameStep), Well: 0.25}}}));
+		scene.Add('ship', this.$Service('DemoData').Ship(ship, {ID: 'me', Name: '', Model: name, Size: ship.Size || 0.012, Parent: around, Missiles: 'ship-missile', Hunters: 'ship-hunter', Torpedoes: 'ship-torpedo', Driver: 'ship-massdriver', Lance: 'ship-lance', Railgun: 'ship-ftl', Flares: 24, Defence: 'ship-pd', Vehicle: {Top: 0.09, Speed: 3000, Around: around, From: arriving ? [0, 6, -150] : [-2.6, 0.3, 1.5], Facing: arriving ? [0, -0.04, 1] : [1, -0.08, -0.5], Follow: [4.6, 1.1], Warp: {To: around === 'terra' ? this.GamePlace : '', Step: Number(this.GameStep), Well: 0.25, Far: 14, FarStep: Number(this.GameFarStep)}}}));
 
 		walker = this.GameWalker();
 
@@ -662,6 +842,31 @@ Elemenx.Component('GameDemo', {
 			this.GamePhase = 'land: not from here';
 	},
 
+	/*
+	 * An influence on the weather of the planet under the ship (Scene Influence): over its surface or in a location under
+	 * the eye, in orbit under the ship (its way from the middle of the body, in the frame of the body), 400 km wide there:
+	 * one of 30 is a speck from orbit.
+	 */
+	GameInfluence: function (kind) {
+		var scene = this.GameScene ? this.GameScene() : null;
+		var inner = scene ? scene.Scene() : null;
+		var me = inner ? inner.Objects.me : null;
+		var body = inner ? inner.Objects.terra : null;
+		var math = this.$Service('Math');
+		var made = scene ? scene.Influence(kind) : null;
+		if (!made && me && body && me.World && body.World && body.Turn)
+			made = scene.Influence(kind, {Body: 'terra', Direction: math.Apply(math.Invert(body.Turn), math.Vectors.Normalize(math.Vectors.Subtract(me.World, body.World)))}, {Radius: 400});
+
+		this.GameNote = made ? kind + ' over ' + Math.round(made.Radius) + ' km for ' + Math.round(made.Length * 24) + ' h' : 'no planet under the ship';
+	},
+
+	/* The time of the scene moved on (days): the weather, the clouds and what they left on the ground as they are then. */
+	GameLater: function (days) {
+		var scene = this.GameScene ? this.GameScene() : null;
+		if (scene)
+			scene.SetTime(scene.Now() + days);
+	},
+
 	/* The autopilot of the ship: hold its course, approach what it aims at (50 km short of it), or off. */
 	GameAutopilot: function (mode) {
 		var scene = this.GameScene ? this.GameScene() : null;
@@ -690,7 +895,7 @@ Elemenx.Component('GameDemo', {
 		this.GamePhase = event.Phase === 'done' ? '' : event.Kind + ': ' + event.Phase;
 
 		/* A warp goes at the step chosen. */
-		if (event.Kind === 'warp' && event.Phase === 'enter')
+		if (event.Kind === 'warp' && event.Phase === 'enter' && !this.GameLeaving)
 			this.GameScene().TravelStep('me', Number(this.GameStep));
 
 		/* Out of a jump between stars: the ship of the system it came to at its edge (GameIn). */

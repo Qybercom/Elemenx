@@ -2197,6 +2197,14 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneMark",
+					"Title": {
+						"en": "SceneMark"
+					},
+					"Group": "game",
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneObject",
 					"Title": {
 						"en": "SceneObject"
@@ -3404,6 +3412,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "UniverseData",
+					"Title": {
+						"en": "UniverseData"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "ViewTouch",
 					"Title": {
 						"en": "ViewTouch"
@@ -3423,6 +3438,13 @@
 						"en": "Vitals"
 					},
 					"Library": "ElemenxGaming"
+				},
+				{
+					"ID": "WeatherInfluences",
+					"Title": {
+						"en": "WeatherInfluences"
+					},
+					"Library": "ElemenxGraphics"
 				},
 				{
 					"ID": "Windows",
@@ -3688,6 +3710,13 @@
 					"Library": "ElemenxGraphics"
 				},
 				{
+					"ID": "SceneMarks",
+					"Title": {
+						"en": "SceneMarks"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "SceneMissiles",
 					"Title": {
 						"en": "SceneMissiles"
@@ -3761,6 +3790,13 @@
 					"ID": "SceneTriggers",
 					"Title": {
 						"en": "SceneTriggers"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
+					"ID": "SceneUniverse",
+					"Title": {
+						"en": "SceneUniverse"
 					},
 					"Library": "ElemenxGraphics"
 				},

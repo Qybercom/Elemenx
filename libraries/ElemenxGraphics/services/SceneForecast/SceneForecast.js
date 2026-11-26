@@ -14,7 +14,7 @@
 Elemenx.Service('SceneForecast', {
 	$Meta: {
 		Description: 'The weather of a planet of one source in the kernel language: its winds and storms, fronts, heaps, cirrus and rain, the same in the page and in a shader.',
-		Methods: ['Code()', 'IR()', 'Air(p, days, seed, radiusKm, scale, fine, eddy, cells)', 'Fronts(fronts, mid, moist, ground, climb, py, storm, cloudiness, cut, cutBy, soft)', 'Heaps(p, sun, warm, moist, ground, climb, streams, mid, humid, storm, sheet, cloudiness, fairLow, fairHigh)', 'Cirrus(streams, py, sheet, low, high)', 'Rain(sheet, humid, storm, heaps, kind, from, to)', 'Shroud(sheet, heaps, kind, cirrus, rain, cloudiness)']
+		Methods: ['Code()', 'IR()', 'Air(p, days, seed, radiusKm, scale, fine, eddy, cells)', 'Fronts(fronts, mid, moist, ground, climb, py, storm, cloudiness, cut, cutBy, soft)', 'Heaps(p, sun, warm, moist, ground, climb, streams, mid, humid, storm, sheet, cloudiness, fairLow, fairHigh)', 'Cirrus(streams, py, sheet, low, high)', 'Rain(sheet, humid, storm, heaps, kind, from, to)', 'Shroud(sheet, heaps, kind, cirrus, rain, cloudiness)', 'Wind(p, days, seed, radiusKm, eddy, cells)']
 	},
 
 	Kernel: [
@@ -249,6 +249,13 @@ Elemenx.Service('SceneForecast', {
 
 	Rain: function (sheet, humid, storm, heaps, kind, from, to) {
 		return this.Code().wx_rain(sheet, humid, storm, heaps, kind, from, to);
+	},
+
+	/* The wind over a way of the body at a time: [x, y, z (the tangent way the air goes, radians a day), how strong a storm is there]. */
+	Wind: function (p, days, seed, radiusKm, eddy, cells) {
+		var made = this.Code().wx_wind(p, days, seed, radiusKm, eddy, Number(cells) || 0);
+
+		return [made[0], made[1], made[2], made[3]];
 	},
 
 	Shroud: function (sheet, heaps, kind, cirrus, rain, cloudiness) {

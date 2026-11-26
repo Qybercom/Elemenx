@@ -26,6 +26,26 @@ async function mount (sun) {
 	return ready;
 }
 
+/* A scene of nothing at all, stopped. */
+async function bare () {
+	var ready = null;
+	var component = Elemenx.Component(unique('BareHost'), {$Template: '<div style="width: 160px; height: 100px"><Scene Paused="true" Quality="low" Labels="false" (ready)="Ready"></Scene></div>', Ready: function (space) {
+		ready = space;
+	}})();
+
+	owned.push(component);
+
+	document.getElementById('mount').appendChild(component.$Element());
+
+	await waitFor(function () {
+		return ready;
+	}, 8000);
+
+	ready.Scene().Loop.Stop();
+
+	return ready;
+}
+
 describe('Contract: the lights of the sky of a Scene: the northern lights and the rainbow', function () {
 	var now = 0;
 
@@ -297,4 +317,32 @@ describe('Contract: the lights of the sky of a Scene: the northern lights and th
 			renderer.Draw = draw;
 		}
 	}, 30000);
+
+	/*
+	 * Regression: a changing weather (Weather changing) went from one to the next after a time of Math.random: another each
+	 * time, for each player. Now of the seed of the scene and the number of the turn: two scenes of one seed alike.
+	 */
+	it('changes a changing weather at the same moments for the same seed', async function () {
+		/* Of no ground (the weather needs none): under load two scenes of a ground took longer than a test has. */
+		var a = await bare();
+		var b = await bare();
+		var seen = [];
+
+		[a, b].forEach(function (scene) {
+			var clouds = [];
+			var i;
+
+			scene.Seed = 'turns';
+			scene.Weather = 'changing';
+
+			for (i = 0; i < 900; i++)
+				clouds.push(Math.round(scene.Engine().WeatherStep(1).Clouds * 1000));
+
+			seen.push(clouds);
+		});
+
+		expect(seen[0]).toEqual(seen[1]);
+		/* It changed on the way. */
+		expect(Math.max.apply(null, seen[0]) - Math.min.apply(null, seen[0])).toBeGreaterThan(200);
+	});
 });

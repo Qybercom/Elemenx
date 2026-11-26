@@ -83,6 +83,75 @@ describe('Regression: the far ground of a planet of its graph (shader/ground-far
 		expect(hashes).toEqual(PINNED);
 	}, 300000);
 
+	/*
+	 * Regression: the light round the far ground was the same everywhere, a gorge as a plain. The picture tells how much of
+	 * the sky the hills round each texel hide (Closed): the valleys more than the tops; and two squares side by side the same
+	 * along their edge (the land past a square is looked at too, no seam).
+	 */
+	it('tells how much of the sky the hills round each texel hide: a valley more than a top, no seam between squares', function () {
+		var terrain = Elemenx.Service('SceneTerrainGenerator');
+		var field = terrain.Sphere({Planet: {Seed: 'terra', Ocean: 0.55, Radius: 6371}});
+		var extent = 0.004;
+		var n = 17;
+		var best = null;
+		var s;
+
+		function heightsOf (face, cu, cv) {
+			var list = [];
+			var i;
+			var k;
+
+			for (k = 0; k < n; k++) {
+				for (i = 0; i < n; i++) {
+					var at = terrain.Face(face, cu - extent / 2 + i * extent / (n - 1), cv - extent / 2 + k * extent / (n - 1));
+					var length = Math.hypot(at[0], at[1], at[2]);
+
+					list.push(field.Planet.Elevation([at[0] / length, at[1] / length, at[2] / length]));
+				}
+			}
+
+			return list;
+		}
+
+		/* The roughest of some squares of the land. */
+		for (s = 0; s < 24; s++) {
+			var face = s % 6;
+			var cu = ((s * 0.37) % 1.6) - 0.8;
+			var cv = ((s * 0.61) % 1.6) - 0.8;
+			var heights = heightsOf(face, cu, cv);
+			var low = Math.min.apply(null, heights);
+			var high = Math.max.apply(null, heights);
+			if (low > 0 && (!best || high - low > best.Span))
+				best = {Face: face, U: cu, V: cv, Heights: heights, Span: high - low};
+		}
+
+		expect(best.Span).toBeGreaterThan(200);
+
+		var picture = planets.PatchPicture(field, best.Face, best.U, best.V, extent, n);
+		var order = best.Heights.map(function (height, index) {
+			return index;
+		}).sort(function (a, b) {
+			return best.Heights[a] - best.Heights[b];
+		});
+		var part = Math.round(n * n * 0.15);
+
+		function mean (list) {
+			return list.reduce(function (sum, index) {
+				return sum + picture.Closed[index];
+			}, 0) / list.length;
+		}
+
+		expect(picture.Closed.length).toBe(n * n);
+		expect(mean(order.slice(0, part))).toBeGreaterThan(mean(order.slice(-part)) * 1.3);
+
+		/* The square to its right: its first column is the last of this one. */
+		var right = planets.PatchPicture(field, best.Face, best.U + extent, best.V, extent, n);
+		var k;
+
+		for (k = 0; k < n; k++)
+			expect(Math.abs(right.Closed[k * n] - picture.Closed[k * n + n - 1])).toBeLessThanOrEqual(1);
+	}, 120000);
+
 	/* A planet of a graph of its own (GroundFarGraph): its picture of it, its code for its workers among its ReliefSources. */
 	it('paints a planet of a graph of its own, its code carried to its workers', function () {
 		var terrain = Elemenx.Service('SceneTerrainGenerator');

@@ -290,7 +290,8 @@ describe('Contract: Scene trait Rigid, solid things of a ground that fall and ar
 			for (i = 0; i < 600 && still < 3; i++) {
 				once();
 
-				still = !inner.Ground.Missing && !Object.keys(inner.Ground.Asked || {}).length && !scene.$Service('SceneTerrainGenerator').Work().Waiting() ? still + 1 : 0;
+				/* Regression: the light of the field (low has it now) worked out in strips caught one frame (25 draws) and not the last (24). */
+				still = !inner.Ground.Missing && !Object.keys(inner.Ground.Asked || {}).length && !scene.$Service('SceneTerrainGenerator').Work().Waiting() && !scene.Engine().FieldPending() ? still + 1 : 0;
 
 				await new Promise(function (done) {
 					setTimeout(done, 5);

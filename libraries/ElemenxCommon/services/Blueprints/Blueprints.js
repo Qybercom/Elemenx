@@ -51,6 +51,7 @@
  *   else the graph takes they pass on as given; Take keeps one result of each. A graph may call itself, as deep as 256
  *   calls (a Repeat of Count 0 ends it). List, Count and Item make and read lists, Random(Seed, Key) a number of 0 to 1
  *   of them (Hash2), Chain(Seed, Index) the index-th number of a chain of a seed (Chain), Select one of two, Table the row of a key (Rows, Default). Invoke(name, inputs) runs one.
+ *   Need(names, callback) loads those that are lazy (Elemenx.Need) and all they call, before they are read.
  * - IR(graph, {Name}) gives the graph in the IR of Elemenx.Compilers ({Module, Diagnostics}: a block of no IR, as noise yet,
  *   is told), each graph a function (P, I) of a record of its results; the kind blueprint goes to ir by it (blueprint-ir),
  *   and on to js or cpp. A block of a Service tells its own: IR(inputs, properties, context) of its definition (context
@@ -2372,6 +2373,59 @@ Elemenx.Service('Blueprints', {
 		finally {
 			this.Calls = null;
 		}
+	},
+
+	/*
+	 * Loads graphs of the resources (group Blueprints) that are lazy (Elemenx.Need) and those they call (Call, Repeat, Map,
+	 * Reduce), as deep as they go: callback(error) once each is here. A name of no resource is passed over (a graph of the
+	 * application, a {Key} filled later): reading it says so as before.
+	 */
+	Need: function (names, callback) {
+		var self = this;
+		var known = Elemenx.Resources('Blueprints');
+		var asked = {};
+
+		function step (list) {
+			var fresh = list.filter(function (name) {
+				var wanted = typeof name === 'string' && !asked[name] && known.indexOf(name) !== -1;
+				if (wanted)
+					asked[name] = true;
+
+				return wanted;
+			});
+
+			/* Always after it returns, as Elemenx.Need. */
+			if (!fresh.length) {
+				setTimeout(function () {
+					callback(null);
+				}, 0);
+
+				return;
+			}
+
+			Elemenx.Need({Blueprints: fresh}, function (error) {
+				var next = [];
+
+				if (error) {
+					callback(error);
+
+					return;
+				}
+
+				fresh.forEach(function (name) {
+					var graph = Elemenx.Resources('Blueprints', name);
+
+					(graph && Array.isArray(graph.blocks) ? graph.blocks : []).forEach(function (block) {
+						if (['Call', 'Repeat', 'Map', 'Reduce'].indexOf(block.type) !== -1)
+							next.push(self.Properties(block).Graph);
+					});
+				});
+
+				step(next);
+			});
+		}
+
+		step([].concat(names));
 	},
 
 	/* The names of the Input blocks and the keys of the Result blocks of a graph that is called: the pins of what calls it. */

@@ -67,7 +67,9 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `LoadResources` | loads what `$Resources` names (`{Group: folder or list}`) into `Elemenx.Resources`: `Resolve`, `Namespace`, `Files`, `Application` (wins over a Library) | Library, Application |
+| `LoadResources` | loads what `$Resources` names (`{Group: folder, list or {Folder, Lazy}}`; lazy ones named only) into `Elemenx.Resources`: `Resolve`, `Namespace`, `Files`, `Application` (wins over a Library) | Library, Application |
+| `Needed` | whether what a `$Needs` spec (`{Group: [names]}`, `*` at the end for a prefix) names is all loaded; throws on a wrong spec | Template and Component |
+| `Need` | `Elemenx.Need`: loads the lazy resources of a spec, callback `(error)` | Template and Component |
 
 ## Locale
 

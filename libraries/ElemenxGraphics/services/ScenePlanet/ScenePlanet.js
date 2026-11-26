@@ -3884,6 +3884,8 @@ Elemenx.Service('ScenePlanet', {
 		var use = new Uint8Array(n * n * 4);
 		/* How much of each texel snow lies on (Snow, a byte each). */
 		var snow = new Uint8Array(n * n);
+		/* How much of the sky the hills round each texel hide (Closed, a byte each: 0 open, 255 shut). */
+		var closed = new Uint8Array(n * n);
 		var i;
 		var k;
 
@@ -4050,6 +4052,48 @@ Elemenx.Service('ScenePlanet', {
 		}
 		var stream = this.Rivers.Color;
 		var highway = this.Rivers.Highway;
+		var beyond = {};
+
+		/* The height of a texel of the grid, past its ring too (kept: the texels by the edge ask the same ones). */
+		function heightAt (i, k) {
+			var key;
+
+			if (i >= -1 && k >= -1 && i <= n && k <= n) return heights[(k + 1) * side + i + 1];
+
+			key = i + ':' + k;
+
+			if (beyond[key] === undefined)
+				beyond[key] = planet.Elevation(unit(terrain.Face(face, cu - extent / 2 + i * step, cv - extent / 2 + k * step)));
+
+			return beyond[key];
+		}
+
+		/*
+		 * How much of the sky the land round a texel hides: in each of 8 ways the highest rise seen 1, 2, 4 and 8 texels off,
+		 * the sine of that horizon, the mean of the 8 (the sea level its floor). A valley, a gorge, the foot of a cliff are
+		 * shut; a ridge, a plain open. Past the edge of the square of the same land, so two squares meet with no seam.
+		 */
+		function closure (i, k) {
+			var low = Math.max(0, heightAt(i, k));
+			var sum = 0;
+			var way;
+			var s;
+
+			for (way = 0; way < 8; way++) {
+				var wx = [1, 1, 0, -1, -1, -1, 0, 1][way];
+				var wy = [0, 1, 1, 1, 0, -1, -1, -1][way];
+				var across = Math.sqrt(wx * wx + wy * wy) * texel * 1000;
+				var most = 0;
+
+				for (s = 1; s <= 8; s *= 2) {
+					most = Math.max(most, (Math.max(0, heightAt(i + wx * s, k + wy * s)) - low) / (across * s));
+				}
+
+				sum += most / Math.sqrt(1 + most * most);
+			}
+
+			return sum / 8;
+		}
 
 		for (k = 0; k < n; k++) {
 			for (i = 0; i < n; i++) {
@@ -4127,6 +4171,7 @@ Elemenx.Service('ScenePlanet', {
 				use[o + 3] = Math.round(got.Dune * 255);
 				/* How much of it snow lies on (its ground near is of the snow of its biome there). */
 				snow[k * n + i] = Math.round(got.Snow * 255);
+				closed[k * n + i] = Math.round(Math.min(1, closure(i, k)) * 255);
 			}
 		}
 
@@ -4147,7 +4192,7 @@ Elemenx.Service('ScenePlanet', {
 			biomes[i] = index === -1 ? 255 : index;
 		}
 
-		return {Size: n, Color: color, Normal: normal, Use: use, Snow: snow, Biomes: biomes, Lands: named};
+		return {Size: n, Color: color, Normal: normal, Use: use, Snow: snow, Closed: closed, Biomes: biomes, Lands: named};
 	},
 
 	/*

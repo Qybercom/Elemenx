@@ -50,11 +50,22 @@
  * - Rename(data, id, name), Remove(data, id), AddBody(data, body), SetSystem(data, id, system): what is changed of it.
  * - Use(key, data), DataOf(key); Open(source, callback), Write(data, store, callback, whole), Save(data), Pack(data,
  *   callback): as SystemData (parts {Kind: 'galaxy'}, {Kind: 'edits'}, those of a system written with System: id).
+ * - Math(): the functions of Math it makes its stars by, the own ones of Elemenx (docs/UNIVERSE-FORMAT.md): a seed makes
+ *   the very same galaxy in any browser, in Node and in a port to another language (docs/universe-golden.json).
  */
 Elemenx.Service('GalaxyData', {
 	$Meta: {
 		Description: 'A galaxy as data: its supermassive black hole, its stars made sector by sector of its seed as many as a galaxy holds, its systems, what was changed of it.',
 		Methods: ['Kinds()', 'Make(options)', 'Density(data, place)', 'Sector(data, x, y, z, limit)', 'Search(data, options)', 'Star(data, id)', 'Hole(data)', 'HoleSystem(data)', 'Cluster(options)', 'Objects(data)', 'Knots(data)', 'ObjectOf(data, id)', 'ObjectSystem(data, id)', 'Position(data, place, time)', 'Added(data, time)', 'Glow(data, count)', 'System(data, id)', 'Cosmos(data, id)', 'Code()', 'IR()', 'Spiral(data)', 'SeedNumber(manifest)', 'Rename(data, id, name)', 'Remove(data, id)', 'AddBody(data, body)', 'SetSystem(data, id, system)', 'Use(key, data)', 'DataOf(key)', 'Open(source, callback)', 'Write(data, store, callback, whole)', 'Save(data)', 'Pack(data, callback)']
+	},
+
+	/*
+	 * The functions of Math its numbers are made by (sin, cos, exp, log, pow...): the own ones of the compiled code
+	 * (Elemenx.Compilers.Math), the very same in any browser, in Node and in another language after docs/UNIVERSE-FORMAT.md,
+	 * so a seed makes the same stars everywhere; the browser's where there is none (a worker).
+	 */
+	Math: function () {
+		return typeof Elemenx !== 'undefined' && Elemenx.Compilers && Elemenx.Compilers.Math ? Elemenx.Compilers.Math() : Math;
 	},
 
 	Sets: {},
@@ -74,6 +85,7 @@ Elemenx.Service('GalaxyData', {
 	},
 
 	Make: function (options) {
+		var math = this.Math();
 		var given = options || {};
 		var seed = String(given.Seed === undefined ? 'galaxy' : given.Seed);
 		var random = this.Random(seed + ':shape');
@@ -95,7 +107,7 @@ Elemenx.Service('GalaxyData', {
 				Phase: Math.round(random() * 360),
 				/* An elliptical one: how flat it is along each axis. */
 				Shape: kind === 'elliptical' ? [1, Math.round((0.6 + random() * 0.4) * 100) / 100, Math.round((0.4 + random() * 0.5) * 100) / 100] : [1, 1, 1],
-				Centre: {ID: 'centre', Name: 'Centre', Mass: Number(given.Mass) || Math.round(Math.pow(radius / 50000, 2) * 4.1e6)},
+				Centre: {ID: 'centre', Name: 'Centre', Mass: Number(given.Mass) || Math.round(math.pow(radius / 50000, 2) * 4.1e6)},
 				Coordinates: given.Coordinates || [0, 0, 0],
 				Sector: 100,
 				Systems: {}
@@ -349,30 +361,35 @@ Elemenx.Service('GalaxyData', {
 
 	/* Along and across the bar of a barred galaxy, ly. */
 	Along: function (m, x, z) {
+		var math = this.Math();
 		var a = m.Phase * Math.PI / 180;
 
-		return x * Math.cos(a) + z * Math.sin(a);
+		return x * math.cos(a) + z * math.sin(a);
 	},
 
 	Across: function (m, x, z) {
+		var math = this.Math();
 		var a = m.Phase * Math.PI / 180;
 
-		return -x * Math.sin(a) + z * Math.cos(a);
+		return -x * math.sin(a) + z * math.cos(a);
 	},
 
 	/* The clumps of an irregular galaxy: 0 to 1, of a noise of its seed. */
 	Clumps: function (data, x, y, z) {
+		var math = this.Math();
 		var noise = this.Noise || (this.Noise = {});
 		var key = data.Manifest.Seed;
 
 		noise[key] = noise[key] || this.$Service('Noise').Make({Type: 'simplex', Seed: key + ':clumps', Fractal: 'fbm', Octaves: 3});
 
-		return Math.pow(noise[key].At(x / 4000, y / 4000, z / 4000), 2) * 2;
+		return math.pow(noise[key].At(x / 4000, y / 4000, z / 4000), 2) * 2;
 	},
 
 	/* A mass of a star of the stars as they are born (most of them small red dwarfs): Suns. */
 	MassOf: function (u) {
-		return Math.min(60, 0.08 * Math.pow(1 - u * 0.999, -1 / 1.35));
+		var math = this.Math();
+
+		return Math.min(60, 0.08 * math.pow(1 - u * 0.999, -1 / 1.35));
 	},
 
 	SectorKey: function (x, y, z) {
@@ -798,6 +815,7 @@ Elemenx.Service('GalaxyData', {
 	},
 
 	MakeObjects: function (data) {
+		var math = this.Math();
 		var self = this;
 		var m = data.Manifest;
 		var s = this.Shape(m);
@@ -818,7 +836,7 @@ Elemenx.Service('GalaxyData', {
 		function laplace (scale) {
 			var v = random() - 0.5;
 
-			return -scale * (v < 0 ? -1 : 1) * Math.log(1 - 2 * Math.abs(v));
+			return -scale * (v < 0 ? -1 : 1) * math.log(1 - 2 * Math.abs(v));
 		}
 
 		/* A place of its disc (gamma of its scale, as its light is), weighed by want till it takes one, at most a few hundred tries. */
@@ -830,10 +848,10 @@ Elemenx.Service('GalaxyData', {
 			var at = 0;
 
 			while (tries++ < 400) {
-				radius = disc ? -Math.log(Math.max(1e-9, random() * random())) * s.Disc : Math.pow(random(), 0.5) * m.Radius * 0.6;
+				radius = disc ? -math.log(Math.max(1e-9, random() * random())) * s.Disc : math.pow(random(), 0.5) * m.Radius * 0.6;
 				angle = random() * Math.PI * 2;
-				x = radius * Math.cos(angle);
-				at = radius * Math.sin(angle);
+				x = radius * math.cos(angle);
+				at = radius * math.sin(angle);
 
 				if (radius < m.Radius * 1.05 && random() < want(x, at))
 					return [x, disc ? laplace(s.Height * (thick || 0.3)) : laplace(m.Radius * 0.2), at];
@@ -863,7 +881,7 @@ Elemenx.Service('GalaxyData', {
 		for (i = 0; i < counts.dark; i++)
 			put('nebula', 'dark', '', place(function (x, at) {
 				return Math.max(0, self.Arm(m, x, at, 0.35, data) - self.Arm(m, x, at, 0, data)) / 1.7 * self.Flocks(data, x, at);
-			}, 0.1), 5 + Math.pow(random(), 2) * 45);
+			}, 0.1), 5 + math.pow(random(), 2) * 45);
 
 		for (i = 0; i < counts.planetary; i++)
 			put('nebula', 'planetary', '', place(function () {
@@ -880,16 +898,16 @@ Elemenx.Service('GalaxyData', {
 
 		for (i = 0; i < counts.open; i++)
 			put('cluster', 'open', '', place(function (x, at) {
-				return Math.pow(self.Arm(m, x, at, 0, data) / 2, 2);
+				return math.pow(self.Arm(m, x, at, 0, data) / 2, 2);
 			}, 0.2), 5 + random() * 25);
 
 		/* A ball round it all, packed to its middle (Plummer). */
 		for (i = 0; i < counts.globular; i++) {
-			r = Math.min(m.Radius * 1.4, m.Radius * 0.12 / Math.sqrt(Math.pow(0.02 + random() * 0.97, -2 / 3) - 1));
+			r = Math.min(m.Radius * 1.4, m.Radius * 0.12 / Math.sqrt(math.pow(0.02 + random() * 0.97, -2 / 3) - 1));
 			z = random() * 2 - 1;
 			a = random() * Math.PI * 2;
 
-			put('cluster', 'globular', '', [Math.cos(a) * Math.sqrt(1 - z * z) * r, z * r * (disc ? 0.8 : 1), Math.sin(a) * Math.sqrt(1 - z * z) * r], 40 + random() * 80);
+			put('cluster', 'globular', '', [math.cos(a) * Math.sqrt(1 - z * z) * r, z * r * (disc ? 0.8 : 1), math.sin(a) * Math.sqrt(1 - z * z) * r], 40 + random() * 80);
 		}
 
 		return list;
@@ -985,6 +1003,7 @@ Elemenx.Service('GalaxyData', {
 
 	/* The system of its black hole: the hole, its disc, the young stars close round it on long thin orbits (AU). */
 	HoleSystem: function (data) {
+		var math = this.Math();
 		var hole = this.Hole(data);
 		var random = this.Random(data.Manifest.Seed + ':centre-system');
 		var stars = [];
@@ -995,7 +1014,7 @@ Elemenx.Service('GalaxyData', {
 		for (i = 0; i < count; i++) {
 			mass = Math.round((3 + random() * 14) * 10) / 10;
 
-			stars.push({ID: 's' + (i + 1), Kind: 'star', Values: {Name: 'S' + (i + 1)}, Traits: {Star: {Mass: mass}, Orbit: {Distance: Math.round(150 * Math.pow(40, random())), Eccentricity: Math.round((0.15 + random() * 0.8) * 100) / 100, Inclination: Math.round(random() * 180), Node: Math.round(random() * 360), Periapsis: Math.round(random() * 360), Anomaly: Math.round(random() * 360), Unit: 'AU'}}});
+			stars.push({ID: 's' + (i + 1), Kind: 'star', Values: {Name: 'S' + (i + 1)}, Traits: {Star: {Mass: mass}, Orbit: {Distance: Math.round(150 * math.pow(40, random())), Eccentricity: Math.round((0.15 + random() * 0.8) * 100) / 100, Inclination: Math.round(random() * 180), Node: Math.round(random() * 360), Periapsis: Math.round(random() * 360), Anomaly: Math.round(random() * 360), Unit: 'AU'}}});
 		}
 
 		/* Each star keeps what the pull of the hole leaves it at its nearest: a few close planets, a station now and then. */
@@ -1012,11 +1031,12 @@ Elemenx.Service('GalaxyData', {
 	 * nearest point (AU), a(1 - e)·∛(m / 3M); beyond about half of it what goes round the star is torn away.
 	 */
 	Room: function (star, around) {
+		var math = this.Math();
 		var orbit = star.Traits.Orbit;
 		var astronomy = this.$Service('Astronomy');
 		var near = astronomy.Length(orbit.Distance) * (1 - Math.min(0.99, Number(orbit.Eccentricity) || 0));
 
-		return 0.4 * near * Math.cbrt(Number(star.Traits.Star.Mass || 1) / (3 * Math.max(1e-9, around)));
+		return 0.4 * near * math.pow(Number(star.Traits.Star.Mass || 1) / (3 * Math.max(1e-9, around)), 1 / 3);
 	},
 
 	/*
@@ -1024,6 +1044,7 @@ Elemenx.Service('GalaxyData', {
 	 * a system has them inside it (at most 30 AU out), and a station round one of them now and then.
 	 */
 	Satellites: function (seed, star, around) {
+		var math = this.Math();
 		var random = this.Random(seed);
 		var room = Math.min(30, this.Room(star, around));
 		var kinds = ['lava', 'rocky', 'desert', 'terran', 'ocean', 'gas', 'ice-giant', 'ice'];
@@ -1040,11 +1061,11 @@ Elemenx.Service('GalaxyData', {
 
 		if (room < 0.012 || random() < 0.3) return children;
 
-		count = 1 + Math.floor(random() * Math.min(6, 1 + Math.log(room / 0.012) / Math.log(1.8) / 2));
+		count = 1 + Math.floor(random() * Math.min(6, 1 + math.log(room / 0.012) / math.log(1.8) / 2));
 		distance = Math.max(0.01, Math.min(room * (0.08 + random() * 0.12), 0.06 + random() * 0.4));
 
 		for (i = 0; i < count && distance < room; i++) {
-			kind = kinds[Math.min(kinds.length - 1, Math.floor(Math.log(distance / 0.01) / Math.log(30) * 3 + random() * 2))];
+			kind = kinds[Math.min(kinds.length - 1, Math.floor(math.log(distance / 0.01) / math.log(30) * 3 + random() * 2))];
 
 			children.push({ID: star.ID + '-' + 'bcdefgh'.charAt(i), Kind: 'planet', Values: {Name: (star.Values.Name || star.ID) + ' ' + 'bcdefgh'.charAt(i)}, Traits: {Orbit: {Distance: Number(distance.toPrecision(3)), Eccentricity: Math.round(random() * 0.12 * 1000) / 1000, Inclination: Math.round(random() * 6 * 10) / 10, Node: Math.round(random() * 360), Periapsis: Math.round(random() * 360), Anomaly: Math.round(random() * 360), Unit: 'AU'}, Body: {Radius: Math.round(kind === 'gas' ? 50000 + random() * 25000 : kind === 'ice-giant' ? 22000 + random() * 6000 : 2400 + random() * 5000), Day: Math.round((8 + random() * 40) * 10) / 10, Tilt: Math.round(random() * 30)}, Surface: {Type: kind}}});
 
@@ -1070,6 +1091,7 @@ Elemenx.Service('GalaxyData', {
 	 * or of Mass) on orbits of the profile of Plummer, isotropic, each with the planets and stations its room leaves it.
 	 */
 	Cluster: function (options) {
+		var math = this.Math();
 		var given = options || {};
 		var type = ['open', 'globular', 'nuclear'].indexOf(given.Type) !== -1 ? given.Type : 'open';
 		var seed = String(given.Seed === undefined ? 'cluster' : given.Seed);
@@ -1092,13 +1114,13 @@ Elemenx.Service('GalaxyData', {
 
 		for (i = 0; i < told; i++) {
 			u = random();
-			mass = masses[0] * Math.pow(masses[1] / masses[0], Math.pow(random(), type === 'open' ? 2.2 : 1.4));
+			mass = masses[0] * math.pow(masses[1] / masses[0], math.pow(random(), type === 'open' ? 2.2 : 1.4));
 			giant = type !== 'open' && random() < 0.12;
 			star = {ID: 'c' + (i + 1), Kind: 'star', Values: {Name: name + ' ' + (i + 1)}, Traits: {Star: giant ? {Mass: 0.85, Radius: Math.round(8 + random() * 60), Temperature: Math.round(3600 + random() * 900)} : {Mass: Math.round(mass * 100) / 100}, Orbit: {
 				/* Plummer: r = a / √(u^(-2/3) - 1), a of its scale; none in the middle few hundredths. */
-				Distance: Math.round(radius * 0.35 * astronomy.Units.ly / Math.sqrt(Math.pow(0.02 + u * 0.95, -2 / 3) - 1)),
+				Distance: Math.round(radius * 0.35 * astronomy.Units.ly / Math.sqrt(math.pow(0.02 + u * 0.95, -2 / 3) - 1)),
 				Eccentricity: Math.round(random() * 0.7 * 100) / 100,
-				Inclination: Math.round(Math.acos(1 - 2 * random()) * 180 / Math.PI),
+				Inclination: Math.round(math.acos(1 - 2 * random()) * 180 / Math.PI),
 				Node: Math.round(random() * 360),
 				Periapsis: Math.round(random() * 360),
 				Anomaly: Math.round(random() * 360),
@@ -1155,10 +1177,11 @@ Elemenx.Service('GalaxyData', {
 	},
 
 	Position: function (data, place, time) {
+		var math = this.Math();
 		var radius = Math.sqrt(place[0] * place[0] + place[2] * place[2]);
 		var angle = -(Number(time) || 0) * this.Speed / Math.max(500, radius);
 
-		return [place[0] * Math.cos(angle) - place[2] * Math.sin(angle), place[1], place[0] * Math.sin(angle) + place[2] * Math.cos(angle)];
+		return [place[0] * math.cos(angle) - place[2] * math.sin(angle), place[1], place[0] * math.sin(angle) + place[2] * math.cos(angle)];
 	},
 
 	/*
@@ -1170,6 +1193,7 @@ Elemenx.Service('GalaxyData', {
 	 * drawn along rays by SceneGalaxy, the same shape.
 	 */
 	Glow: function (data, count) {
+		var math = this.Math();
 		var self = this;
 		var m = data.Manifest;
 		var s = this.Shape(m);
@@ -1190,11 +1214,11 @@ Elemenx.Service('GalaxyData', {
 			for (i = 0; i < k; i++)
 				product *= Math.max(1e-9, random());
 
-			return -Math.log(product);
+			return -math.log(product);
 		}
 
 		function laplace (scale) {
-			return (random() < 0.5 ? -1 : 1) * -Math.log(Math.max(1e-9, random())) * scale;
+			return (random() < 0.5 ? -1 : 1) * -math.log(Math.max(1e-9, random())) * scale;
 		}
 
 		function direction () {
@@ -1202,7 +1226,7 @@ Elemenx.Service('GalaxyData', {
 			var a = random() * Math.PI * 2;
 			var w = Math.sqrt(1 - u * u);
 
-			return [w * Math.cos(a), u, w * Math.sin(a)];
+			return [w * math.cos(a), u, w * math.sin(a)];
 		}
 
 		function put (p, color, bright) {
@@ -1221,8 +1245,8 @@ Elemenx.Service('GalaxyData', {
 		function disc () {
 			var radius = gamma(2) * s.Disc;
 			var a = random() * Math.PI * 2;
-			var x = radius * Math.cos(a);
-			var z = radius * Math.sin(a);
+			var x = radius * math.cos(a);
+			var z = radius * math.sin(a);
 			var arm = self.Arm(m, x, z, 0, data);
 			var flock = self.Flocks(data, x, z);
 			var young;
@@ -1247,7 +1271,7 @@ Elemenx.Service('GalaxyData', {
 
 		function sphere () {
 			var p = direction();
-			var r = m.Kind === 'dwarf' ? m.Radius * 0.25 / Math.sqrt(Math.max(1e-6, Math.pow(Math.max(1e-6, random()), -2 / 3) - 1)) : gamma(3) * m.Radius * 0.08;
+			var r = m.Kind === 'dwarf' ? m.Radius * 0.25 / Math.sqrt(Math.max(1e-6, math.pow(Math.max(1e-6, random()), -2 / 3) - 1)) : gamma(3) * m.Radius * 0.08;
 			if (r > m.Radius * 1.3) return;
 
 			put([p[0] * r * m.Shape[0], p[1] * r * m.Shape[2], p[2] * r * m.Shape[1]], [1, 0.84, 0.64], 0.55);
@@ -1256,8 +1280,8 @@ Elemenx.Service('GalaxyData', {
 		function ring () {
 			var radius = s.Ring + (random() + random() + random() - 1.5) * s.Width * 1.4;
 			var a = random() * Math.PI * 2;
-			var x = radius * Math.cos(a);
-			var z = radius * Math.sin(a);
+			var x = radius * math.cos(a);
+			var z = radius * math.sin(a);
 			if (random() > 0.35 + self.Flocks(data, x, z) * 0.9) return;
 
 			put([x, laplace(s.Height * 0.5), z], [0.66, 0.78, 1], 0.9);
@@ -1269,11 +1293,11 @@ Elemenx.Service('GalaxyData', {
 		function clump () {
 			var radius = gamma(2) * s.Disc;
 			var a = random() * Math.PI * 2;
-			var x = radius * Math.cos(a);
-			var z = radius * Math.sin(a);
+			var x = radius * math.cos(a);
+			var z = radius * math.sin(a);
 			var y = laplace(s.Height * 2);
 			var c = self.Clumps(data, x, y, z) / 2;
-			if (random() > Math.pow(c, 1.5) * 0.95 + 0.03) return;
+			if (random() > math.pow(c, 1.5) * 0.95 + 0.03) return;
 
 			put([x, y, z], random() < 0.7 ? [0.66, 0.78, 1] : [1, 0.86, 0.72], 0.85);
 
@@ -1287,7 +1311,7 @@ Elemenx.Service('GalaxyData', {
 			var across = (random() + random() - 1) * s.Bar * 0.2;
 			var turn = m.Phase * Math.PI / 180;
 
-			put([along * Math.cos(turn) - across * Math.sin(turn), laplace(s.Bar * 0.08), along * Math.sin(turn) + across * Math.cos(turn)], [1, 0.84, 0.62], 0.75);
+			put([along * math.cos(turn) - across * math.sin(turn), laplace(s.Bar * 0.08), along * math.sin(turn) + across * math.cos(turn)], [1, 0.84, 0.62], 0.75);
 		}
 
 		var makers = {Disc: disc, Bulge: bulge, Sphere: sphere, Ring: ring, Clump: clump, Bar: bar};
@@ -1361,19 +1385,21 @@ Elemenx.Service('GalaxyData', {
 
 	/* The direction of the north of its galaxy as a system of a star lies (its plane tilted as its seed says). */
 	Pole: function (data, id) {
+		var math = this.Math();
 		var random = this.Random(data.Manifest.Seed + ':pole:' + id);
 		var tilt = random() * Math.PI;
 		var turn = random() * Math.PI * 2;
 
-		return [Math.sin(tilt) * Math.cos(turn), Math.cos(tilt), Math.sin(tilt) * Math.sin(turn)];
+		return [math.sin(tilt) * math.cos(turn), math.cos(tilt), math.sin(tilt) * math.sin(turn)];
 	},
 
 	Cosmos: function (data, id) {
+		var math = this.Math();
 		var star = this.Star(data, id);
 		var density = star ? this.Density(data, star.Place) : this.Local;
 		var m = data.Manifest;
 
-		return {Kind: 'galaxy', Seed: m.Seed + ':' + id, Pole: this.Pole(data, id), Galaxy: {Seed: m.Seed, Kind: m.Kind, Radius: m.Radius, Arms: m.Arms, Pitch: m.Pitch, Phase: m.Phase, Shape: m.Shape}, Place: star ? star.Place.slice(0, 3) : [m.Radius * 0.54, 0, 0], Band: 1, Stars: Math.max(0.3, Math.min(1, 0.5 + Math.log(Math.max(1e-6, density / this.Local)) * 0.1))};
+		return {Kind: 'galaxy', Seed: m.Seed + ':' + id, Pole: this.Pole(data, id), Galaxy: {Seed: m.Seed, Kind: m.Kind, Radius: m.Radius, Arms: m.Arms, Pitch: m.Pitch, Phase: m.Phase, Shape: m.Shape}, Place: star ? star.Place.slice(0, 3) : [m.Radius * 0.54, 0, 0], Band: 1, Stars: Math.max(0.3, Math.min(1, 0.5 + math.log(Math.max(1e-6, density / this.Local)) * 0.1))};
 	},
 
 	Rename: function (data, id, name) {

@@ -6,6 +6,15 @@ Elemenx.Component('SpaceDemo', {
 	$TemplateURL: 'SpaceDemo.html',
 	$Traits: ['SceneDemo'],
 	SpaceSeed: 'kepler-186',
+	/* Marks over the bodies (SceneMark, SceneMarks): a card with a chart over Earth and Mars, a meter over the station, the moons of Jupiter as a cluster, Neptune at the edge. */
+	SpaceMarks: false,
+	SpaceTemperatures: [14.1, 14.6, 13.9, 15.2, 15.8, 15.1, 16.0, 15.4],
+	SpaceAir: {Labels: ['CO2', 'N2', 'Ar', 'other'], Series: [{Name: 'Air', Values: [95.3, 2.6, 1.9, 0.2]}]},
+	SpacePower: 82,
+	SpaceJovians: ['io', 'europa', 'ganymede', 'callisto'],
+	SpaceMarked: function (value) {
+		this.SpaceMarks = !!value;
+	},
 	SpaceDay: 0,
 	SpaceArrived: function (detail) {
 		this.SpaceNote = 'Arrived: ' + this.Spaced().Get(detail.ID).Name + ' at ' + this.Spaced().Get(detail.At).Name;

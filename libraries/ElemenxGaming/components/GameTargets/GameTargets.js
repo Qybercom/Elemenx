@@ -8,7 +8,8 @@
  * the target, helm: the places and the target, strategic: the foes, the places and the target, else none), all or target only those. A press on a mark makes it the
  * target of the vehicle (SetTarget). Missiles (SceneMissiles): one at the vehicle always (red, how soon it meets it), the
  * others where foes are shown; the locks of the vehicle as brackets closing on their targets, red when locked. For is
- * the vehicle (empty: the one the hero sits in); Label names it for screen readers.
+ * the vehicle (empty: the one the hero sits in); Label names it for screen readers. The frames are marks of the scene
+ * (SceneMarks): each on its contact, hidden behind a body, the target at the edge of the view with an arrow when it is off it.
  */
 Elemenx.Component('GameTargets', {
 	$TemplateURL: 'GameTargets.html',
@@ -88,23 +89,18 @@ Elemenx.Component('GameTargets', {
 		});
 
 		(contacts || []).forEach(function (one) {
-			var spot;
-
 			at[one.ID] = one.At;
 
 			if (!self.Shown(one, mode)) return;
 
-			spot = engine.Project(one.At);
-
-			if (!spot.Visible || spot.X < 0 || spot.Y < 0 || spot.X > scene.Scene().Width || spot.Y > scene.Scene().Height) return;
-
+			/* Where each is on the view is of the marks of the scene (SceneMarks): hidden behind a body, the target at the edge. */
 			if (one.Kind === 'missile') {
-				marks.push({ID: one.ID, X: spot.X, Y: spot.Y, Name: one.Name, Far: one.Incoming && isFinite(soon[one.ID]) ? soon[one.ID].toFixed(1) + ' s' : '', Kind: one.Incoming ? 'incoming' : 'missile', Target: false});
+				marks.push({ID: one.ID, Name: one.Name, Far: one.Incoming && isFinite(soon[one.ID]) ? soon[one.ID].toFixed(1) + ' s' : '', Kind: one.Incoming ? 'incoming' : 'missile', Target: false});
 
 				return;
 			}
 
-			marks.push({ID: one.ID, X: spot.X, Y: spot.Y, Name: one.Name, Far: Math.round(one.Distance) + ' m', Kind: one.Hostile ? 'enemy' : one.Team ? 'ally' : 'point', Target: !!one.Target});
+			marks.push({ID: one.ID, Name: one.Name, Far: Math.round(one.Distance) + ' m', Kind: one.Hostile ? 'enemy' : one.Team ? 'ally' : 'point', Target: !!one.Target});
 
 			if (one.Target && mode === 'turret') lead = self.LeadOf(one, engine);
 			else if (one.Target && arms && arms.Driver) lead = self.DriverLead(one, engine, arms.Driver.Name);
@@ -121,6 +117,71 @@ Elemenx.Component('GameTargets', {
 		this.Marks = marks;
 		this.Locks = locks;
 		this.Lead = lead;
+		this.Spots = at;
+
+		this.Marked(marks);
+	},
+
+	/*
+	 * The frames as marks of the scene, each on its contact (Align center, never moved off it), hidden behind a body; the
+	 * target at the edge of the view with an arrow when it is off it. Those of contacts gone are taken away.
+	 */
+	Marked: function (marks) {
+		var self = this;
+		var scene = this.ParentScene();
+		var element = this.$Element();
+		var was = this.MarkKeys || {};
+		var now = {};
+
+		if (!scene || typeof scene.Mark !== 'function' || !element) return;
+
+		this.MarkSpace = this.MarkSpace || 'target:' + Math.random().toString(36).slice(2) + ':';
+
+		marks.forEach(function (mark) {
+			var button = element.querySelector('.elemenx-game-target[data-id="' + String(mark.ID).replace(/"/g, '') + '"]');
+			var key = self.MarkSpace + mark.ID;
+
+			if (!button) return;
+
+			now[key] = true;
+
+			scene.Mark(key, {Element: button, At: self.SpotOf(mark.ID), Align: 'center', Declutter: false, Line: false, Occlude: true, Edge: !!mark.Target, Priority: mark.Target ? 1 : 0});
+		});
+
+		Object.keys(was).forEach(function (key) {
+			if (!now[key])
+				scene.Unmark(key);
+		});
+
+		this.MarkKeys = now;
+	},
+
+	SpotOf: function (id) {
+		var self = this;
+
+		return function () {
+			return self.Spots && self.Spots[id] || null;
+		};
+	},
+
+	SceneStop: function () {
+		this.Unmarked();
+	},
+
+	$OnDestroy: function () {
+		this.Unmarked();
+	},
+
+	Unmarked: function () {
+		var scene = this.ParentScene();
+		var keys = this.MarkKeys || {};
+
+		if (scene && typeof scene.Unmark === 'function')
+			Object.keys(keys).forEach(function (key) {
+				scene.Unmark(key);
+			});
+
+		this.MarkKeys = {};
 	},
 
 	/* Where to aim at a target as it moves, for a shot of the weapon of the turret (its Speed; a ray at once needs none). */

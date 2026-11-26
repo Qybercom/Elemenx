@@ -74,6 +74,7 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - `person`: V took the view of a walker to another place: third, first or shoulder.
 - `shoulder`: B took the view over another shoulder: right or left.
 - `dig`: A hole was dug in the ground (Dig): {At, Radius}.
+- `influence`: An influence on the weather of a planet began (Influence): {ID, Kind, Body, Direction, Radius, Start, Length, Strength}.
 
 ## Slots
 
@@ -182,4 +183,4 @@ What a scene waits for, its programs and models, comes behind the page and holds
 - [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L252) — `tests/regression/library-game-strategy.test.js`
 - [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L280) — `tests/regression/library-game-strategy.test.js`
 
-+374 more in the same files
++385 more in the same files

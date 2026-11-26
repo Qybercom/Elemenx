@@ -34,6 +34,50 @@ describe('Contract: sketches over a ground of Terrain: brushes, lines and areas 
 		return {Plain: terrain.Flat(GROUND), Sketched: terrain.Flat(Object.assign({}, GROUND, {Sketch: sketch(items, layer)}))};
 	}
 
+	/*
+	 * Regression: each point of a square of the ground looked at all the items of its sketch (119 in the world of the showcase,
+	 * 2 of them over a square of 47 m), five times a vertex: half the time of the square. A square now looks at the items over
+	 * it alone (Within, of Prefetch), the very same heights.
+	 */
+	it('makes a square of the items over it alone, the very same heights as of all of them', function () {
+		var items = [];
+		var field;
+		var made;
+		var reads = 0;
+		var far;
+		var i;
+
+		for (i = 0; i < 40; i++)
+			items.push({ID: 'r' + i, Type: i % 2 ? 'raise' : 'lower', Points: [[-250 + (i % 8) * 70, -250 + Math.floor(i / 8) * 120]], Radius: 18, Amount: 2 + i % 3});
+
+		field = terrain.Flat(Object.assign({}, GROUND, {Sketch: sketch(items)}));
+		far = field.Sketch.Items[39];
+
+		/* What the far item is asked of: its bounds, each time a point looks at it. */
+		var bounds = far.Bounds;
+
+		Object.defineProperty(far, 'Bounds', {get: function () {
+			reads++;
+
+			return bounds;
+		}});
+
+		made = field.Chunk(-250, -250, 46.875, 32);
+
+		expect(reads).toBeLessThanOrEqual(2);
+
+		/* The same heights as of every item, point by point (the 33 by 33 of its grid: its skirts after them hang lower). */
+		field.Sketch.Within(null);
+
+		for (i = 0; i < 33 * 33 * 3; i += 3)
+			expect(made.Positions[i + 1]).toBe(field.Height(made.Positions[i] - 250, made.Positions[i + 2] - 250));
+
+		/* A point out of the box looks at all of them. */
+		field.Sketch.Within(-260, -260, -240, -240);
+
+		expect(field.Height(110, 0)).toBe(terrain.Flat(Object.assign({}, GROUND, {Sketch: sketch(items)})).Height(110, 0));
+	});
+
 	it('raises and lowers along a stroke, flattens to a height and smooths, up to its radius and no farther', function () {
 		var made = both([{ID: 'a', Type: 'raise', Points: [[0, 0], [40, 0]], Radius: 10, Amount: 5}, {ID: 'b', Type: 'lower', Points: [[0, 100]], Radius: 10, Amount: 3}, {ID: 'c', Type: 'flatten', Points: [[100, 0], [140, 0]], Radius: 12, Height: 9}]);
 		var plain = made.Plain.Height;

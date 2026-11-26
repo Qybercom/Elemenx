@@ -19,9 +19,13 @@ div.elemenx-game-targets {
 	border: 2px solid var(--elemenx-game-target);
 	border-radius: var(--elemenx-radius-small);
 	background: none;
-	transform: translate(-50%, -50%);
 	cursor: pointer;
 	pointer-events: auto;
+}
+
+/* Off the view: the target at its edge (SceneMarks), an arrow toward it. */
+.elemenx-game-target[data-edge="true"] {
+	opacity: 0.85;
 }
 
 .elemenx-game-target.enemy {
