@@ -434,6 +434,66 @@ describe('Contract: WorldEditor, a world level in level (galaxy, system, planet,
 		expect(editor.ShaderGraphs()).toBe(null);
 	});
 
+	it('changes a cloud, a network and a layout graph for the world alone in a Blueprint of its kind, what each gives drawn beside it', async function () {
+		var made = await mount();
+		var editor = made.Editor;
+		var preview;
+
+		expect(editor.GraphNames()).toEqual(expect.arrayContaining(['cloud/sky', 'cloud/night', 'cloud/cluster', 'cloud/belt']));
+
+		editor.OpenGraph('cloud/belt');
+
+		await tick(20);
+
+		expect(editor.GraphType(editor.Version, 'graph:cloud/belt')).toBe('cloud');
+		expect(editor.Previewed(editor.Version, 'graph:cloud/belt')).toBe(true);
+		expect(editor.Previewed(editor.Version, 'graph:planet/relief')).toBe(false);
+		/* The scenes of its systems read it: the rocks of their belts are of it. */
+		expect(Object.keys(editor.ShaderGraphs())).toEqual(['cloud/belt']);
+
+		await waitFor(function () {
+			preview = made.Host.$Element().querySelector('.elemenx-world-editor-graph-preview');
+
+			return preview && /260/.test(preview.textContent);
+		}, 6000);
+
+		expect(made.Host.$Element().querySelector('.elemenx-world-editor-graph-body.previewed')).not.toBe(null);
+
+		editor.ResetGraph('cloud/belt');
+
+		expect(editor.ShaderGraphs()).toBe(null);
+
+		/* A network: the rivers of its planets (their option RiversGraph), drawn beside it too; not kept in a planet. */
+		expect(editor.GraphNames()).toEqual(expect.arrayContaining(['network/rivers', 'network/roads', 'network/track']));
+
+		editor.OpenGraph('network/rivers');
+
+		editor.Own().Path = [{Level: 'galaxy', ID: ''}, {Level: 'system', ID: 'a'}, {Level: 'planet', ID: 'b'}];
+
+		expect(editor.Previewed(editor.Version, 'graph:network/rivers')).toBe(true);
+		expect(editor.PlanetValue().RiversGraph.type).toBe('network');
+
+		editor.PlanetChanged(editor.PlanetValue());
+
+		expect(editor.World().Planets[editor.PlanetKey()].RiversGraph).toBe(undefined);
+
+		editor.ResetGraph('network/rivers');
+
+		expect(editor.PlanetValue().RiversGraph).toBe(undefined);
+
+		/* A layout: the plans of the settlements of its locations (Graphs of their ground), drawn beside it too. */
+		expect(editor.GraphNames()).toEqual(expect.arrayContaining(['layout/grid', 'layout/districts', 'layout/village', 'layout/cloverleaf']));
+
+		editor.OpenGraph('layout/grid');
+
+		expect(editor.Previewed(editor.Version, 'graph:layout/grid')).toBe(true);
+		expect(Object.keys(editor.GroundGraphs())).toEqual(['layout/grid']);
+
+		editor.ResetGraph('layout/grid');
+
+		expect(editor.GroundGraphs()).toBe(null);
+	});
+
 	it('keeps all of the world in one file: its galaxy and its edits, its planets, its locations and its resources', async function () {
 		var made = await mount();
 		var editor = made.Editor;

@@ -1,0 +1,4 @@
+<div class="elemenx-blueprint-preview" [class]="[Kind ? 'elemenx-blueprint-preview-' + Kind : '']" role="group" [attribute.aria-label]="Label || $T('graphics.blueprintPreview.label')">
+	<canvas class="elemenx-blueprint-preview-canvas" role="img" [attribute.aria-label]="Note || Label || $T('graphics.blueprintPreview.label')" [style.height]="Number(Height) + 'px'" (pointerdown)="Pressed($event)" (pointermove)="Moved($event)" (pointerup)="Released" (pointercancel)="Released"></canvas>
+	<div class="elemenx-blueprint-preview-note" aria-live="polite">{{Note}}</div>
+</div>

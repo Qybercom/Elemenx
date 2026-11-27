@@ -14,6 +14,8 @@
 - query: a=1&b=2&b=3&c[d]=4 как {a: '1', b: ['2', '3'], c: {d: '4'}} (a[] добавляет в список); Stringify — обратно.
 - base64: Parse отдаёт текст (UTF-8), Bytes true — Uint8Array; Stringify принимает текст, Uint8Array или ArrayBuffer; Url true — вариант для адресов (- и _, без =).
 
+Чужой текст читается осторожно: ключ __proto__ остаётся обычным собственным ключом и никогда не становится прототипом объектов; списки, таблицы и элементы вкладываются не глубже MaxDepth (1000; опция MaxDepth для TOML и XML), а алиасы YAML разворачиваются не больше чем в MaxNodes значений (1 000 000; опция MaxNodes). За пределом — ошибка с указанием места.
+
 ## Методы
 
 - `Register(name, format)`
@@ -106,7 +108,7 @@
 - [reads and writes TOML: tables, arrays of tables, dotted keys, strings, numbers, dates and inline tables](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L190) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
 - [reads and writes XML as elements of {Name, Attributes, Children}](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L230) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
 - [reads and writes query strings with lists and nested names, and Base64 of texts and bytes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L245) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
-- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L130) — `tests/regression/headless.test.js`
-- [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`
+- [keeps a key __proto__ or constructor of a text as a key of its own, never as the prototype of objects](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L264) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads lists, tables and elements MaxDepth deep at most, and the aliases of YAML for MaxNodes values at most](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L295) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
 
-+1 ещё в тех же файлах
++3 ещё в тех же файлах

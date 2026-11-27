@@ -178,7 +178,28 @@ describe('Builder: native programs (--native)', function () {
 		expect(view).not.toContain('__PACKAGE__');
 		expect(fs.readFileSync(path.join(module, 'build.gradle'), 'utf8')).toContain("namespace 'com.example.server.ui'");
 		expect(fs.readFileSync(path.join(module, 'build.gradle'), 'utf8')).toContain("implementation 'androidx.webkit:webkit:1.14.0'");
-		expect(fs.readFileSync(path.join(module, 'consumer-rules.pro'), 'utf8')).toContain('-keepclassmembers class com.example.server.ui.ElemenxView$Port');
+		expect(fs.readFileSync(path.join(module, 'consumer-rules.pro'), 'utf8')).not.toContain('-keepclassmembers');
+
+		/*
+		 * Regression: the door was a JavaScript interface of every frame (one of another origin called the handlers), and a
+		 * link of any scheme went to an Intent. A listener of messages for the origin of the Application alone now, and the
+		 * links of the schemes allowed.
+		 */
+		expect(view).toContain('WebViewCompat.addWebMessageListener(this, "ElemenxAndroid", Collections.singleton(ORIGIN),');
+		expect(view).toContain('WebViewCompat.addDocumentStartJavaScript(ElemenxView.this, "window.ElemenxAndroidState = "');
+		expect(view).not.toContain('addJavascriptInterface');
+		expect(view).toContain('public static final String[] SCHEMES = {"http", "https", "mailto", "tel", "sms", "geo", "market"};');
+		expect(view).toContain('if (!schemes.contains(scheme) || NEVER.contains(scheme)) return true;');
+
+		build({native: 'android-library', nativeSettings: {Android: {Package: 'com.example.server.ui', Module: 'ui', Schemes: ['https', 'tel']}}});
+
+		expect(fs.readFileSync(path.join(module, 'src', 'main', 'java', 'com', 'example', 'server', 'ui', 'ElemenxView.java'), 'utf8')).toContain('public static final String[] SCHEMES = {"https", "tel"};');
+		expect(function () {
+			build({native: 'android-library', nativeSettings: {Android: {Schemes: ['https', 'intent']}}});
+		}).toThrow('Native.Android.Schemes cannot open intent');
+		expect(function () {
+			build({native: 'android-library', nativeSettings: {Android: {Schemes: 'https'}}});
+		}).toThrow('Native.Android.Schemes must be a list of schemes');
 		expect(fs.readFileSync(path.join(folder, 'README.md'), 'utf8')).toContain("include ':ui'");
 
 		expect(function () {

@@ -943,6 +943,13 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-scene-axes-y`
 - `elemenx-scene-axes-z`
 
+## BlueprintPreview
+
+- `elemenx-blueprint-preview`
+- `elemenx-blueprint-preview-canvas`
+- `elemenx-blueprint-preview-cloud`
+- `elemenx-blueprint-preview-note`
+
 ## GameBar
 
 - `elemenx-game-bar`: `large`, `low`, `segmented`, `small`
@@ -1699,6 +1706,8 @@ The classes the game components share, and the modifier `game` of `elemenx-windo
 - `elemenx-world-editor-graph`
 - `elemenx-world-editor-graph-bar`
 - `elemenx-world-editor-graph-blueprint`
+- `elemenx-world-editor-graph-body`: `previewed`
+- `elemenx-world-editor-graph-preview`
 - `elemenx-world-editor-group`
 - `elemenx-world-editor-item`
 - `elemenx-world-editor-main`

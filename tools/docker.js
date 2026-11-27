@@ -20,8 +20,17 @@ var child = require('child_process');
 
 var Base = 'nginx:1.27-alpine';
 
-/* A header of nginx: its name and its value in quotes, for every response (always: the errors too). */
+/*
+ * A header of nginx: its name and its value in quotes, for every response (always: the errors too). A name of letters,
+ * digits and -, a value of no line break: either would end the directive and begin another (regression).
+ */
 function header (name, value) {
+	if (!/^[A-Za-z0-9-]+$/.test(String(name)))
+		throw new Error('Docker.Headers: a name of letters, digits and - is expected: ' + name);
+
+	if (/[\u0000-\u001f\u007f]/.test(String(value)))
+		throw new Error('Docker.Headers: the value of ' + name + ' has a line break or a control character');
+
 	return '\tadd_header ' + name + ' "' + String(value).replace(/["\\]/g, '\\$&') + '" always;';
 }
 

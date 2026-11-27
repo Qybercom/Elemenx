@@ -1,0 +1,22 @@
+<!-- generated -->
+# ImageBlueprints
+
+ImageBlueprints: картинки, которые считает процессор, из графов Blueprints, объявленные в $Provides (Blueprints создаёт службу, когда встречает такой граф или блок): кора и листья растений. Граф вида image заканчивается блоком Image: Width и Height (пиксели), а дальше либо Color (vec4, 0–1) и Bump (рельеф) каждого пикселя — тогда граф запускается по разу на пиксель (его блоки Input — U и V, 0–1 поперёк и вниз, X и Y — сам пиксель, и то, что ему передано), либо Picture, картинка целиком ({Width, Height, Data}, как её даёт блок-алгоритм) — тогда граф запускается один раз. Из рельефа строится карта нормалей (Strength — крутизна; Wrap — без шва поперёк, как вокруг ствола), и средний цвет (Mean, по каждому седьмому пикселю).
+- Compiled(graph) — то, что его запускает, собранное на странице ({Source — его код, Image — свойства его Image, Told — входы Image, до которых дошла связь}); воркер запускает это (его Source — код, граф там не читается).
+- Run(compiled, parameters, inputs) — {Picture: {Width, Height, Data (байты RGBA), Mean}, Normal: {Width, Height, Data} (из Bump; null, если его нет)}. Make(graph, parameters, inputs) — Run от Compiled. Sample(graph) — с чем граф запускается, чтобы его увидеть (Preset — первое растение SceneFlora, если граф его читает).
+- Блоки: Bark (Preset, U, V: пиксель коры пресета SceneFlora — вокруг ствола поперёк и вверх по растению — из графа его узора: R, G, B, Bump) и Leaves (Preset: атлас листьев пресета, Size на Tall пикселей, Tile — одна гроздь: SceneFlora.LeafPicture).
+Картинки библиотеки (ElemenxGraphics/image/<имя>): bark и leaves (SceneFlora.Textures). Те же функции работают в Node.
+
+## Методы
+
+- `Sample(graph)`
+- `Make(graph, parameters, inputs)`
+- `Compiled(graph)`
+- `Run(compiled, parameters, inputs)`
+
+## Тесты
+
+- [declares the kind image and its blocks, and makes a picture of each pixel of a graph](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js#L41) — `libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js`
+- [takes a picture made whole, and runs it once](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js#L64) — `libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js`
+- [refuses a graph of another kind and one of no Image](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js#L76) — `libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js`
+- [shows a picture in BlueprintPreview](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js#L86) — `libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js`

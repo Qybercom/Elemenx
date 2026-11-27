@@ -81,10 +81,12 @@
  *   once in the page and given to workers by ShareGround; SketchMake(type, graph) makes a type of another graph. The
  *   shape of each carve of a volume is its graph too (blueprints/carve/<type>: tunnel, sphere, caves, passages, overhangs;
  *   inputs X, Y, Z, G the ground over the point, Steep, Points, Packed and the values of the carve; result Density, of
- *   overhangs Share, WX, WZ): CarveRun(type), CarveMake(type, graph). A ground of graphs of its own (Graphs: {'sketch/<type>'
- *   or 'carve/<type>': a graph}, as a world gives them) has their code made in the page (GraphCode, GraphCodeOf(graphs):
- *   {name: its code}; ShareGround makes it before a worker has the options); SketchRun(type, own) and CarveRun(type, own)
- *   are of that code when it has one of the type.
+ *   overhangs Share, WX, WZ): CarveRun(type), CarveMake(type, graph). A ground of graphs of its own (Graphs: {'sketch/<type>',
+ *   'carve/<type>' or 'layout/<name>': a graph}, as a world gives them) has their code made in the page (GraphCode,
+ *   GraphCodeOf(graphs): {name: its code}; ShareGround makes it before a worker has the options); SketchRun(type, own),
+ *   CarveRun(type, own) and SettlementPlan(item, others, sizes, own) are of that code when it has one of the type.
+ * - SettlementPlan(item, others, sizes, own): the plan of a settlement of a sketch, a graph of a layout (LayoutBlueprints:
+ *   blueprints/layout/<name> of its layout, or Graph of its kind; LayoutRun(name) its function, LayoutCode carried).
  * - PlainRelief(settings): the library relief of a ground of no graph, no planet and no noise of its own, by its code made
  *   in the page: {Height, Climate(x, z)}. ShareGround(pool, options, made): what its options take with them to the
  *   workers of a pool (the code and the wasm of its relief), once; made: make its code first if it was not yet.
@@ -95,7 +97,7 @@
 Elemenx.Service('SceneTerrainGenerator', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'Rock(field, args)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)', 'ReliefWasm(settings, plain)', 'WasmRun(made, input, count)', 'WasmExports(made)', 'PlainRelief(settings)', 'ShareGround(pool, options, made)', 'SketchDefaults(type)', 'SketchRun(type, own)', 'SketchMake(type, graph)', 'CarveRun(type, own)', 'CarveMake(type, graph)', 'GraphCodeOf(graphs)', 'SketchCodeOf(type, graph)', 'CarveCodeOf(type, graph)', 'BakeRun(own)', 'BakeMake(graph)', 'BakeCodeOf(graph)', 'OwnRun(code)', 'WasmShare(pool, key)']
+		Methods: ['FlatOf(options)', 'Flat(options)', 'Border(options)', 'Passages(carve, height)', 'Daylight(field, x0, z0, x1, z1, low, options)', 'Rock(field, args)', 'SketchCarves(sketch, height, seed)', 'PassageRoute(graph, from, to)', 'Relief(settings)', 'Climate(settings)', 'ClimateOf(settings)', 'LibraryRelief(options)', 'Sphere(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Free(size, side, lines, areas, edge)', 'Floor(options, side)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Sketched(sketch, base, seed)', 'RoadWay(field, from, to, options)', 'SketchChanged(before, after)', 'Source(names)', 'ReliefWasm(settings, plain)', 'WasmRun(made, input, count)', 'WasmExports(made)', 'PlainRelief(settings)', 'ShareGround(pool, options, made)', 'SketchDefaults(type)', 'SketchRun(type, own)', 'SketchMake(type, graph)', 'CarveRun(type, own)', 'CarveMake(type, graph)', 'GraphCodeOf(graphs)', 'SettlementPlan(item, others, sizes, own)', 'LayoutRun(name)', 'SketchCodeOf(type, graph)', 'CarveCodeOf(type, graph)', 'BakeRun(own)', 'BakeMake(graph)', 'BakeCodeOf(graph)', 'OwnRun(code)', 'WasmShare(pool, key)']
 	},
 
 	$Provides: {Seeded: {Kinds: ['terrain']}},
@@ -3331,7 +3333,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 */
 	Work: function () {
 		var self = this;
-		var pool = this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneFlora: true});
+		var pool = this.$Service('Workers').Pool('SceneTerrainGenerator', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, ScenePlanet: true, SceneTerrainGenerator: true, LayoutBlueprints: true, SceneFlora: true});
 		var run;
 		var share;
 
@@ -3750,7 +3752,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 			made.Plan = self.SettlementPlan(made.Item, all, function (name) {
 				return self.SettlementSizes[name] || null;
-			});
+			}, own);
 			at = items.indexOf(made);
 
 			made.Plan.Streets.forEach(function (street, index) {
@@ -4166,6 +4168,7 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 			if (kind === 'sketch') made[name] = self.SketchCodeOf(type, graph);
 			else if (kind === 'carve') made[name] = self.CarveCodeOf(type, graph);
+			else if (kind === 'layout') made[name] = {Source: self.$Service('LayoutBlueprints').Code(graph).Source};
 		});
 
 		return made;
@@ -4207,716 +4210,34 @@ Elemenx.Service('SceneTerrainGenerator', {
 	 * Gives {Streets: [{Points, Width, Road (of a street drawn of a type of road)}], Lots: [{X, Z, Turn, Width, Depth, Class, District}], Walls: [[[x, z]...]], Gates: [{X, Z,
 	 * Turn}], Towers: [{X, Z}]}.
 	 */
-	SettlementPlan: function (item, others, sizes) {
-		var self = this;
+	SettlementPlan: function (item, others, sizes, own) {
+		var layouts = this.$Service('LayoutBlueprints');
 		var kind = this.SettlementKinds[item.Kind] || this.SettlementKinds.village;
-		var points = item.Points;
-		var density = item.Density === undefined ? 0.85 : Number(item.Density);
-		var random = this.$Service('Random').Sequence(String(item.Seed === undefined ? item.ID : item.Seed));
-		var plan = {ID: item.ID, Kind: item.Kind || 'village', Streets: [], Lots: [], Walls: [], Gates: [], Towers: []};
-		var center = [0, 0];
-		var longest = 0;
-		var angle = 0;
+		var layout = kind.Graph || layouts.Area(item, others, kind, sizes).Layout || 'grid';
+		/* Of a graph of the ground's own (GraphCode: layout/<name> of a world), else of the library's. */
+		var code = own && own['layout/' + layout];
 
-		function inside (polygon, x, z) {
-			var within = false;
-			var a;
-			var b;
+		return layouts.Plan(this.LayoutRun(code ? {Source: code.Source} : layout)({}, {Item: item, Others: others, Kind: kind, Sizes: sizes}).Layout);
+	},
 
-			for (a = 0, b = polygon.length - 1; a < polygon.length; b = a++) {
-				if (polygon[a][1] > z !== polygon[b][1] > z && x < (polygon[b][0] - polygon[a][0]) * (z - polygon[a][1]) / (polygon[b][1] - polygon[a][1]) + polygon[a][0])
-					within = !within;
-			}
+	/* The layouts of the library (blueprints/layout/<name>), their code made in the page (LayoutRun), carried to the workers. */
+	LayoutNames: ['grid', 'main', 'road', 'radial', 'districts'],
 
-			return within;
-		}
+	LayoutCode: {},
 
-		/* The point of a line nearest to x, z: [x, z, distance]. */
-		function nearest (line, x, z) {
-			var best = [x, z, Infinity];
-			var a;
+	/* The function of the code of a layout graph (a name of the library, or ElemenxGraphics/...): made in the page, carried. */
+	LayoutRun: function (name) {
+		var key = name && name.Source ? '' : String(name);
+		var source = name && name.Source || this.LayoutCode[key];
+		if (!source)
+			source = this.LayoutCode[key] = this.$Service('LayoutBlueprints').Code(key.indexOf('/') === -1 ? 'ElemenxGraphics/layout/' + key : key).Source;
 
-			for (a = 0; a + 1 < line.length; a++) {
-				var dx = line[a + 1][0] - line[a][0];
-				var dz = line[a + 1][1] - line[a][1];
-				var t = Math.max(0, Math.min(1, ((x - line[a][0]) * dx + (z - line[a][1]) * dz) / (dx * dx + dz * dz || 1)));
-				var p = [line[a][0] + dx * t, line[a][1] + dz * t];
-				var d = Math.hypot(p[0] - x, p[1] - z);
-				if (d < best[2])
-					best = [p[0], p[1], d];
-			}
+		this.LayoutMade = this.LayoutMade || {};
 
-			return best;
-		}
+		if (!this.LayoutMade[source])
+			this.LayoutMade[source] = new Function('B', 'M', 'N', source)(this.$Service('Blueprints'), this.$Service('Math'), this.$Service('Noise'));
 
-		function distance (line, x, z) {
-			return nearest(line, x, z)[2];
-		}
-
-		/* How far a point is from the edge of the settlement. */
-		function edge (x, z) {
-			return distance(points.concat([points[0]]), x, z);
-		}
-
-		/* A line clipped to the settlement: the runs of it inside, by steps of four metres. */
-		function clip (from, to) {
-			var length = Math.hypot(to[0] - from[0], to[1] - from[1]);
-			var steps = Math.max(1, Math.ceil(length / 4));
-			var runs = [];
-			var run = null;
-			var s;
-
-			for (s = 0; s <= steps; s++) {
-				var p = [from[0] + (to[0] - from[0]) * s / steps, from[1] + (to[1] - from[1]) * s / steps];
-
-				if (inside(points, p[0], p[1])) {
-					run = run || [p, p];
-					run[1] = p;
-				}
-				else if (run) {
-					runs.push(run);
-					run = null;
-				}
-			}
-
-			if (run)
-				runs.push(run);
-
-			/* None along its very edge: the lots of it would be out of it. */
-			return runs.filter(function (one) {
-				var middle = [(one[0][0] + one[1][0]) / 2, (one[0][1] + one[1][1]) / 2];
-
-				return Math.hypot(one[1][0] - one[0][0], one[1][1] - one[0][1]) > 8 && edge(middle[0], middle[1]) > width;
-			});
-		}
-
-		if (!points || points.length < 3) return plan;
-
-		points.forEach(function (point, index) {
-			var next = points[(index + 1) % points.length];
-			var length = Math.hypot(next[0] - point[0], next[1] - point[1]);
-
-			center = [center[0] + point[0] / points.length, center[1] + point[1] / points.length];
-
-			if (length > longest) {
-				longest = length;
-				angle = Math.atan2(next[1] - point[1], next[0] - point[0]);
-			}
-		});
-
-		var block;
-		var width = Math.max(3, Number(item.Street) || kind.Street);
-		var along = [Math.cos(angle), Math.sin(angle)];
-		var across = [-along[1], along[0]];
-		var reach = 0;
-
-		points.forEach(function (point) {
-			reach = Math.max(reach, Math.hypot(point[0] - center[0], point[1] - center[1]));
-		});
-
-		/* The step of its streets: of its kind, but a small one has a few blocks all the same. */
-		block = Math.max(15, Number(item.Block) || Math.min(kind.Block, reach * 0.45));
-
-		/*
-		 * Its layout (Layout of it, else of its kind): grid, main (a main street and lanes off it), road (a village along its road),
-		 * radial (an old centre, a grid round it) or districts (avenues out and round, districts of their own grids). On a hillside
-		 * (Slope over 3%) its streets go along the level of it (Contour, radians) where they can. Too small for its layout:
-		 * districts of a city need some 450 m round its middle, an old centre with its ring 180 m.
-		 */
-		var layout = String(item.Layout || kind.Layout || (kind.Grid ? 'grid' : 'main'));
-		if (layout === 'districts' && reach < 450)
-			layout = 'radial';
-
-		if (layout === 'radial' && reach < 180)
-			layout = 'grid';
-
-		var sloped = Number(item.Slope) > 0.03 && isFinite(Number(item.Contour)) && item.Contour !== null && item.Contour !== '';
-		/* The squares of its own (left free of lots) and the roads of the sketch its houses line (its streets not). */
-		var plazas = [];
-		var fronts = [];
-
-		function lengthOf (line) {
-			var total = 0;
-			var a;
-
-			for (a = 1; a < line.length; a++)
-				total += Math.hypot(line[a][0] - line[a - 1][0], line[a][1] - line[a - 1][1]);
-
-			return total;
-		}
-
-		/* The point of a line so many metres along it, and its way there: {At [x, z], Way [x, z]}. */
-		function pointAt (line, metres) {
-			var left = metres;
-			var a;
-
-			for (a = 0; a + 1 < line.length; a++) {
-				var dx = line[a + 1][0] - line[a][0];
-				var dz = line[a + 1][1] - line[a][1];
-				var length = Math.hypot(dx, dz);
-
-				if (length > 1e-9 && (left <= length || a + 2 === line.length)) {
-					var t = Math.min(1, left / length);
-
-					return {At: [line[a][0] + dx * t, line[a][1] + dz * t], Way: [dx / length, dz / length]};
-				}
-
-				left -= length;
-			}
-
-			return {At: line[line.length - 1], Way: [1, 0]};
-		}
-
-		/* A curve through the points of a line (Catmull-Rom), a point every step metres. */
-		function smooth (line, step) {
-			var made = [line[0]];
-			var a;
-
-			for (a = 0; a + 1 < line.length; a++) {
-				var p0 = line[Math.max(0, a - 1)];
-				var p1 = line[a];
-				var p2 = line[a + 1];
-				var p3 = line[Math.min(line.length - 1, a + 2)];
-				var count = Math.max(1, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
-				var c;
-
-				for (c = 1; c <= count; c++) {
-					var t = c / count;
-					var t2 = t * t;
-					var t3 = t2 * t;
-
-					made.push([0, 1].map(function (axis) {
-						return 0.5 * (2 * p1[axis] + (p2[axis] - p0[axis]) * t + (2 * p0[axis] - 5 * p1[axis] + 4 * p2[axis] - p3[axis]) * t2 + (3 * p1[axis] - p0[axis] - 3 * p2[axis] + p3[axis]) * t3);
-					}));
-				}
-			}
-
-			return made;
-		}
-
-		/* A line from one point to another wandering aside by up to amount metres, a point every 8 m; fixed: at its start still; turns: how often (1). */
-		function wander (from, to, amount, phase, fixed, turns) {
-			var length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
-			var count = Math.max(2, Math.ceil(length / 8));
-			var aside = [-(to[1] - from[1]) / length, (to[0] - from[0]) / length];
-			var made = [];
-			var c;
-
-			for (c = 0; c <= count; c++) {
-				var t = c / count;
-				var w = t * (turns || 1);
-				var off = amount * (0.65 * Math.sin(phase + 2.6 * w) + 0.35 * Math.sin(phase * 1.7 + 6.1 * w)) * (fixed ? Math.min(1, t * 3) : 1);
-
-				made.push([from[0] + (to[0] - from[0]) * t + aside[0] * off, from[1] + (to[1] - from[1]) * t + aside[1] * off]);
-			}
-
-			return made;
-		}
-
-		/*
-		 * A line cut to the settlement (and to where keep(x, z) tells), every 2 m: the runs of it inside, longer than 8 m and
-		 * not along its very edge; a straight line as its two ends, any other a point every 8 m. Closed: a ring, whole (Closed
-		 * of its run) if all of it is in.
-		 */
-		function runs (line, keep, closed) {
-			var path = closed ? line.concat([line[0]]) : line;
-			var found = [];
-			var run = null;
-			var every = [];
-			var a;
-
-			for (a = 0; a + 1 < path.length; a++) {
-				var steps = Math.max(1, Math.ceil(Math.hypot(path[a + 1][0] - path[a][0], path[a + 1][1] - path[a][1]) / 2));
-				var s;
-
-				for (s = a ? 1 : 0; s <= steps; s++)
-					every.push([path[a][0] + (path[a + 1][0] - path[a][0]) * s / steps, path[a][1] + (path[a + 1][1] - path[a][1]) * s / steps]);
-			}
-
-			every.forEach(function (p) {
-				if (inside(points, p[0], p[1]) && (!keep || keep(p[0], p[1]))) {
-					run = run || [];
-
-					run.push(p);
-				}
-				else if (run) {
-					found.push(run);
-					run = null;
-				}
-			});
-
-			if (run)
-				found.push(run);
-
-			if (closed && found.length === 1 && found[0].length === every.length) {
-				var whole = found[0].filter(function (p, index) {
-					return index % 4 === 0 && index < every.length - 1;
-				});
-
-				whole.Closed = true;
-
-				return [whole];
-			}
-
-			return found.filter(function (one) {
-				var middle = one[Math.floor(one.length / 2)];
-
-				return lengthOf(one) > 8 && edge(middle[0], middle[1]) > width;
-			}).map(function (one) {
-				if (line.length === 2 && !closed)
-					return [one[0], one[one.length - 1]];
-
-				return one.filter(function (p, index) {
-					return index % 4 === 0 || index === one.length - 1;
-				});
-			});
-		}
-
-		/* A ring round its middle of so many points, its radius wobbling by a part of it. */
-		function circle (radius, count, wobble, phase) {
-			var made = [];
-			var c;
-
-			for (c = 0; c < count; c++) {
-				var turn = c / count * Math.PI * 2;
-				var far = radius * (1 + wobble * Math.sin(phase + turn * 3) * Math.cos(phase * 0.7 + turn * 2));
-
-				made.push([center[0] + Math.cos(turn) * far, center[1] + Math.sin(turn) * far]);
-			}
-
-			return made;
-		}
-
-		/* A street of it: Road, the type of road it is (an avenue...), Closed, a ring. */
-		function street (line, wide, road, closed) {
-			var made = {Points: line, Width: wide};
-
-			if (road)
-				made.Road = road;
-
-			if (closed)
-				made.Closed = true;
-
-			plan.Streets.push(made);
-		}
-
-		/* A grid of streets turned so, a step apart, where keep(x, z) tells: each line only as long as the circle it lies in. */
-		function grid (turn, step, wide, keep) {
-			var u = [Math.cos(turn), Math.sin(turn)];
-			var v = [-u[1], u[0]];
-			var k;
-
-			for (k = -Math.floor(reach / step); k <= Math.floor(reach / step); k++) {
-				var half = Math.sqrt(Math.max(0, reach * reach - k * step * k * step)) + 2;
-
-				[[u, v], [v, u]].forEach(function (axes) {
-					var o = [center[0] + axes[1][0] * k * step, center[1] + axes[1][1] * k * step];
-
-					runs([[o[0] - axes[0][0] * half, o[1] - axes[0][1] * half], [o[0] + axes[0][0] * half, o[1] + axes[0][1] * half]], keep).forEach(function (run) {
-						street(run, wide);
-					});
-				});
-			}
-		}
-
-		/* The streets drawn in it, else its own. */
-		var drawn = others.filter(function (other) {
-			return other.Type === 'street' && other.Points && other.Points.some(function (point) {
-				return inside(points, point[0], point[1]);
-			});
-		});
-
-		if (drawn.length) {
-			/* Road: the type of road it is drawn as (SceneRoads; else of the kind of the settlement). */
-			plan.Streets = drawn.map(function (other) {
-				var street = {Points: other.Points, Width: Number(other.Width) || width};
-
-				if (other.Road)
-					street.Road = other.Road;
-
-				return street;
-			});
-		}
-		else if (layout === 'grid') {
-			var k;
-
-			for (k = -Math.ceil(reach / block); k <= Math.ceil(reach / block); k++) {
-				[[along, across], [across, along]].forEach(function (axes) {
-					var o = [center[0] + axes[1][0] * k * block, center[1] + axes[1][1] * k * block];
-
-					clip([o[0] - axes[0][0] * reach, o[1] - axes[0][1] * reach], [o[0] + axes[0][0] * reach, o[1] + axes[0][1] * reach]).forEach(function (run) {
-						plan.Streets.push({Points: run, Width: k === 0 ? width * 1.3 : width});
-					});
-				});
-			}
-		}
-		else if (layout === 'main') {
-			clip([center[0] - along[0] * reach, center[1] - along[1] * reach], [center[0] + along[0] * reach, center[1] + along[1] * reach]).forEach(function (run) {
-				plan.Streets.push({Points: run, Width: width});
-			});
-
-			/* Lanes off the main street, to one side and the other by turns. */
-			var lane;
-
-			for (lane = -Math.floor(reach / block * 2); lane <= Math.floor(reach / block * 2); lane++) {
-				var side = lane % 2 ? 1 : -1;
-				var root = [center[0] + along[0] * lane * block * 0.5, center[1] + along[1] * lane * block * 0.5];
-
-				if (!lane) continue;
-
-				clip(root, [root[0] + across[0] * side * block * 0.9, root[1] + across[1] * side * block * 0.9]).forEach(function (run) {
-					plan.Streets.push({Points: run, Width: width * 0.75});
-				});
-			}
-		}
-		else if (layout === 'road') {
-			/*
-			 * A village along its road: a road of the sketch through it, its houses on both sides of it (else a main street of
-			 * its own, bent as a way across the country is, along the level of a hillside); lanes off it to one side and the
-			 * other by turns, out and along the level on a hillside.
-			 */
-			var level = sloped ? Number(item.Contour) : angle;
-			var spine = [Math.cos(level), Math.sin(level)];
-			var spines = [];
-
-			others.forEach(function (other) {
-				if (other.Type !== 'road' || !other.Points || other.Points.length < 2 || String(other.Road || '').indexOf('street-' + item.ID + '-') === 0) return;
-
-				runs(other.Points.map(function (point) {
-					return [point[0], point[1]];
-				})).forEach(function (run) {
-					fronts.push({Points: run, Width: Number(other.Width) || 6});
-					spines.push(run);
-				});
-			});
-
-			if (!spines.length) {
-				runs(wander([center[0] - spine[0] * reach * 1.3, center[1] - spine[1] * reach * 1.3], [center[0] + spine[0] * reach * 1.3, center[1] + spine[1] * reach * 1.3], reach * 0.16, random() * 6, false, 2.2)).forEach(function (run) {
-					street(run, width);
-
-					spines.push(run);
-				});
-			}
-
-			/*
-			 * On a hillside, terraces: a street along the level each side of the main one, a block apart (its line moved aside),
-			 * joined to it by short ways now and then; elsewhere lanes off it to one side and the other by turns, a little bent.
-			 */
-			var turnLane = 0;
-
-			spines.forEach(function (line) {
-				var total = lengthOf(line);
-				var at;
-
-				if (sloped) {
-					[1, -1].forEach(function (out) {
-						var moved = line.map(function (point, index) {
-							var way = pointAt(line, lengthOf(line.slice(0, index + 1))).Way;
-
-							return [point[0] - way[1] * out * block * 0.55, point[1] + way[0] * out * block * 0.55];
-						});
-
-						runs(smooth(moved, 8)).forEach(function (run) {
-							street(run, width * 0.75);
-						});
-					});
-
-					for (at = block * 0.6; at < total - block * 0.3; at += block * 1.3) {
-						var joint = pointAt(line, at);
-						var to = turnLane % 2 ? 1 : -1;
-
-						turnLane++;
-
-						runs([joint.At, [joint.At[0] - joint.Way[1] * to * block * 0.6, joint.At[1] + joint.Way[0] * to * block * 0.6]]).slice(0, 1).forEach(function (run) {
-							street(run, width * 0.6);
-						});
-					}
-
-					return;
-				}
-
-				for (at = block * 0.5; at < total - block * 0.3; at += block * 0.55) {
-					var place = pointAt(line, at);
-					var out = turnLane % 2 ? 1 : -1;
-					var normal = [-place.Way[1] * out, place.Way[0] * out];
-					var lean = (random() - 0.5) * 0.5;
-					var way = [normal[0] * Math.cos(lean) - normal[1] * Math.sin(lean), normal[0] * Math.sin(lean) + normal[1] * Math.cos(lean)];
-
-					turnLane++;
-
-					runs(wander(place.At, [place.At[0] + way[0] * block * 1.1, place.At[1] + way[1] * block * 1.1], 5, random() * 6, true)).slice(0, 1).forEach(function (run) {
-						street(run, width * 0.75);
-					});
-				}
-			});
-		}
-		else if (layout === 'radial') {
-			/*
-			 * A town of an old centre: a market square in its middle, streets out of it every way, a ring round the old town
-			 * and a crooked one inside it; past the ring a grid (along the level of a hillside), its streets ending on the ring.
-			 */
-			var market = Math.max(12, reach * 0.08);
-			var old = reach * 0.4;
-			var rays = 6;
-			var grain = sloped ? Number(item.Contour) : angle;
-			var ray;
-
-			/* The market and the street round it, the streets out of it starting on that. */
-			plazas.push(circle(market, 12, 0, 0));
-
-			runs(circle(market, 16, 0, 0), null, true).forEach(function (run) {
-				street(run, width * 0.8, '', run.Closed);
-			});
-
-			runs(circle(old, 32, 0, 0), null, true).forEach(function (run) {
-				street(run, width, '', run.Closed);
-			});
-			runs(circle(old * 0.58, 14, 0.12, random() * 6), null, true).forEach(function (run) {
-				street(run, width * 0.75, '', run.Closed);
-			});
-
-			for (ray = 0; ray < rays; ray++) {
-				var heading = angle + ray * Math.PI * 2 / rays + (random() - 0.5) * 0.3;
-				var out2 = [Math.cos(heading), Math.sin(heading)];
-
-				runs(wander([center[0] + out2[0] * market, center[1] + out2[1] * market], [center[0] + out2[0] * reach * 1.3, center[1] + out2[1] * reach * 1.3], reach * 0.035, random() * 6, true)).forEach(function (run) {
-					street(run, width);
-				});
-			}
-
-			grid(grain, block, width, function (x, z) {
-				return Math.hypot(x - center[0], z - center[1]) > old - 1;
-			});
-		}
-		else if (layout === 'districts') {
-			/*
-			 * A city of districts: a square in its middle, avenues out of it (straight, every other one an avenue of a median), a
-			 * boulevard round its core and an avenue round its middle; a grid in the core, and in each district between two
-			 * avenues out a grid of its own, turned its own way, its streets ending on the avenues round them.
-			 */
-			var plaza = Math.max(16, reach * 0.06);
-			var core = reach * 0.3;
-			var middle = reach * 0.62;
-			var sectors = 6;
-			var avenue = 26;
-			var s;
-
-			plazas.push(circle(plaza, 12, 0, 0));
-
-			runs(circle(plaza, 16, 0, 0), null, true).forEach(function (run) {
-				street(run, width, '', run.Closed);
-			});
-
-			runs(circle(core, 32, 0, 0), null, true).forEach(function (run) {
-				street(run, 20, 'boulevard', run.Closed);
-			});
-			runs(circle(middle, 40, 0, 0), null, true).forEach(function (run) {
-				street(run, avenue, 'avenue', run.Closed);
-			});
-
-			var headings = [];
-
-			for (s = 0; s < sectors; s++) {
-				headings.push(angle + s * Math.PI * 2 / sectors);
-
-				runs([[center[0] + Math.cos(headings[s]) * plaza, center[1] + Math.sin(headings[s]) * plaza], [center[0] + Math.cos(headings[s]) * reach * 1.3, center[1] + Math.sin(headings[s]) * reach * 1.3]]).forEach(function (run) {
-					street(run, s % 2 ? avenue : width * 1.3, s % 2 ? 'avenue' : '');
-				});
-			}
-
-			grid(angle, block * 0.7, width, function (x, z) {
-				var far = Math.hypot(x - center[0], z - center[1]);
-
-				return far > plaza + 1 && far < core + 1;
-			});
-
-			headings.forEach(function (heading, index) {
-				var next = headings[(index + 1) % sectors];
-				var a = [Math.cos(heading), Math.sin(heading)];
-				var b = [Math.cos(next), Math.sin(next)];
-
-				[[core, middle], [middle, Infinity]].forEach(function (band) {
-					grid(heading + Math.PI / sectors + (random() - 0.5) * 0.7, block, width, function (x, z) {
-						var dx = x - center[0];
-						var dz = z - center[1];
-						var far = Math.hypot(dx, dz);
-
-						/* Between the two avenues out (a metre over them, so its streets end on them) and the two round. */
-						return a[0] * dz - a[1] * dx >= -1 && b[0] * dz - b[1] * dx <= 1 && far >= band[0] - 1 && far <= band[1] + 1 && (a[0] + b[0]) * dx + (a[1] + b[1]) * dz > 0;
-					});
-				});
-			});
-		}
-
-		var squares = others.filter(function (other) {
-			return other.Type === 'square' && other.Points && other.Points.length > 2;
-		});
-
-		squares = squares.concat(plazas.map(function (one) {
-			return {Points: one};
-		}));
-
-		/*
-		 * The other ways of the sketch through it (roads, streets not its own, rivers, railways): no lot stands on them. Its own
-		 * streets made roads of the scene (SceneScatter: road street-<its ID>-<n>) and where only they meet are its streets.
-		 */
-		function own (other) {
-			var mine = 'street-' + item.ID + '-';
-			if (String(other.Road || '').indexOf(mine) === 0) return true;
-
-			return !!(other.Roads && other.Roads.length) && other.Roads.every(function (road) {
-				return String(road).indexOf(mine) === 0;
-			});
-		}
-
-		var ways = others.filter(function (other) {
-			return other !== item && (other.Type === 'road' || other.Type === 'street' || other.Type === 'river' || other.Type === 'railway' || other.Type === 'canyon') && other.Points && other.Points.length > 1 && !own(other);
-		});
-		var districts = others.filter(function (other) {
-			return other.Type === 'district' && other.Points && other.Points.length > 2;
-		});
-
-		function classes (x, z) {
-			var district = districts.filter(function (other) {
-				return inside(other.Points, x, z);
-			})[0];
-			var near = Math.hypot(x - center[0], z - center[1]) / Math.max(1, reach);
-
-			if (district)
-				return {District: district.Kind || 'residential', Weights: self.SettlementDistricts[district.Kind] || self.SettlementDistricts.residential};
-
-			return {District: '', Weights: kind.Core && near < 0.35 ? kind.Core : kind.Classes};
-		}
-
-		function pick (weights) {
-			var names = Object.keys(weights);
-			var total = names.reduce(function (sum, name) {
-				return sum + weights[name];
-			}, 0);
-			var roll = random() * total;
-			var n;
-
-			for (n = 0; n < names.length; n++) {
-				roll -= weights[names[n]];
-
-				if (roll <= 0)
-					return names[n];
-			}
-
-			return names[names.length - 1];
-		}
-
-		/* The lines of its streets (a ring closed) and their bounds, for the lots to be kept off them quickly. */
-		var lines = plan.Streets.map(function (one) {
-			return one.Closed ? one.Points.concat([one.Points[0]]) : one.Points;
-		});
-		var boxes = lines.map(function (line) {
-			return line.reduce(function (box, point) {
-				return [Math.min(box[0], point[0]), Math.min(box[1], point[1]), Math.max(box[2], point[0]), Math.max(box[3], point[1])];
-			}, [Infinity, Infinity, -Infinity, -Infinity]);
-		});
-
-		/*
-		 * Lots along both sides of each street and of each road its houses line: a building of its place, its front to the
-		 * street, a little set back; along a curve or a ring by its way at each lot.
-		 */
-		plan.Streets.concat(fronts).forEach(function (street) {
-			var line = street.Closed ? street.Points.concat([street.Points[0]]) : street.Points;
-			var length = lengthOf(line);
-
-			[1, -1].forEach(function (side) {
-				var walked = 4;
-
-				while (walked < length - 4) {
-					var place = pointAt(line, walked);
-					var unit = place.Way;
-					var at = place.At;
-					var probe = classes(at[0], at[1]);
-					var name = pick(probe.Weights);
-					var size = name ? sizes(name) : null;
-					var normal = [-unit[1] * side, unit[0] * side];
-					var x;
-					var z;
-					var free;
-
-					if (!size) {
-						walked += 12;
-
-						continue;
-					}
-
-					/* A lot left empty, as the density tells. */
-					if (random() >= density) {
-						walked += size[0] + 3;
-
-						continue;
-					}
-
-					x = at[0] + unit[0] * size[0] / 2 + normal[0] * (street.Width / 2 + 2 + size[1] / 2);
-					z = at[1] + unit[1] * size[0] / 2 + normal[1] * (street.Width / 2 + 2 + size[1] / 2);
-
-					/* All of it inside the settlement, off its squares, its streets and the other lots. */
-					free = [[-1, -1], [1, -1], [1, 1], [-1, 1]].every(function (corner) {
-						return inside(points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2);
-					}) && !squares.some(function (other) {
-						return inside(other.Points, x, z);
-					}) && plan.Streets.every(function (other, index) {
-						var room = other.Width / 2 + Math.min(size[0], size[1]) / 2;
-						var box = boxes[index];
-						if (x < box[0] - room || x > box[2] + room || z < box[1] - room || z > box[3] + room) return true;
-
-						return distance(lines[index], x, z) > room;
-					}) && plan.Lots.every(function (lot) {
-						return Math.hypot(lot.X - x, lot.Z - z) > (Math.max(lot.Width, lot.Depth) + Math.max(size[0], size[1])) * 0.42;
-					}) && ways.every(function (other) {
-						var room = (Number(other.Width) || 6) / 2 + (Number(other.Shoulder) || 1.5);
-
-						/* Its middle, its corners and the middles of its sides all off the way. */
-						return [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].every(function (corner) {
-							return distance(other.Points, x + unit[0] * corner[0] * size[0] / 2 + normal[0] * corner[1] * size[1] / 2, z + unit[1] * corner[0] * size[0] / 2 + normal[1] * corner[1] * size[1] / 2) > room;
-						});
-					});
-
-					/* No room for it: a few metres on, maybe a smaller one fits there. */
-					if (!free) {
-						walked += 4;
-
-						continue;
-					}
-
-					plan.Lots.push({X: x, Z: z, Turn: Math.atan2(-normal[0], -normal[1]), Width: size[0], Depth: size[1], Class: name, District: probe.District});
-
-					walked += size[0] + 3;
-				}
-			});
-		});
-
-		/*
-		 * A fort: walls round it, its gates on them where its streets go out, the way through them along the street, a tower at each
-		 * corner.
-		 */
-		if (kind.Walls || item.Walls) {
-			var ring = points.concat([points[0]]);
-
-			plan.Walls.push(ring);
-
-			points.forEach(function (point) {
-				plan.Towers.push({X: point[0], Z: point[1]});
-			});
-
-			plan.Streets.forEach(function (street) {
-				var line = street.Points;
-				var last = line.length - 1;
-
-				[[line[0], line[1]], [line[last], line[last - 1]]].forEach(function (end) {
-					var on = nearest(ring, end[0][0], end[0][1]);
-					if (on[2] < 6)
-						plan.Gates.push({X: on[0], Z: on[1], Turn: Math.atan2(end[0][0] - end[1][0], end[0][1] - end[1][1])});
-				});
-			});
-		}
-
-		return plan;
+		return this.LayoutMade[source];
 	},
 
 	/*
@@ -5332,9 +4653,14 @@ Elemenx.Service('SceneTerrainGenerator', {
 
 	/* What a worker of the ground carries: see Workers. */
 	/* What a worker carries of this Service besides its methods: its tables. */
-	Carried: ['TunnelRadius', 'DefaultBiomes', 'Zones', 'Carves', 'GroundMaterials', 'LookMaterials', 'SketchTypes', 'SketchTable', 'SketchPlaced', 'SettlementSizes', 'SettlementKinds', 'SettlementDistricts'],
+	Carried: ['TunnelRadius', 'DefaultBiomes', 'Zones', 'Carves', 'GroundMaterials', 'LookMaterials', 'SketchTypes', 'SketchTable', 'SketchPlaced', 'SettlementSizes', 'SettlementKinds', 'SettlementDistricts', 'LayoutNames', 'LayoutCode'],
 
+	/* What a worker of it carries: see Workers; the code of the layouts of the library made first (LayoutRun). */
 	Source: function (names) {
+		this.LayoutNames.forEach(function (name) {
+			this.LayoutRun(name);
+		}, this);
+
 		return this.$Service('Workers').Source(this, names);
 	},
 

@@ -1,0 +1,477 @@
+{
+	"version": 1,
+	"type": "cloud",
+	"name": "night",
+	"parameters": [
+		{
+			"key": "Seed",
+			"type": "text",
+			"value": "night",
+			"comment": "Seed"
+		},
+		{
+			"key": "Count",
+			"type": "float",
+			"value": 9000,
+			"comment": "Stars"
+		},
+		{
+			"key": "Power",
+			"type": "float",
+			"value": 6,
+			"comment": "How few are bright"
+		},
+		{
+			"key": "Scale",
+			"type": "float",
+			"value": 1,
+			"comment": "Brightness"
+		},
+		{
+			"key": "Low",
+			"type": "float",
+			"value": 0,
+			"comment": "Least brightness"
+		},
+		{
+			"key": "Radius",
+			"type": "float",
+			"value": 50,
+			"comment": "Radius of the ball round the eye"
+		}
+	],
+	"blocks": [
+		{
+			"id": "night-p-seed",
+			"type": "Parameter",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Seed"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "night-p-count",
+			"type": "Parameter",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Count"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "night-p-power",
+			"type": "Parameter",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Power"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "night-p-scale",
+			"type": "Parameter",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Scale"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "night-p-low",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Low"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "night-p-radius",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Radius"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "night-input-index",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "night-at0",
+			"type": "Formula",
+			"x": 220,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 0"
+				}
+			]
+		},
+		{
+			"id": "night-d0",
+			"type": "Draw",
+			"x": 440,
+			"y": 760,
+			"properties": []
+		},
+		{
+			"id": "night-at1",
+			"type": "Formula",
+			"x": 220,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 1"
+				}
+			]
+		},
+		{
+			"id": "night-d1",
+			"type": "Draw",
+			"x": 440,
+			"y": 940,
+			"properties": []
+		},
+		{
+			"id": "night-at2",
+			"type": "Formula",
+			"x": 220,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 2"
+				}
+			]
+		},
+		{
+			"id": "night-d2",
+			"type": "Draw",
+			"x": 440,
+			"y": 1120,
+			"properties": []
+		},
+		{
+			"id": "night-at3",
+			"type": "Formula",
+			"x": 220,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 3"
+				}
+			]
+		},
+		{
+			"id": "night-d3",
+			"type": "Draw",
+			"x": 440,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "night-sphere",
+			"type": "Sphere",
+			"x": 660,
+			"y": 130,
+			"properties": []
+		},
+		{
+			"id": "night-pick",
+			"type": "Pick",
+			"x": 660,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Items",
+					"value": "3200, 4500, 5600, 6500, 8000, 12000"
+				}
+			]
+		},
+		{
+			"id": "night-bright",
+			"type": "Formula",
+			"x": 660,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(D, Power) * Scale + Low"
+				}
+			]
+		},
+		{
+			"id": "night-blackbody",
+			"type": "Blackbody",
+			"x": 880,
+			"y": 400,
+			"properties": []
+		},
+		{
+			"id": "night-split",
+			"type": "Split",
+			"x": 1100,
+			"y": 490,
+			"properties": []
+		},
+		{
+			"id": "night-combine",
+			"type": "Combine",
+			"x": 1320,
+			"y": 580,
+			"properties": []
+		},
+		{
+			"id": "night-cloud",
+			"type": "Cloud",
+			"x": 1540,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 9000
+				},
+				{
+					"key": "Fields",
+					"value": ""
+				},
+				{
+					"key": "Least",
+					"value": 0
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "night-link-0",
+			"p1": "night-input-index-out-Value",
+			"p2": "night-at0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-1",
+			"p1": "night-p-seed-out-Value",
+			"p2": "night-d0-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-2",
+			"p1": "night-at0-out-Value",
+			"p2": "night-d0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-3",
+			"p1": "night-input-index-out-Value",
+			"p2": "night-at1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-4",
+			"p1": "night-p-seed-out-Value",
+			"p2": "night-d1-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-5",
+			"p1": "night-at1-out-Value",
+			"p2": "night-d1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-6",
+			"p1": "night-input-index-out-Value",
+			"p2": "night-at2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-7",
+			"p1": "night-p-seed-out-Value",
+			"p2": "night-d2-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-8",
+			"p1": "night-at2-out-Value",
+			"p2": "night-d2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-9",
+			"p1": "night-input-index-out-Value",
+			"p2": "night-at3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-10",
+			"p1": "night-p-seed-out-Value",
+			"p2": "night-d3-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-11",
+			"p1": "night-at3-out-Value",
+			"p2": "night-d3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-12",
+			"p1": "night-d0-out-Value",
+			"p2": "night-sphere-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-13",
+			"p1": "night-d1-out-Value",
+			"p2": "night-sphere-in-V",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-14",
+			"p1": "night-p-radius-out-Value",
+			"p2": "night-sphere-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-15",
+			"p1": "night-d2-out-Value",
+			"p2": "night-pick-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-16",
+			"p1": "night-d3-out-Value",
+			"p2": "night-bright-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-17",
+			"p1": "night-p-power-out-Value",
+			"p2": "night-bright-in-Power",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-18",
+			"p1": "night-p-scale-out-Value",
+			"p2": "night-bright-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-19",
+			"p1": "night-p-low-out-Value",
+			"p2": "night-bright-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-20",
+			"p1": "night-pick-out-Out",
+			"p2": "night-blackbody-in-Temperature",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-21",
+			"p1": "night-blackbody-out-Color",
+			"p2": "night-split-in-Vector",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-22",
+			"p1": "night-split-out-X",
+			"p2": "night-combine-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-23",
+			"p1": "night-split-out-Y",
+			"p2": "night-combine-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-24",
+			"p1": "night-split-out-Z",
+			"p2": "night-combine-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-25",
+			"p1": "night-bright-out-Value",
+			"p2": "night-combine-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-26",
+			"p1": "night-p-count-out-Value",
+			"p2": "night-cloud-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-27",
+			"p1": "night-sphere-out-Point",
+			"p2": "night-cloud-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "night-link-28",
+			"p1": "night-combine-out-XYZW",
+			"p2": "night-cloud-in-Color",
+			"kind": "value"
+		}
+	]
+}

@@ -1,0 +1,48 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "trumpet",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "trumpet-input-frame",
+			"type": "Input",
+			"x": 40,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Frame"
+				}
+			]
+		},
+		{
+			"id": "trumpet-form",
+			"type": "Trumpet",
+			"x": 280,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "trumpet-layout",
+			"type": "Layout",
+			"x": 520,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "trumpet-link-0",
+			"p1": "trumpet-input-frame-out-Value",
+			"p2": "trumpet-form-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "trumpet-link-1",
+			"p1": "trumpet-form-out-Layout",
+			"p2": "trumpet-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}

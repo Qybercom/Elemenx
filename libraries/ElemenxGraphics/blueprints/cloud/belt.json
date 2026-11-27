@@ -1,0 +1,1098 @@
+{
+	"version": 1,
+	"type": "cloud",
+	"name": "belt",
+	"parameters": [
+		{
+			"key": "Seed",
+			"type": "text",
+			"value": "belt",
+			"comment": "Seed"
+		},
+		{
+			"key": "Count",
+			"type": "float",
+			"value": 260,
+			"comment": "Rocks"
+		},
+		{
+			"key": "Inner",
+			"type": "float",
+			"value": 2.2,
+			"comment": "Inner edge"
+		},
+		{
+			"key": "Outer",
+			"type": "float",
+			"value": 3.2,
+			"comment": "Outer edge"
+		},
+		{
+			"key": "Tilt",
+			"type": "float",
+			"value": 0,
+			"comment": "Inclination, degrees"
+		},
+		{
+			"key": "Radius",
+			"type": "float",
+			"value": 1,
+			"comment": "Radius of the body it goes round (1: none)"
+		},
+		{
+			"key": "Unit",
+			"type": "float",
+			"value": 1,
+			"comment": "Units of a radius"
+		},
+		{
+			"key": "Factor",
+			"type": "float",
+			"value": 1,
+			"comment": "Size of the rocks as real as the scene"
+		},
+		{
+			"key": "Body",
+			"type": "float",
+			"value": 1,
+			"comment": "Size of the body it goes round (1: none)"
+		},
+		{
+			"key": "Rocks",
+			"type": "float",
+			"value": 1,
+			"comment": "Size of the rocks"
+		},
+		{
+			"key": "Colors",
+			"type": "any",
+			"value": [
+				[
+					0.5411764705882353,
+					0.4980392156862745,
+					0.4549019607843137
+				],
+				[
+					0.43529411764705883,
+					0.396078431372549,
+					0.3607843137254902
+				],
+				[
+					0.6392156862745098,
+					0.5882352941176471,
+					0.5176470588235295
+				],
+				[
+					0.36470588235294116,
+					0.33725490196078434,
+					0.3137254901960784
+				]
+			],
+			"comment": "Colors of the rocks"
+		}
+	],
+	"blocks": [
+		{
+			"id": "belt-p-seed",
+			"type": "Parameter",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Seed"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "belt-p-count",
+			"type": "Parameter",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Count"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-inner",
+			"type": "Parameter",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Inner"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-outer",
+			"type": "Parameter",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Outer"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-tilt",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Tilt"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-radius",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Radius"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-unit",
+			"type": "Parameter",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Unit"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-factor",
+			"type": "Parameter",
+			"x": 0,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Factor"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-body",
+			"type": "Parameter",
+			"x": 0,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Body"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-rocks",
+			"type": "Parameter",
+			"x": 0,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rocks"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "belt-p-colors",
+			"type": "Parameter",
+			"x": 0,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Colors"
+				},
+				{
+					"key": "Type",
+					"value": "any"
+				}
+			]
+		},
+		{
+			"id": "belt-input-index",
+			"type": "Input",
+			"x": 0,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "belt-at0",
+			"type": "Formula",
+			"x": 220,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 0"
+				}
+			]
+		},
+		{
+			"id": "belt-d0",
+			"type": "Draw",
+			"x": 440,
+			"y": 1210,
+			"properties": []
+		},
+		{
+			"id": "belt-at1",
+			"type": "Formula",
+			"x": 220,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 1"
+				}
+			]
+		},
+		{
+			"id": "belt-d1",
+			"type": "Draw",
+			"x": 440,
+			"y": 130,
+			"properties": []
+		},
+		{
+			"id": "belt-at2",
+			"type": "Formula",
+			"x": 220,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 2"
+				}
+			]
+		},
+		{
+			"id": "belt-d2",
+			"type": "Draw",
+			"x": 440,
+			"y": 310,
+			"properties": []
+		},
+		{
+			"id": "belt-at3",
+			"type": "Formula",
+			"x": 220,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 3"
+				}
+			]
+		},
+		{
+			"id": "belt-d3",
+			"type": "Draw",
+			"x": 440,
+			"y": 490,
+			"properties": []
+		},
+		{
+			"id": "belt-at4",
+			"type": "Formula",
+			"x": 220,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 4"
+				}
+			]
+		},
+		{
+			"id": "belt-d4",
+			"type": "Draw",
+			"x": 440,
+			"y": 670,
+			"properties": []
+		},
+		{
+			"id": "belt-at5",
+			"type": "Formula",
+			"x": 220,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 5"
+				}
+			]
+		},
+		{
+			"id": "belt-d5",
+			"type": "Draw",
+			"x": 440,
+			"y": 850,
+			"properties": []
+		},
+		{
+			"id": "belt-at6",
+			"type": "Formula",
+			"x": 220,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 6"
+				}
+			]
+		},
+		{
+			"id": "belt-d6",
+			"type": "Draw",
+			"x": 440,
+			"y": 1030,
+			"properties": []
+		},
+		{
+			"id": "belt-at7",
+			"type": "Formula",
+			"x": 220,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 7"
+				}
+			]
+		},
+		{
+			"id": "belt-d7",
+			"type": "Draw",
+			"x": 440,
+			"y": 1210,
+			"properties": []
+		},
+		{
+			"id": "belt-at8",
+			"type": "Formula",
+			"x": 220,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 8"
+				}
+			]
+		},
+		{
+			"id": "belt-d8",
+			"type": "Draw",
+			"x": 440,
+			"y": 130,
+			"properties": []
+		},
+		{
+			"id": "belt-at9",
+			"type": "Formula",
+			"x": 220,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 9"
+				}
+			]
+		},
+		{
+			"id": "belt-d9",
+			"type": "Draw",
+			"x": 440,
+			"y": 310,
+			"properties": []
+		},
+		{
+			"id": "belt-at10",
+			"type": "Formula",
+			"x": 220,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 10"
+				}
+			]
+		},
+		{
+			"id": "belt-d10",
+			"type": "Draw",
+			"x": 440,
+			"y": 490,
+			"properties": []
+		},
+		{
+			"id": "belt-at11",
+			"type": "Formula",
+			"x": 220,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 12 + 11"
+				}
+			]
+		},
+		{
+			"id": "belt-d11",
+			"type": "Draw",
+			"x": 440,
+			"y": 670,
+			"properties": []
+		},
+		{
+			"id": "belt-distance",
+			"type": "Formula",
+			"x": 660,
+			"y": 760,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(Inner + (Outer - Inner) * D) * Radius * Unit"
+				}
+			]
+		},
+		{
+			"id": "belt-eccentricity",
+			"type": "Formula",
+			"x": 660,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 + (0.12 - 0) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-inclination",
+			"type": "Formula",
+			"x": 660,
+			"y": 940,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Tilt + (-6 + (6 - -6) * D)"
+				}
+			]
+		},
+		{
+			"id": "belt-node",
+			"type": "Formula",
+			"x": 660,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 + (360 - 0) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-periapsis",
+			"type": "Formula",
+			"x": 660,
+			"y": 1120,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 + (360 - 0) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-anomaly",
+			"type": "Formula",
+			"x": 660,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0 + (360 - 0) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-axis-x",
+			"type": "Formula",
+			"x": 660,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "-1 + (1 - -1) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-axis-y",
+			"type": "Formula",
+			"x": 660,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "-1 + (1 - -1) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-axis-z",
+			"type": "Formula",
+			"x": 660,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "-1 + (1 - -1) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-spin",
+			"type": "Formula",
+			"x": 660,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.5 + (3 - 0.5) * D"
+				}
+			]
+		},
+		{
+			"id": "belt-size",
+			"type": "Formula",
+			"x": 660,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "(0.03 + (0.11 - 0.03) * D) * Factor * Body * Rocks"
+				}
+			]
+		},
+		{
+			"id": "belt-pick",
+			"type": "Pick",
+			"x": 880,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Items",
+					"value": ""
+				}
+			]
+		},
+		{
+			"id": "belt-cloud",
+			"type": "Cloud",
+			"x": 1540,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 260
+				},
+				{
+					"key": "Fields",
+					"value": "Distance, Eccentricity, Inclination, Node, Periapsis, Anomaly, AxisX, AxisY, AxisZ, Spin"
+				},
+				{
+					"key": "Least",
+					"value": 0
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "belt-link-0",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-1",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d0-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-2",
+			"p1": "belt-at0-out-Value",
+			"p2": "belt-d0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-3",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-4",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d1-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-5",
+			"p1": "belt-at1-out-Value",
+			"p2": "belt-d1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-6",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-7",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d2-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-8",
+			"p1": "belt-at2-out-Value",
+			"p2": "belt-d2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-9",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-10",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d3-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-11",
+			"p1": "belt-at3-out-Value",
+			"p2": "belt-d3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-12",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at4-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-13",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d4-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-14",
+			"p1": "belt-at4-out-Value",
+			"p2": "belt-d4-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-15",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at5-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-16",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d5-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-17",
+			"p1": "belt-at5-out-Value",
+			"p2": "belt-d5-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-18",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at6-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-19",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d6-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-20",
+			"p1": "belt-at6-out-Value",
+			"p2": "belt-d6-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-21",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at7-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-22",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d7-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-23",
+			"p1": "belt-at7-out-Value",
+			"p2": "belt-d7-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-24",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at8-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-25",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d8-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-26",
+			"p1": "belt-at8-out-Value",
+			"p2": "belt-d8-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-27",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at9-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-28",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d9-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-29",
+			"p1": "belt-at9-out-Value",
+			"p2": "belt-d9-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-30",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at10-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-31",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d10-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-32",
+			"p1": "belt-at10-out-Value",
+			"p2": "belt-d10-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-33",
+			"p1": "belt-input-index-out-Value",
+			"p2": "belt-at11-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-34",
+			"p1": "belt-p-seed-out-Value",
+			"p2": "belt-d11-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-35",
+			"p1": "belt-at11-out-Value",
+			"p2": "belt-d11-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-36",
+			"p1": "belt-d0-out-Value",
+			"p2": "belt-distance-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-37",
+			"p1": "belt-p-inner-out-Value",
+			"p2": "belt-distance-in-Inner",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-38",
+			"p1": "belt-p-outer-out-Value",
+			"p2": "belt-distance-in-Outer",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-39",
+			"p1": "belt-p-radius-out-Value",
+			"p2": "belt-distance-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-40",
+			"p1": "belt-p-unit-out-Value",
+			"p2": "belt-distance-in-Unit",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-41",
+			"p1": "belt-d1-out-Value",
+			"p2": "belt-eccentricity-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-42",
+			"p1": "belt-d2-out-Value",
+			"p2": "belt-inclination-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-43",
+			"p1": "belt-p-tilt-out-Value",
+			"p2": "belt-inclination-in-Tilt",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-44",
+			"p1": "belt-d3-out-Value",
+			"p2": "belt-node-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-45",
+			"p1": "belt-d4-out-Value",
+			"p2": "belt-periapsis-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-46",
+			"p1": "belt-d5-out-Value",
+			"p2": "belt-anomaly-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-47",
+			"p1": "belt-d7-out-Value",
+			"p2": "belt-axis-x-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-48",
+			"p1": "belt-d8-out-Value",
+			"p2": "belt-axis-y-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-49",
+			"p1": "belt-d9-out-Value",
+			"p2": "belt-axis-z-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-50",
+			"p1": "belt-d10-out-Value",
+			"p2": "belt-spin-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-51",
+			"p1": "belt-d6-out-Value",
+			"p2": "belt-size-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-52",
+			"p1": "belt-p-factor-out-Value",
+			"p2": "belt-size-in-Factor",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-53",
+			"p1": "belt-p-body-out-Value",
+			"p2": "belt-size-in-Body",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-54",
+			"p1": "belt-p-rocks-out-Value",
+			"p2": "belt-size-in-Rocks",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-55",
+			"p1": "belt-d11-out-Value",
+			"p2": "belt-pick-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-56",
+			"p1": "belt-p-colors-out-Value",
+			"p2": "belt-pick-in-List",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-57",
+			"p1": "belt-p-count-out-Value",
+			"p2": "belt-cloud-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-58",
+			"p1": "belt-size-out-Value",
+			"p2": "belt-cloud-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-59",
+			"p1": "belt-pick-out-Out",
+			"p2": "belt-cloud-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-60",
+			"p1": "belt-distance-out-Value",
+			"p2": "belt-cloud-in-Distance",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-61",
+			"p1": "belt-eccentricity-out-Value",
+			"p2": "belt-cloud-in-Eccentricity",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-62",
+			"p1": "belt-inclination-out-Value",
+			"p2": "belt-cloud-in-Inclination",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-63",
+			"p1": "belt-node-out-Value",
+			"p2": "belt-cloud-in-Node",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-64",
+			"p1": "belt-periapsis-out-Value",
+			"p2": "belt-cloud-in-Periapsis",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-65",
+			"p1": "belt-anomaly-out-Value",
+			"p2": "belt-cloud-in-Anomaly",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-66",
+			"p1": "belt-axis-x-out-Value",
+			"p2": "belt-cloud-in-AxisX",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-67",
+			"p1": "belt-axis-y-out-Value",
+			"p2": "belt-cloud-in-AxisY",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-68",
+			"p1": "belt-axis-z-out-Value",
+			"p2": "belt-cloud-in-AxisZ",
+			"kind": "value"
+		},
+		{
+			"id": "belt-link-69",
+			"p1": "belt-spin-out-Value",
+			"p2": "belt-cloud-in-Spin",
+			"kind": "value"
+		}
+	]
+}

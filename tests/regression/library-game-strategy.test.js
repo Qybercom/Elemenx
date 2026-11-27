@@ -72,6 +72,21 @@ describe('Contract: GameStrategy, selection, orders, attacks and the fog of war 
 	}
 
 	/* Each test mounts a scene of its own: the first frame compiles all its shaders (seconds, more on a busy machine). */
+	/* Regression: Label, the name of it for screen readers, was read nowhere: the canvas stayed hidden from them. */
+	it('is a picture of its Label for screen readers, hidden from them with none', async function () {
+		var named = await mount('Label="Battle map"');
+		var element = named.Game.$Element();
+
+		expect(element.getAttribute('role')).toBe('img');
+		expect(element.getAttribute('aria-label')).toBe('Battle map');
+		expect(element.hasAttribute('aria-hidden')).toBe(false);
+
+		element = (await mount('')).Game.$Element();
+
+		expect(element.getAttribute('aria-hidden')).toBe('true');
+		expect(element.hasAttribute('aria-label')).toBe(false);
+	});
+
 	it('selects the units of its team only, by code, by Ctrl+A and by a frame drawn over them, and none by Escape', async function () {
 		var made = await mount();
 		var scene = made.Scene;

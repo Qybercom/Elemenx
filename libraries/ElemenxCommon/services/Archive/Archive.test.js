@@ -137,4 +137,66 @@ describe('Contract: Archive, a zip of texts and bytes made in the page', functio
 		expect(list.length).toBe(70000);
 		expect(Array.from(archive.Unzip(zip)['t/69999'])).toEqual([69999 & 255]);
 	});
+
+	/*
+	 * Regression: a zip of another unpacked without a bound (a megabyte to a gigabyte and more), whatever size its directory
+	 * told, and a file named __proto__ became the prototype of the list of files.
+	 */
+	it('unpacks a deflated file to the size its directory tells at most, all of them to MaxBytes, a file named __proto__ kept', async function () {
+		var big = new Uint8Array(200000);
+		/* A literal {'__proto__': ...} sets a prototype: JSON gives the key of its own a file of another has. */
+		var named = JSON.parse('{"__proto__": "own"}');
+		var zip = await new Promise(function (done, fail) {
+			archive.Compress(Object.defineProperty(JSON.parse('{"__proto__": "own"}'), 'zeros.bin', {value: big, enumerable: true}), function (error, made) {
+				if (error) fail(error);
+				else done(made);
+			});
+		});
+
+		function expand (bytes, options) {
+			return new Promise(function (done) {
+				archive.Expand(bytes, function (error, files) {
+					done(error ? error.message : files);
+				}, options);
+			});
+		}
+
+		var files = await expand(zip);
+
+		expect(files['zeros.bin'].length).toBe(200000);
+		expect(new TextDecoder().decode(Object.getOwnPropertyDescriptor(files, '__proto__').value)).toBe('own');
+		expect(Object.getPrototypeOf(files)).toBe(Object.prototype);
+		expect(await expand(zip, {MaxBytes: 1000})).toBe('Archive: the files unpack to more than 1000 bytes');
+
+		/* Its directory made to tell 100 bytes: the deflated stream of 200000 is stopped there. */
+		var lying = zip.slice();
+		var view = new DataView(lying.buffer);
+		var at = lying.length - 22;
+
+		at = view.getUint32(at + 16, true);
+
+		while (view.getUint32(at, true) === 0x02014b50) {
+			var length = view.getUint16(at + 28, true);
+			var name = new TextDecoder().decode(lying.subarray(at + 46, at + 46 + length));
+			if (name === 'zeros.bin')
+				view.setUint32(at + 24, 100, true);
+
+			at += 46 + length + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
+		}
+
+		expect(await expand(lying)).toBe('Archive: zeros.bin is not as its directory tells');
+
+		var packed = await new Promise(function (done) {
+			archive.Deflate(big, function (error, made) {
+				done(made);
+			});
+		});
+
+		expect(await new Promise(function (done) {
+			archive.Inflate(packed, function (error) {
+				done(error.message);
+			}, 100);
+		})).toBe('Archive: unpacked data of more than 100 bytes');
+		expect(Object.getOwnPropertyDescriptor(archive.Unzip(archive.Zip(named)), '__proto__').value.length).toBe(3);
+	});
 });

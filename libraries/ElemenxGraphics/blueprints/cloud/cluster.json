@@ -1,0 +1,495 @@
+{
+	"version": 1,
+	"type": "cloud",
+	"name": "cluster",
+	"parameters": [
+		{
+			"key": "Seed",
+			"type": "text",
+			"value": "cluster",
+			"comment": "Seed"
+		},
+		{
+			"key": "Count",
+			"type": "float",
+			"value": 2000,
+			"comment": "Stars"
+		},
+		{
+			"key": "Scale",
+			"type": "float",
+			"value": 1,
+			"comment": "Scale of its profile"
+		},
+		{
+			"key": "Temperatures",
+			"type": "text",
+			"value": "3300, 3800, 4300, 4900, 5400, 6000",
+			"comment": "Temperatures of its stars"
+		}
+	],
+	"blocks": [
+		{
+			"id": "cluster-p-seed",
+			"type": "Parameter",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Seed"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "cluster-p-count",
+			"type": "Parameter",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Count"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "cluster-p-scale",
+			"type": "Parameter",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Scale"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "cluster-p-temperatures",
+			"type": "Parameter",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Temperatures"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "cluster-input-index",
+			"type": "Input",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "cluster-at0",
+			"type": "Formula",
+			"x": 220,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 5 + 0"
+				}
+			]
+		},
+		{
+			"id": "cluster-d0",
+			"type": "Draw",
+			"x": 440,
+			"y": 580,
+			"properties": []
+		},
+		{
+			"id": "cluster-at1",
+			"type": "Formula",
+			"x": 220,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 5 + 1"
+				}
+			]
+		},
+		{
+			"id": "cluster-d1",
+			"type": "Draw",
+			"x": 440,
+			"y": 760,
+			"properties": []
+		},
+		{
+			"id": "cluster-at2",
+			"type": "Formula",
+			"x": 220,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 5 + 2"
+				}
+			]
+		},
+		{
+			"id": "cluster-d2",
+			"type": "Draw",
+			"x": 440,
+			"y": 940,
+			"properties": []
+		},
+		{
+			"id": "cluster-at3",
+			"type": "Formula",
+			"x": 220,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 5 + 3"
+				}
+			]
+		},
+		{
+			"id": "cluster-d3",
+			"type": "Draw",
+			"x": 440,
+			"y": 1120,
+			"properties": []
+		},
+		{
+			"id": "cluster-at4",
+			"type": "Formula",
+			"x": 220,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 5 + 4"
+				}
+			]
+		},
+		{
+			"id": "cluster-d4",
+			"type": "Draw",
+			"x": 440,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "cluster-u",
+			"type": "Formula",
+			"x": 660,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "0.02 + (0.97 - 0.02) * D"
+				}
+			]
+		},
+		{
+			"id": "cluster-plummer",
+			"type": "Plummer",
+			"x": 880,
+			"y": 220,
+			"properties": []
+		},
+		{
+			"id": "cluster-sphere",
+			"type": "Sphere",
+			"x": 1100,
+			"y": 310,
+			"properties": []
+		},
+		{
+			"id": "cluster-pick",
+			"type": "Pick",
+			"x": 660,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Items",
+					"value": "3300, 3800, 4300, 4900, 5400, 6000"
+				}
+			]
+		},
+		{
+			"id": "cluster-bright",
+			"type": "Formula",
+			"x": 660,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(D, 3) * 0.75 + 0.08"
+				}
+			]
+		},
+		{
+			"id": "cluster-blackbody",
+			"type": "Blackbody",
+			"x": 880,
+			"y": 580,
+			"properties": []
+		},
+		{
+			"id": "cluster-split",
+			"type": "Split",
+			"x": 1100,
+			"y": 670,
+			"properties": []
+		},
+		{
+			"id": "cluster-combine",
+			"type": "Combine",
+			"x": 1320,
+			"y": 760,
+			"properties": []
+		},
+		{
+			"id": "cluster-cloud",
+			"type": "Cloud",
+			"x": 1540,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2000
+				},
+				{
+					"key": "Fields",
+					"value": ""
+				},
+				{
+					"key": "Least",
+					"value": 0
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "cluster-link-0",
+			"p1": "cluster-input-index-out-Value",
+			"p2": "cluster-at0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-1",
+			"p1": "cluster-p-seed-out-Value",
+			"p2": "cluster-d0-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-2",
+			"p1": "cluster-at0-out-Value",
+			"p2": "cluster-d0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-3",
+			"p1": "cluster-input-index-out-Value",
+			"p2": "cluster-at1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-4",
+			"p1": "cluster-p-seed-out-Value",
+			"p2": "cluster-d1-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-5",
+			"p1": "cluster-at1-out-Value",
+			"p2": "cluster-d1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-6",
+			"p1": "cluster-input-index-out-Value",
+			"p2": "cluster-at2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-7",
+			"p1": "cluster-p-seed-out-Value",
+			"p2": "cluster-d2-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-8",
+			"p1": "cluster-at2-out-Value",
+			"p2": "cluster-d2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-9",
+			"p1": "cluster-input-index-out-Value",
+			"p2": "cluster-at3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-10",
+			"p1": "cluster-p-seed-out-Value",
+			"p2": "cluster-d3-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-11",
+			"p1": "cluster-at3-out-Value",
+			"p2": "cluster-d3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-12",
+			"p1": "cluster-input-index-out-Value",
+			"p2": "cluster-at4-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-13",
+			"p1": "cluster-p-seed-out-Value",
+			"p2": "cluster-d4-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-14",
+			"p1": "cluster-at4-out-Value",
+			"p2": "cluster-d4-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-15",
+			"p1": "cluster-d0-out-Value",
+			"p2": "cluster-u-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-16",
+			"p1": "cluster-u-out-Value",
+			"p2": "cluster-plummer-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-17",
+			"p1": "cluster-p-scale-out-Value",
+			"p2": "cluster-plummer-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-18",
+			"p1": "cluster-d1-out-Value",
+			"p2": "cluster-sphere-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-19",
+			"p1": "cluster-d2-out-Value",
+			"p2": "cluster-sphere-in-V",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-20",
+			"p1": "cluster-plummer-out-Radius",
+			"p2": "cluster-sphere-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-21",
+			"p1": "cluster-d3-out-Value",
+			"p2": "cluster-pick-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-22",
+			"p1": "cluster-p-temperatures-out-Value",
+			"p2": "cluster-pick-in-List",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-23",
+			"p1": "cluster-d4-out-Value",
+			"p2": "cluster-bright-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-24",
+			"p1": "cluster-pick-out-Out",
+			"p2": "cluster-blackbody-in-Temperature",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-25",
+			"p1": "cluster-blackbody-out-Color",
+			"p2": "cluster-split-in-Vector",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-26",
+			"p1": "cluster-split-out-X",
+			"p2": "cluster-combine-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-27",
+			"p1": "cluster-split-out-Y",
+			"p2": "cluster-combine-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-28",
+			"p1": "cluster-split-out-Z",
+			"p2": "cluster-combine-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-29",
+			"p1": "cluster-bright-out-Value",
+			"p2": "cluster-combine-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-30",
+			"p1": "cluster-p-count-out-Value",
+			"p2": "cluster-cloud-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-31",
+			"p1": "cluster-sphere-out-Point",
+			"p2": "cluster-cloud-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "cluster-link-32",
+			"p1": "cluster-combine-out-XYZW",
+			"p2": "cluster-cloud-in-Color",
+			"kind": "value"
+		}
+	]
+}

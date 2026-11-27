@@ -773,6 +773,14 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "BlueprintPreview",
+					"Title": {
+						"en": "BlueprintPreview"
+					},
+					"Group": "game",
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "Board",
 					"Title": {
 						"en": "Board"
@@ -2768,6 +2776,13 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "CloudBlueprints",
+					"Title": {
+						"en": "CloudBlueprints"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "Consents",
 					"Title": {
 						"en": "Consents"
@@ -2957,11 +2972,25 @@
 					"Library": "ElemenxUI"
 				},
 				{
+					"ID": "ImageBlueprints",
+					"Title": {
+						"en": "ImageBlueprints"
+					},
+					"Library": "ElemenxGraphics"
+				},
+				{
 					"ID": "InputDevices",
 					"Title": {
 						"en": "InputDevices"
 					},
 					"Library": "ElemenxCommon"
+				},
+				{
+					"ID": "LayoutBlueprints",
+					"Title": {
+						"en": "LayoutBlueprints"
+					},
+					"Library": "ElemenxGraphics"
 				},
 				{
 					"ID": "Layouts",
@@ -3025,6 +3054,13 @@
 						"en": "NFC"
 					},
 					"Library": "ElemenxUI"
+				},
+				{
+					"ID": "NetworkBlueprints",
+					"Title": {
+						"en": "NetworkBlueprints"
+					},
+					"Library": "ElemenxGraphics"
 				},
 				{
 					"ID": "Noise",

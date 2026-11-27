@@ -1,0 +1,23 @@
+<!-- generated -->
+# CloudBlueprints
+
+CloudBlueprints: clouds of points made of graphs of Blueprints, declared in $Provides (Blueprints makes it when it meets such a graph or block). A graph of the kind cloud ends at Cloud and is run once for each of its points: its Input blocks read Index (the point, 0 the first), Count and what it is given (a Seed most often), and Cloud takes what the point is: Position (vec3), Color (vec4: r, g, b and its brightness), Size, Keep (false: the point is dropped) and a number for each of its Fields (names: 'Distance, Spin'). Its Count (an input, else its property, up to a million) is read once, of the point 0; Least (a distance) drops a point nearer than it to one kept before it, so they lie apart as a disc of Poisson lays them. Its numbers are of the seed of Astronomy.Random by Draw (Seed, Index * the numbers a point draws + the one it is): a graph draws what a code drawing them one after another drew.
+
+- Points(graph, parameters, inputs): runs one (an object, its JSON, or the name of a resource): {Count (of the points kept), Positions (Float32Array, by threes), Colors (by fours), Sizes, Fields ({name: Float64Array})}; Positions, Colors and Sizes are there when the graph tells them. Made once for the same graph, parameters and inputs (the last 32 kept). Its code is made of the graph (Blueprints.Code: no walk of its blocks for each point), else it runs as it is.
+- Its blocks stand in any graph of numbers (a generator, and the kinds that use one): Sphere (U, V of 0 to 1: a point on a ball of Radius, as many on each part of it; Z of U from -1 to 1, the way round of V), Shell (the same within a ball from Inner to Outer, as many in each part of it: W the depth), Disc (U, V: a point on a flat ring from Inner to Outer, in X and Z), Spiral (U, V, Arm of a whole number: on one of Arms arms of a logarithmic spiral of Pitch degrees from Inner to Outer, Spread wide), Gauss (U, V: a number of a normal spread, Middle and Deviation), Plummer (U, Scale: how far a star of a cluster of the profile of Plummer is from its middle), Fibonacci (Index, Count: the points of a spiral of Fibonacci, as even as can be over a ball of Radius), Pick (Value of 0 to 1: one of List, else of its Items, as Random.Pick takes one) and Blackbody (Temperature in kelvins: the color of a star of it, 0 to 1, as Astronomy.Color gives it).
+
+The library's clouds (ElemenxGraphics/cloud/<name>): sky (the stars of space round the eye), night (of the night of a ground), cluster (the swarm of a star cluster: Seed, Scale), belt (the rocks of a belt: Seed, Count, Inner, Outer, Tilt, Round, Body, Factor, Rocks, Colors; Fields Distance, Eccentricity, Inclination, Node, Periapsis, Anomaly, AxisX, AxisY, AxisZ, Spin). The same functions run in Node: they read no page.
+
+## Methods
+
+- `Points(graph, parameters, inputs)`
+
+## Tests
+
+- [declares the kind cloud and its blocks to Blueprints](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js#L42) — `libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js`
+- [runs a graph once for each point, its fields, sizes and colors of each](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js#L54) — `libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js`
+- [drops the points not kept and those nearer than Least to one kept](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js#L80) — `libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js`
+- [gives the same cloud for the same graph, parameters and inputs, another for others](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js#L110) — `libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js`
+- [puts points on a ball, in a shell, on a ring, on the arms of a spiral](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js#L118) — `libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js`
+- [refuses a graph of no Cloud](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js#L145) — `libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js`
+- [draws what a cloud graph gives in BlueprintPreview, and tells it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js#L151) — `libraries/ElemenxGraphics/services/CloudBlueprints/CloudBlueprints.test.js`

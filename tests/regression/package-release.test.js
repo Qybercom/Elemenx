@@ -123,6 +123,17 @@ describe('Elemenx npm release surface', function () {
 		expect(publish).toContain('id-token: write');
 		expect(publish).toContain('uses: ./.github/workflows/ci.yml');
 		expect(publish).toContain('e2e: true');
+
+		/*
+		 * Regression: the tokens of the marketplaces and the key of the signature were in the env of the whole job, read by
+		 * npm ci and every package it ran. A secret is in the env of the step that publishes with it alone (10 spaces in).
+		 */
+		publish.split('\n').filter(function (line) {
+			return /\$\{\{ secrets\.[A-Z_]+ \}\}/.test(line);
+		}).forEach(function (line) {
+			expect(line, line).toMatch(/^ {10}[A-Z_]+: \$\{\{ secrets\.[A-Z_]+ \}\}$/);
+		});
+
 		expect(publish).toContain('needs: test');
 		expect(publish.indexOf('uses: ./.github/workflows/ci.yml')).toBeLessThan(publish.indexOf('npm publish --access public'));
 		expect(ci).toContain('workflow_call:');
@@ -162,10 +173,10 @@ describe('Elemenx npm release surface', function () {
 		expect(ci).toContain('&& !inputs.e2e');
 
 		/* The marketplaces of the editors, each in the job of its extension when its secret is set, a version there already skipped. */
-		expect(publish).toContain("if: matrix.editor == 'vscode' && env.VSCE_PAT != ''");
-		expect(publish).toContain("if: matrix.editor == 'vscode' && env.OVSX_PAT != ''");
-		expect(publish).toContain("if: matrix.editor == 'intellij' && env.JETBRAINS_TOKEN != ''");
-		expect(publish).toContain("if: matrix.editor == 'visualstudio' && env.VSCE_PAT != ''");
+		expect(publish).toContain("if: matrix.editor == 'vscode' && env.HAS_VSCE == 'true'");
+		expect(publish).toContain("if: matrix.editor == 'vscode' && env.HAS_OVSX == 'true'");
+		expect(publish).toContain("if: matrix.editor == 'intellij' && env.HAS_JETBRAINS == 'true'");
+		expect(publish).toContain("if: matrix.editor == 'visualstudio' && env.HAS_VSCE == 'true'");
 		expect(publish).toContain('publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate');
 		expect(publish).toContain('publishPlugin --no-daemon');
 		expect(publish).toContain('-publishManifest editors\\visualstudio\\publishManifest.json');

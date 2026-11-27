@@ -102,6 +102,18 @@ describe('Elemenx designer: a project for the Designer', function () {
 			expect([file.Status, file.Text, file.Type]).toEqual([200, '<main>{{Title}}</main>\n', 'text/html; charset=utf-8']);
 			expect((await get(port, '/__project/files/%2e%2e/%2e%2e/etc/hosts')).Status).toBe(404);
 			expect((await get(port, '/__project/files/node_modules/secret.js')).Status).toBe(404);
+
+			/* Regression: .GIT (Windows reads it as .git) and .env were served. */
+			fs.mkdirSync(path.join(project, '.git'), {recursive: true});
+			fs.writeFileSync(path.join(project, '.git', 'config'), '[core]\n');
+			fs.writeFileSync(path.join(project, '.env'), 'SECRET=1\n');
+			fs.mkdirSync(path.join(project, 'NODE_MODULES'), {recursive: true});
+			fs.writeFileSync(path.join(project, 'NODE_MODULES', 'a.js'), '1\n');
+
+			expect((await get(port, '/__project/files/.GIT/config')).Status).toBe(404);
+			expect((await get(port, '/__project/files/.git/config')).Status).toBe(404);
+			expect((await get(port, '/__project/files/.env')).Status).toBe(404);
+			expect((await get(port, '/__project/files/NODE_MODULES/a.js')).Status).toBe(404);
 			expect((await get(port, '/__project/files/Shop/missing.js')).Status).toBe(404);
 			expect((await get(port, '/__project/describe.json', 'POST')).Status).toBe(405);
 			expect((await get(port, '/__project/files/app.js', 'PUT')).Status).toBe(405);

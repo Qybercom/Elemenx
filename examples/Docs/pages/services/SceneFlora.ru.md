@@ -34,6 +34,8 @@ SceneFlora: реалистичные растения из кода. Вид — 
 - `Preset(name)`
 - `Tree(preset, variant)`
 - `Textures(preset)`
+- `ImageOf(name, p, own)`
+- `LeafPicture(p, sizes)`
 - `Asset(tree, textures)`
 - `FromPicture(picture, base)`
 - `Key(preset, variants)`
@@ -54,4 +56,4 @@ SceneFlora: реалистичные растения из кода. Вид — 
 - [draws its bark (a normal map with it) and its leaves, cut where there is no leaf, or takes pictures of its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L361) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 - [defines a species as a model of SceneModels, each of its variants another plant, made in workers](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js#L382) — `libraries/ElemenxGraphics/services/SceneFlora/SceneFlora.test.js`
 
-+5 ещё в тех же файлах
++8 ещё в тех же файлах

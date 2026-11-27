@@ -21,11 +21,13 @@
  *   it does in each kind of graph:
  *   GLSL (in a graph of shaders: a text with its inputs as {Key}, or function (context) giving {Output: code}, context.Lines to add lines
  *   before), Needs (parts of Renderer.Chunks it calls): the shaders, of BlueprintShaders), Compute (function (inputs, properties, context) giving
- *   {Output: value}), Run (an action of a flow, below) and Pass (a pass of a picture, below)}. Nodes(graph) lists the
+ *   {Output: value}), Code (function (context) giving {Output: an expression of JavaScript} for Code: context Inputs
+ *   (expressions), Properties, Index, Prelude(line): a line before the function; B, M and N are there), Run (an action of a flow, below) and Pass (a pass of a picture, below)}. Nodes(graph) lists the
  *   types that may stand in a graph of a type, NodeOf(type) gives one.
- * - Graph(type, {Compile(plan, options), End, Uses, Bake(made), Unbake(record), Text(glsl, options)}) adds a kind of
+ * - Graph(type, {Compile(plan, options), End, Uses, Coded, Bake(made), Unbake(record), Text(glsl, options)}) adds a kind of
  *   graph (End: the type of block it ends at; Uses: kinds whose blocks stand in it too, as an effect takes the blocks of
- *   a generator; Bake and Unbake: what is made as JSON and back; Text: what is made of a text written by hand); Graphs() lists them. This library has generator (code of numbers that gives
+ *   a generator; Coded: the key of the input of its End that Code gives as its result (a list of keys: each a link reaches,
+ *   by its key), so a graph of it is made code as a generator is; Bake and Unbake: what is made as JSON and back; Text: what is made of a text written by hand); Graphs() lists them. This library has generator (code of numbers that gives
  *   each Result by its Key), flow (events and actions, run by Start) and behaviour (a tree of an agent, run by Agent). The kinds of shaders are of the Service
  *   BlueprintShaders (ElemenxUI), which defines them, with the GLSL of the blocks, as it is made: pass (a fragment
  *   shader over the whole picture, its Output a vec4), material (a function of GLSL that changes a surface, its
@@ -50,7 +52,8 @@
  *   for each item of a list ({Item, Index}), Reduce for each ({Item, Index, Sum}, from Initial, its result Sum); what
  *   else the graph takes they pass on as given; Take keeps one result of each. A graph may call itself, as deep as 256
  *   calls (a Repeat of Count 0 ends it). List, Count and Item make and read lists, Random(Seed, Key) a number of 0 to 1
- *   of them (Hash2), Chain(Seed, Index) the index-th number of a chain of a seed (Chain), Select one of two, Table the row of a key (Rows, Default). Invoke(name, inputs) runs one.
+ *   of them (Hash2), Chain(Seed, Index) the index-th number of a chain of a seed (Chain), Draw(Seed, Index) the index-th
+ *   number of a seed of Astronomy.Random (Of random: of Random.Create; Draw: what a code drawing them one after another drew), Select one of two, Table the row of a key (Rows, Default). Invoke(name, inputs) runs one.
  *   Need(names, callback) loads those that are lazy (Elemenx.Need) and all they call, before they are read.
  * - IR(graph, {Name}) gives the graph in the IR of Elemenx.Compilers ({Module, Diagnostics}: a block of no IR, as noise yet,
  *   is told), each graph a function (P, I) of a record of its results; the kind blueprint goes to ir by it (blueprint-ir),
@@ -106,7 +109,7 @@
 Elemenx.Service('Blueprints', {
 	$Meta: {
 		Description: 'Graphs of blocks in the JSON of Flowprint, made into code and flows of actions (and into shaders by BlueprintShaders).',
-		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Inlined(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'Agent(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'Chain(seed, index)', 'CurveAt(keys, x, smooth, loop)', 'Numeric(graph, values, types, keys)', 'NumericCode(graph, values, types, keys)', 'Wasm(numeric)']
+		Methods: ['Node(type, definition)', 'Nodes(graph)', 'NodeOf(type)', 'Graph(type, definition)', 'Graphs()', 'Create(type, options)', 'Block(type, options)', 'Add(graph, type, options)', 'Link(graph, from, to)', 'Remove(graph, id)', 'Pin(block, key, out)', 'Read(json)', 'Write(graph)', 'Fill(graph, values)', 'Inlined(graph)', 'Check(graph)', 'Order(graph)', 'Compile(graph, options)', 'Code(graph)', 'Source(names)', 'Bake(graph)', 'Start(graph, context)', 'Agent(graph, context)', 'IR(graph, options)', 'Invoke(name, inputs)', 'Hash2(a, b)', 'Chain(seed, index)', 'Draw(seed, index, of)', 'CurveAt(keys, x, smooth, loop)', 'Numeric(graph, values, types, keys)', 'NumericCode(graph, values, types, keys)', 'Wasm(numeric)']
 	},
 
 	Version: 1,
@@ -1099,11 +1102,17 @@ Elemenx.Service('Blueprints', {
 		var source;
 		var run;
 		var hash;
+		var coded;
 
 		/* The graphs it calls in their places (Inlined), filled as it is. */
 		graph = this.Read(graph);
 
-		if (graph.type !== 'generator')
+		/* A generator, or a graph of a kind made code too (Coded: the input of its end that is its result). */
+		this.Provide(graph.type);
+
+		coded = graph.type !== 'generator' && this.Makers[graph.type] && this.Makers[graph.type].Coded ? this.Makers[graph.type] : null;
+
+		if (graph.type !== 'generator' && !coded)
 			throw new Error('Elemenx Blueprints: Code makes a generator, not a ' + graph.type + ' graph');
 
 		graph = this.Inlined(graph);
@@ -1141,8 +1150,17 @@ Elemenx.Service('Blueprints', {
 		}
 
 		plan.Order.forEach(function (id) {
-			if (plan.Blocks[id].type === 'Result' && plan.Blocks[id].enabled !== false)
+			if ((plan.Blocks[id].type === 'Result' || coded && plan.Blocks[id].type === coded.End) && plan.Blocks[id].enabled !== false)
 				need(id);
+		});
+
+		/* The outputs that a block needed reads ('block:key'). */
+		var read = {};
+
+		Object.keys(needed).forEach(function (id) {
+			Object.keys(plan.From[id]).forEach(function (key) {
+				read[plan.From[id][key].Block + ':' + plan.From[id][key].Key] = true;
+			});
 		});
 
 		plan.Order.forEach(function (id, index) {
@@ -1161,7 +1179,9 @@ Elemenx.Service('Blueprints', {
 			(self.Inputs(node, block) || []).forEach(function (input) {
 				var from = plan.From[id][input.Key];
 
-				if (from) inputs[input.Key] = 'C(' + names[from.Block][from.Key] + ', ' + JSON.stringify(from.Type || null) + ', ' + JSON.stringify(input.Type || null) + ')';
+				/* No cast where it changes nothing (Cast gives the value as it is): the code of a graph run for each point is the faster. */
+				if (from && (!input.Type || ['any', 'same', 'object'].indexOf(input.Type) !== -1 || input.Type === from.Type)) inputs[input.Key] = names[from.Block][from.Key];
+				else if (from) inputs[input.Key] = 'C(' + names[from.Block][from.Key] + ', ' + JSON.stringify(from.Type || null) + ', ' + JSON.stringify(input.Type || null) + ')';
 				else inputs[input.Key] = input.Value === undefined ? 'undefined' : JSON.stringify(self.Cast(input.Value, null, input.Type));
 			});
 
@@ -1171,6 +1191,20 @@ Elemenx.Service('Blueprints', {
 				if (block.enabled !== false) {
 					results.push(JSON.stringify(properties.Key || 'Value') + ': ' + inputs.Value);
 					keys.push(properties.Key || 'Value');
+				}
+
+				return;
+			}
+
+			/* The end of a kind made code: its result the input Coded names, or of a list of names each one a link reaches. */
+			if (coded && block.type === coded.End) {
+				if (block.enabled !== false) {
+					[].concat(coded.Coded).forEach(function (key) {
+						if (Array.isArray(coded.Coded) && !plan.From[id][key]) return;
+
+						results.push(JSON.stringify(key) + ': ' + inputs[key]);
+						keys.push(key);
+					});
 				}
 
 				return;
@@ -1210,6 +1244,9 @@ Elemenx.Service('Blueprints', {
 				var name = 'v' + index + '_' + String(output.Key).replace(/[^A-Za-z0-9_]/g, '_');
 
 				names[id][output.Key] = name;
+
+				/* An output of a Combine that nothing reads is not made (each of them a list of its own). */
+				if (block.type === 'Combine' && !read[id + ':' + output.Key]) return;
 
 				lines.push('\t\tvar ' + name + ' = ' + (code[output.Key] === undefined ? 'undefined' : code[output.Key]) + ';');
 			});
@@ -1323,8 +1360,11 @@ Elemenx.Service('Blueprints', {
 				return {Out: '!' + inputs.X};
 			case 'Chain':
 				return {Value: 'B.Chain(' + inputs.Seed + ', ' + inputs.Index + ')'};
+			case 'Draw':
+				return {Value: 'B.Draw(' + inputs.Seed + ', ' + inputs.Index + ', ' + JSON.stringify(properties.Of === 'random' ? 'random' : 'astronomy') + ')'};
 			default:
-				return null;
+				/* A block of a Service tells its own code: Code(context) of its definition, {Output: an expression}. */
+				return this.Types[type] && typeof this.Types[type].Code === 'function' ? this.Types[type].Code.call(this, context) || null : null;
 		}
 	},
 
@@ -4041,6 +4081,44 @@ Elemenx.Service('Blueprints', {
 		return list.Values[at];
 	},
 
+	/*
+	 * The index-th number (0 to 1, 0 the first) of the numbers of a seed of Astronomy.Random (Mulberry32): its state goes
+	 * up by the same step each time, so any of them is had at once, with none before it. Draw(seed, 0), Draw(seed, 1)...
+	 * are Random(seed).Next(), Next()...: a graph run for each point draws what the code drew one after another. of
+	 * 'random': those of Random.Create(seed) (the same numbers of another hash of the seed).
+	 */
+	Draw: function (seed, index, of) {
+		var key = String(seed === undefined || seed === null ? '' : seed);
+		var random = of === 'random';
+		var state;
+		var t;
+		var i;
+
+		this.Draws = this.Draws || {};
+		state = this.Draws[(random ? 'r:' : 'a:') + key];
+
+		if (state === undefined && random) {
+			state = this.$Service('Random').Hash(key) | 0;
+			this.Draws['r:' + key] = state;
+		}
+		else if (state === undefined) {
+			state = 1779033703 ^ key.length;
+
+			for (i = 0; i < key.length; i++) {
+				state = Math.imul(state ^ key.charCodeAt(i), 3432918353);
+				state = state << 13 | state >>> 19;
+			}
+
+			this.Draws['a:' + key] = state;
+		}
+
+		state = state + Math.imul(Math.max(0, Math.floor(Number(index) || 0)) + 1, 0x6D2B79F5) | 0;
+		t = Math.imul(state ^ state >>> 15, 1 | state);
+		t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+
+		return ((t ^ t >>> 14) >>> 0) / 4294967296;
+	},
+
 	/* A number 0 to 1 of two values (of text or numbers), the very one rt_hash(rt_key(a), rt_key(b)) of the IR in JavaScript gives. */
 	Hash2: function (a, b) {
 		function key (value) {
@@ -4683,6 +4761,13 @@ Elemenx.Service('Blueprints', {
 		this.Node('Chain', {Graphs: code, Group: 'function', Inputs: [{Key: 'Seed', Type: 'any', Value: 0}, {Key: 'Index', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
 			Compute: function (inputs) {
 				return {Value: self.Chain(inputs.Seed, inputs.Index)};
+			}
+		});
+
+		/* The index-th number of a seed of Astronomy.Random (Draw): what a code that drew them one after another drew there. */
+		this.Node('Draw', {Graphs: code, Group: 'function', Properties: [{Key: 'Of', Type: 'select', Options: ['astronomy', 'random'], Value: 'astronomy'}], Inputs: [{Key: 'Seed', Type: 'any', Value: 0}, {Key: 'Index', Type: 'float', Value: 0}], Outputs: [{Key: 'Value', Type: 'float'}],
+			Compute: function (inputs, properties) {
+				return {Value: self.Draw(inputs.Seed, inputs.Index, properties.Of)};
 			}
 		});
 

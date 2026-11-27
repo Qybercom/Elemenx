@@ -99,4 +99,4 @@
 - [tabs declared with their content show the panel of the current one, and make the component of a tab when it first opens](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3943) — `tests/examples/ui-kit.spec.js`
 - [editor tabs switch and close](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3996) — `tests/examples/ui-kit.spec.js`
 - [radio groups and tab strips with their own state do not affect each other](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4057) — `tests/examples/ui-kit.spec.js`
-- [keeps nested templates inside the text and finds the end of the outer one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L421) — `tests/regression/server.test.js`
+- [keeps nested templates inside the text and finds the end of the outer one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L424) — `tests/regression/server.test.js`

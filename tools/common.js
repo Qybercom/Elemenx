@@ -171,6 +171,11 @@ function LibraryPrivate (relative, folder) {
 	return parts.indexOf('locales') > 0;
 }
 
+/* An address the tools open in the browser of the system: http or https, a host (letters, digits, . - : [ ]) and a port, a path of / alone. */
+function openableURL (url) {
+	return /^https?:\/\/[A-Za-z0-9.\-:[\]]+\/$/.test(String(url));
+}
+
 /* The text of an attribute or of an element of markup, escaped: & < > and " as entities (Text.Escape of ElemenxCommon). */
 function escapeMarkup (value) {
 	return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -178,6 +183,7 @@ function escapeMarkup (value) {
 
 module.exports = {
 	escapeMarkup: escapeMarkup,
+	openableURL: openableURL,
 	LibraryPrivate: LibraryPrivate,
 	SystemLibraries: SystemLibraries,
 	systemLibraries: systemLibraries,

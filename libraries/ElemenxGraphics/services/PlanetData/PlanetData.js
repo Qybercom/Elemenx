@@ -199,7 +199,7 @@ Elemenx.Service('PlanetData', {
 
 					if (--waiting) return;
 
-					run('Drainage', [heights, side], function (drained) {
+					run('Drainage', [heights, side, undefined, planets.RiversSourceOf(drained)], function (drained) {
 						var rivers = drained.Rivers;
 
 						run('Settlements', [Object.assign({}, working, {Rivers: rivers}), Number(given.Towns) || 20000], function (placed) {

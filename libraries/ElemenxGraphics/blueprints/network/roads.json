@@ -1,0 +1,347 @@
+{
+	"version": 1,
+	"type": "network",
+	"name": "roads",
+	"parameters": [
+		{
+			"key": "Main",
+			"type": "text",
+			"value": "road",
+			"comment": "Type of road between towns"
+		},
+		{
+			"key": "Minor",
+			"type": "text",
+			"value": "country",
+			"comment": "Type of road to a town"
+		},
+		{
+			"key": "Paths",
+			"type": "text",
+			"value": "gravel",
+			"comment": "Type of the other roads"
+		},
+		{
+			"key": "Rail",
+			"type": "bool",
+			"value": false,
+			"comment": "A railway beside the main roads"
+		}
+	],
+	"blocks": [
+		{
+			"id": "roads-input-field",
+			"type": "Input",
+			"x": 40,
+			"y": 60,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Field"
+				}
+			]
+		},
+		{
+			"id": "roads-input-hubs",
+			"type": "Input",
+			"x": 40,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Hubs"
+				}
+			]
+		},
+		{
+			"id": "roads-input-passages",
+			"type": "Input",
+			"x": 40,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Passages"
+				}
+			]
+		},
+		{
+			"id": "roads-input-trunks",
+			"type": "Input",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Trunks"
+				}
+			]
+		},
+		{
+			"id": "roads-p-main",
+			"type": "Parameter",
+			"x": 40,
+			"y": 480,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Main"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "roads-p-minor",
+			"type": "Parameter",
+			"x": 40,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Minor"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "roads-p-paths",
+			"type": "Parameter",
+			"x": 40,
+			"y": 680,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Paths"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "roads-p-rail",
+			"type": "Parameter",
+			"x": 40,
+			"y": 780,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Rail"
+				},
+				{
+					"key": "Type",
+					"value": "bool"
+				}
+			]
+		},
+		{
+			"id": "roads-highways",
+			"type": "Ways",
+			"x": 280,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Class",
+					"value": ""
+				},
+				{
+					"key": "Closed",
+					"value": false
+				}
+			]
+		},
+		{
+			"id": "roads-highways-route",
+			"type": "Route",
+			"x": 520,
+			"y": 300,
+			"properties": [
+				{
+					"key": "Keep",
+					"value": true
+				},
+				{
+					"key": "MaxGrade",
+					"value": 0
+				},
+				{
+					"key": "Bridge",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "roads-connect",
+			"type": "Connect",
+			"x": 760,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Big",
+					"value": 2
+				},
+				{
+					"key": "Gap",
+					"value": 30
+				}
+			]
+		},
+		{
+			"id": "roads-route",
+			"type": "Route",
+			"x": 1000,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Keep",
+					"value": false
+				},
+				{
+					"key": "MaxGrade",
+					"value": 0
+				},
+				{
+					"key": "Bridge",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "roads-classify",
+			"type": "Classify",
+			"x": 1240,
+			"y": 260,
+			"properties": []
+		},
+		{
+			"id": "roads-rails",
+			"type": "Beside",
+			"x": 1480,
+			"y": 300,
+			"properties": [
+				{
+					"key": "Offset",
+					"value": 14
+				},
+				{
+					"key": "Rank",
+					"value": 2
+				},
+				{
+					"key": "Class",
+					"value": "rail"
+				},
+				{
+					"key": "Places",
+					"value": 1
+				}
+			]
+		},
+		{
+			"id": "roads-network",
+			"type": "Network",
+			"x": 1720,
+			"y": 300,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "roads-link-0",
+			"p1": "roads-input-trunks-out-Value",
+			"p2": "roads-highways-in-List",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-1",
+			"p1": "roads-highways-out-Network",
+			"p2": "roads-highways-route-in-Network",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-2",
+			"p1": "roads-input-field-out-Value",
+			"p2": "roads-highways-route-in-Field",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-3",
+			"p1": "roads-input-hubs-out-Value",
+			"p2": "roads-connect-in-Hubs",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-4",
+			"p1": "roads-input-passages-out-Value",
+			"p2": "roads-connect-in-Passages",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-5",
+			"p1": "roads-highways-route-out-Network",
+			"p2": "roads-connect-in-Trunks",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-6",
+			"p1": "roads-connect-out-Network",
+			"p2": "roads-route-in-Network",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-7",
+			"p1": "roads-input-field-out-Value",
+			"p2": "roads-route-in-Field",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-8",
+			"p1": "roads-route-out-Network",
+			"p2": "roads-classify-in-Network",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-9",
+			"p1": "roads-p-main-out-Value",
+			"p2": "roads-classify-in-Main",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-10",
+			"p1": "roads-p-minor-out-Value",
+			"p2": "roads-classify-in-Minor",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-11",
+			"p1": "roads-p-paths-out-Value",
+			"p2": "roads-classify-in-Paths",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-12",
+			"p1": "roads-classify-out-Network",
+			"p2": "roads-rails-in-Network",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-13",
+			"p1": "roads-p-rail-out-Value",
+			"p2": "roads-rails-in-On",
+			"kind": "value"
+		},
+		{
+			"id": "roads-link-14",
+			"p1": "roads-rails-out-Network",
+			"p2": "roads-network-in-Network",
+			"kind": "value"
+		}
+	]
+}

@@ -132,6 +132,47 @@ describe('Contract: a Scene draws a planet of data (PlanetData), opened once fro
 		expect(Array.from(pixel)).toEqual(Array.from(face.Data.slice(Math.round(37 * size / 256) * 4, Math.round(37 * size / 256) * 4 + 4)));
 	}, 120000);
 
+	/*
+	 * Regression: the globe, the bake and the loops over the bodies each made the base of a planet again (its rules, its
+	 * air, the presets of its envelope parsed anew), many times a frame: a third of a frame of the Orbit demo.
+	 */
+	it('makes the base of a planet once a frame, however many draws and loops ask for it', async function () {
+		var scene = await mount({Seed: 'once', Rivers: false, Settlements: false, Highways: false}, []);
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var planets = Elemenx.Service('ScenePlanet');
+		var ruled = planets.Ruled;
+		var now = performance.now() + 1000;
+		var read = 0;
+		var i;
+
+		for (i = 0; i < 5; i++) {
+			inner.Rest = 0;
+
+			engine.Frame(now += 100);
+		}
+
+		planets.Ruled = function () {
+			read++;
+
+			return ruled.apply(this, arguments);
+		};
+
+		try {
+			for (i = 0; i < 10; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 100);
+			}
+		}
+		finally {
+			planets.Ruled = ruled;
+		}
+
+		expect(engine.PlanetOptions(inner.Objects.terra)).not.toBe(null);
+		expect(read).toBeLessThanOrEqual(10);
+	}, 60000);
+
 	it('tells when the data of its planet is not there, and draws no other planet', async function () {
 		var errors = [];
 		var scene = await mount({Data: 'https://planets.test/none.planet', Rivers: false, Settlements: false, Highways: false}, errors);

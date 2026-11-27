@@ -3,6 +3,8 @@
 
 Скелет и анимация файла FBX в текстовом виде, как их отдают Blender и Mixamo: клип, сделанный для другого скелета. Parse(text), Sample(curve, time, fallback), Load(url, callback). Двоичный файл отвергается с понятной ошибкой: экспортируйте его как текст (ASCII FBX). Модель получает такие клипы через SceneModels.Define(name, {URL, Motions: {walk: url, run: {URL, Stride, Held}}}) и SceneModels.Retarget: кости сопоставляются по роли, а не по имени, twist-кости идут за своей костью, а Held берёт руки клипа как есть, вместе с пальцами: для рук, которые что-то держат.
 
+Двоичный файл читается осторожно: запись, которая кончается не дальше своего начала, и список длиннее своих данных — ошибки. Inflate(bytes, most) распаковывает не больше most байт (по умолчанию MaxBytes, 1 ГБ).
+
 ## Методы
 
 - `Parse(data)`
@@ -10,7 +12,7 @@
 - `Load(url, callback)`
 - `IsBinary(bytes)`
 - `Tree(data)`
-- `Inflate(bytes)`
+- `Inflate(bytes, most)`
 - `Child(node, name)`
 - `Children(node, name)`
 - `Skeleton(tree)`
@@ -50,4 +52,5 @@
 - [keeps to the letter of the formats: turns in their order, layers by polygon, four bones, names, degrees, bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L518) — `tests/regression/model-formats.test.js`
 - [exports a model of code with its clips, and its skeleton for a clip of another binary file](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L589) — `tests/regression/model-formats.test.js`
 - [makes a model of a file of FBX through Models, as one of glTF](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L632) — `tests/regression/model-formats.test.js`
-- [reads the clip of an FBX as text and lays it on another skeleton, by what its bones are](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L13962) — `tests/regression/library-scene.test.js`
+- [refuses a binary FBX whose record ends before it begins, whose list is longer than its data, or that unpacks too much](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/model-formats.test.js#L658) — `tests/regression/model-formats.test.js`
+- [reads the clip of an FBX as text and lays it on another skeleton, by what its bones are](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L14030) — `tests/regression/library-scene.test.js`

@@ -5,6 +5,7 @@ The formats of data and of files: a text read into values and values written int
 
 - Parse(name, text, options) the values of a text; Stringify(name, value, options) the text of values. A text a format cannot read throws an Error that names the place: its Line and Column (from 1), in its message too.
 - Register(name, format) adds a format of the Application (or replaces one): {Parse(text, options), Stringify(value, options), Extensions: ['.ext'], Mime, Label}. Find(name) returns one, Names() lists them, For(file) the name of the format of a file name (by its extension) or of a type of MIME, or null.
+- A text of another is read with care: a key __proto__ is a key of its own, never the prototype of objects; lists, tables and elements go MaxDepth deep at most (1000; options MaxDepth: TOML, XML), the aliases of YAML stand for MaxNodes values at most (1 000 000; options MaxNodes); past them an error that names the place.
 
 Built in, with their options:
 
@@ -109,7 +110,7 @@ Built in, with their options:
 - [reads and writes TOML: tables, arrays of tables, dotted keys, strings, numbers, dates and inline tables](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L190) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
 - [reads and writes XML as elements of {Name, Attributes, Children}](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L230) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
 - [reads and writes query strings with lists and nested names, and Base64 of texts and bytes](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L245) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
-- [loads every Service of ElemenxCommon through its entry for Node: a loop runs on timers, FPS waits in silence](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L130) — `tests/regression/headless.test.js`
-- [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`
+- [keeps a key __proto__ or constructor of a text as a key of its own, never as the prototype of objects](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L264) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
+- [reads lists, tables and elements MaxDepth deep at most, and the aliases of YAML for MaxNodes values at most](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js#L295) — `libraries/ElemenxCommon/services/DataFormats/DataFormats.test.js`
 
-+1 more in the same files
++3 more in the same files

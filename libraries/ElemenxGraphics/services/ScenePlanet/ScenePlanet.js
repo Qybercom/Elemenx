@@ -44,6 +44,8 @@
  *   is of blueprints/shader/ground-far (GroundFarGraph: one of its own; PictureRun(graph, code), PictureMake(graph)).
  *   Its plates are of blueprints/planet/plate (inputs Index, Count, Seed, Ocean; results MX, MY, MZ, its middle, VX, VY, VZ, its motion, Oceanic: of seven numbers of its seed,
  *   Blueprints.Chain), PlateGraph one of its own: PlateOf(graph, source) its function (Code: of a text, not of numbers).
+ *   Its rivers are of blueprints/network/rivers (a network graph of NetworkBlueprints: the ways of DrainageWays smoothed and
+ *   rounded), RiversGraph one of its own: RiversSourceOf(options) its code for the workers that drain it.
  * - Edits: what was changed of its relief after it was made, brushes along a path, in their order: [{Type (raise, lower,
  *   flatten, smooth), Points [[latitude, longitude]...], Radius (km), Amount (metres; of smooth 0 to 1), Height (metres,
  *   of flatten)}]; the nearer the path the more, none past Radius. Paint makes the planet, Edits change what it made.
@@ -72,7 +74,7 @@
 Elemenx.Service('ScenePlanet', {
 	$Meta: {
 		Description: 'A planet as one continuous function of a direction: painted continents, tectonic plates, winds, climate and biomes, as fine as it is asked.',
-		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step, part, parts)', 'MergeHighways(pieces)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)', 'ReliefRun(name)', 'PictureRun(graph, code)', 'PictureMake(graph)', 'ReliefMake(graph)', 'ReliefOf(name, graph, code)', 'GraphSources(options)', 'Kind(kind)', 'KindByShare(share)', 'Warmth(celsius)', 'SurfaceType(type)', 'Giant(type)']
+		Methods: ['Make(options)', 'Direction(latitude, longitude)', 'LatLon(direction)', 'Kinds()', 'Project(view, direction)', 'Unproject(view, x, y)', 'ViewTurn(yaw, pitch, roll)', 'Map(options, rows, width, height, overlay)', 'Planet(options)', 'Color(planet, sample, overlay, light)', 'Picture(options, view, rect, step, overlay)', 'Face(options, face, size, row, rows)', 'Heights(options, face, size, row, rows)', 'Drainage(heights, size, least, source)', 'DrainageWays(heights, size, least)', 'RiversSourceOf(options)', 'UseRivers(key, rivers)', 'UseData(key, data)', 'AddTiles(key, names)', 'DataOf(key)', 'Ruled(options)', 'DataVectors(key)', 'Vectored(options)', 'TownsFor(options)', 'TileName(layer, face, level, x, y)', 'TileDirection(face, s, t)', 'TilePlace(direction)', 'TileValues(options, layer, face, level, x, y, size, table)', 'Settlements(options, count)', 'PlacedTowns(options, towns)', 'PlacedRivers(options, rivers)', 'UseSettlements(key, towns)', 'Highways(options, step, part, parts)', 'MergeHighways(pieces)', 'UseHighways(key, roads)', 'Lights(options, face, size, row, rows)', 'Sphere(options)', 'Cells(radius, size, kind)', 'CellAt(radius, size, direction, kind)', 'CellOf(id)', 'CellPoint(cell, a, b)', 'CellCenter(cell)', 'CellCorners(cell)', 'CellNeighbours(radius, size, cell)', 'CellPlace(radius, cell)', 'Work()', 'Source(names)', 'ReliefRun(name)', 'PictureRun(graph, code)', 'PictureMake(graph)', 'ReliefMake(graph)', 'ReliefOf(name, graph, code)', 'GraphSources(options)', 'Kind(kind)', 'KindByShare(share)', 'Warmth(celsius)', 'SurfaceType(type)', 'Giant(type)']
 	},
 
 	/* The kinds of strokes of a paint. */
@@ -1805,13 +1807,50 @@ Elemenx.Service('ScenePlanet', {
 	},
 
 	/*
-	 * The rivers of a planet of the heights of its cells (heights: 6 faces of size by size, as Heights makes them): the
-	 * land filled up from its sea (a priority flood: what is lower than all round it is filled to where it overflows, each
-	 * cell draining to the one it was reached from), the water of each cell gathered downstream, and the ways of what
-	 * drains Least cells (24) or more traced to the sea, smoothed: {Size, Rivers: [{Points (directions), Flow (cells), Level
-	 * (metres of the bed: never up downstream)}]}, the Rivers of Make.
+	 * The rivers of a planet of the heights of its cells (heights: 6 faces of size by size, as Heights makes them), a graph
+	 * of a network (blueprints/network/rivers of NetworkBlueprints: the ways of DrainageWays, smoothed and rounded; source:
+	 * the code of one of its own, NetworkBlueprints.Code(graph).Source): {Size, Rivers: [{Points (directions), Flow
+	 * (cells), Level (metres of the bed: never up downstream)}]}, the Rivers of Make. least: what a river drains at the
+	 * least (cells, the Least of the graph, 40).
 	 */
-	Drainage: function (heights, size, least) {
+	Drainage: function (heights, size, least, source) {
+		var code = source || this.RiversCode || this.RiversSource();
+		var made;
+
+		this.RiversMade = this.RiversMade || {};
+
+		if (!this.RiversMade[code])
+			this.RiversMade[code] = new Function('B', 'M', 'N', code)(this.$Service('Blueprints'), this.$Service('Math'), this.$Service('Noise'));
+
+		made = this.RiversMade[code](least ? {Least: least} : {}, {Heights: heights, Size: size}).Network || {Ways: []};
+
+		return {Size: size, Rivers: made.Ways.map(function (way) {
+			return {Points: way.Points, Flow: way.Values.Flow, Level: way.Values.Level};
+		})};
+	},
+
+	/* The code of the graph of the rivers of the library (blueprints/network/rivers), made in the page, carried to its workers. */
+	RiversCode: null,
+
+	/* The code of the graph of the rivers of a planet of its own (its option RiversGraph), made in the page for its workers; undefined with none. */
+	RiversSourceOf: function (options) {
+		return options && options.RiversGraph ? this.$Service('NetworkBlueprints').Code(options.RiversGraph).Source : undefined;
+	},
+
+	RiversSource: function () {
+		if (!this.RiversCode)
+			this.RiversCode = this.$Service('NetworkBlueprints').Code('ElemenxGraphics/network/rivers').Source;
+
+		return this.RiversCode;
+	},
+
+	/*
+	 * The ways of the rivers of a planet of the heights of its cells, as a network (NetworkBlueprints): the land filled up
+	 * from its sea (a priority flood: what is lower than all round it is filled to where it overflows, each cell draining
+	 * to the one it was reached from), the water of each cell gathered downstream, and the ways of what drains least cells
+	 * or more traced to the sea along the cells, each {Points (directions), Class river, Values: {Flow, Level}}.
+	 */
+	DrainageWays: function (heights, size, least) {
 		var self = this;
 		var n = size;
 		var total = 6 * n * n;
@@ -1822,7 +1861,6 @@ Elemenx.Service('ScenePlanet', {
 		var done = new Uint8Array(total);
 		var heap = self.$Service('Math').Queue();
 		var count = 0;
-		/* A river: what drains 40 cells and more (the one number of all its callers). */
 		var limit = least || 40;
 		var rivers = [];
 		var i;
@@ -1944,10 +1982,10 @@ Elemenx.Service('ScenePlanet', {
 			}
 
 			if (points.length > 1)
-				rivers.push(self.Smoothed(points, flows, levels));
+				rivers.push({ID: 'river-' + rivers.length, From: -1, To: -1, Points: points, Class: 'river', Closed: false, Values: {Flow: flows, Level: levels}});
 		}
 
-		return {Size: n, Rivers: rivers};
+		return {Nodes: [], Ways: rivers};
 	},
 
 	/* A way of a river smoothed off its grid (Chaikin, twice): its corners cut, its flow and level along it. */
@@ -2186,7 +2224,7 @@ Elemenx.Service('ScenePlanet', {
 		return !!this.SurfaceType(type).Giant;
 	},
 
-	Carried: ['Rules', 'Defaults', 'SurfaceTypes', 'Rivers', 'ClimateCode', 'ReliefCode', 'ReliefNames', 'PlateCode', 'PictureCode', 'Paint'],
+	Carried: ['Rules', 'Defaults', 'SurfaceTypes', 'Rivers', 'ClimateCode', 'ReliefCode', 'ReliefNames', 'PlateCode', 'PictureCode', 'RiversCode', 'Paint'],
 
 	/*
 	 * The graphs of the land and of the relief of a planet made code (blueprints/planet/land and relief): {land, relief:
@@ -4609,7 +4647,7 @@ Elemenx.Service('ScenePlanet', {
 	 * and the globe showed other lands than its ground.
 	 */
 	Work: function () {
-		var pool = this.$Service('Workers').Pool('ScenePlanet', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, SceneTerrainGenerator: true, ScenePlanet: true, SceneFlora: true});
+		var pool = this.$Service('Workers').Pool('ScenePlanet', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, SceneTerrainGenerator: true, LayoutBlueprints: true, ScenePlanet: true, SceneFlora: true, NetworkBlueprints: true});
 		var registry = this.$Service('SceneBiomes');
 
 		if (!pool.Lands && registry && registry.Registry) {
@@ -4634,6 +4672,7 @@ Elemenx.Service('ScenePlanet', {
 
 		this.PlateSource();
 		this.PictureRun();
+		this.RiversSource();
 
 		return this.$Service('Workers').Source(this, names);
 	}

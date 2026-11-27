@@ -650,4 +650,38 @@ describe('Contract: ModelFormats and Fbx, the files of models read and written',
 		expect(made.Pieces.length).toBeGreaterThan(0);
 		expect(Object.keys(made.Clips)).toContain('Wave');
 	});
+
+	/*
+	 * Regression: a binary file of another hung the page or took its memory: a record that ended where it began was read
+	 * again and again, a list of billions with no data was made before it failed, packed data unpacked without a bound.
+	 */
+	it('refuses a binary FBX whose record ends before it begins, whose list is longer than its data, or that unpacks too much', function () {
+		var bytes = new Uint8Array(fbx.Binary({Version: 7400, Nodes: [{Name: 'A', Props: [new Float64Array([1, 2])], Nodes: []}]}));
+		var looped = bytes.slice();
+		var longer = bytes.slice();
+		var at = Array.from(bytes).findIndex(function (value, index) {
+			return value === 100 && bytes[index + 1] === 2 && bytes[index + 9] === 16;
+		});
+
+		expect(fbx.Tree(bytes).Nodes[0].Name).toBe('A');
+		expect(at).toBeGreaterThan(27);
+
+		new DataView(looped.buffer).setUint32(27, 27, true);
+		new DataView(longer.buffer).setUint32(at + 1, 2000000000, true);
+
+		expect(function () {
+			fbx.Tree(looped);
+		}).toThrow('Elemenx Fbx: a record ends before it begins');
+		expect(function () {
+			fbx.Tree(longer);
+		}).toThrow('Elemenx Fbx: a list of 2000000000 is longer than its data');
+
+		/* zlib of a stored block of 10 bytes, unpacked with room for 4. */
+		var packed = new Uint8Array([0x78, 0x01, 0x01, 10, 0, 245, 255, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+		expect(Array.from(fbx.Inflate(packed))).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+		expect(function () {
+			fbx.Inflate(packed, 4);
+		}).toThrow('Elemenx Fbx: packed data of more than 4 bytes');
+	});
 });

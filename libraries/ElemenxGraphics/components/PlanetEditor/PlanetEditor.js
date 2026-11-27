@@ -828,7 +828,7 @@ Elemenx.Component('PlanetEditor', {
 
 							if (--left) return;
 
-							planets.Work().Run('ScenePlanet', 'Drainage', [heights, size], function (wrong, drained) {
+							planets.Work().Run('ScenePlanet', 'Drainage', [heights, size, undefined, planets.RiversSourceOf(bare)], function (wrong, drained) {
 								if (pass !== made.Pass) return;
 
 								made.Rivers = wrong || !drained ? [] : drained.Rivers;

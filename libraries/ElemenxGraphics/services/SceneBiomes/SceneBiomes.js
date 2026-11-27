@@ -12,7 +12,8 @@
  *   resources (resources/biomes, ElemenxGraphics/biomes/<name>): an Application gives one of that name in its place.
  * - Check(list, field): whether lands by their climate cover a ground and its heights as they should: the gaps of their
  *   climates in each band of heights, lands the ground never reaches, lands it never has, the part of it of no land.
- * - Village(field, {X, Y, Houses, Radius, Seed, Shapes}) lays out a village on a ground (SceneTerrainGenerator.Flat): {Objects (specs
+ * - Village(field, {X, Y, Houses, Radius, Seed, Shapes, Graph}) lays out a village on a ground (SceneTerrainGenerator.Flat), a
+ *   graph of a layout (LayoutBlueprints; blueprints/layout/village, else Graph): {Objects (specs
  *   for Scene.Add), Roads ([[x, z]...], one way to each house and one out of it), Center}. It keeps to what is level
  *   and dry, and moves to the nearest such place when its own is not.
  * The same functions run in Node: they read no page.
@@ -220,63 +221,14 @@ Elemenx.Service('SceneBiomes', {
 		});
 	},
 
+	/*
+	 * A village laid out on a ground: a graph of a layout (Graph of its options, else blueprints/layout/village of
+	 * LayoutBlueprints: its place, its houses round its middle, the road out of it).
+	 */
 	Village: function (field, options) {
-		var self = this;
 		var settings = options || {};
-		var random = this.Random(settings.Seed === undefined ? 'village' : settings.Seed);
-		var count = Number(settings.Houses) || 8;
-		var radius = Number(settings.Radius) || 30;
-		var shapes = settings.Shapes || ['house', 'house', 'house', 'barracks', 'windmill', 'tower'];
-		var center = {X: Number(settings.X) || 0, Z: Number(settings.Y) || 0};
-		var half = field.Size / 2 - radius - 8;
-		var found = this.Level(field, center.X, center.Z, 8);
-		var objects = [];
-		var roads = [];
-		var turn;
-		var ring;
-		var i;
+		var made = this.$Service('LayoutBlueprints').Make(settings.Graph || 'ElemenxGraphics/layout/village', {}, {Field: field, X: Number(settings.X) || 0, Y: Number(settings.Y) || 0, Seed: settings.Seed === undefined ? 'village' : settings.Seed, Radius: Number(settings.Radius) || 30, Count: Number(settings.Houses) || 8, Shapes: settings.Shapes || null});
 
-		/* The nearest level place, ring by ring. */
-		for (ring = 1; ring < 24 && !found; ring++) {
-			for (turn = 0; turn < 16 && !found; turn++) {
-				var x = center.X + Math.cos(turn / 16 * Math.PI * 2) * ring * 16;
-				var z = center.Z + Math.sin(turn / 16 * Math.PI * 2) * ring * 16;
-
-				if (Math.abs(x) < half && Math.abs(z) < half && this.Level(field, x, z, 8)) {
-					center = {X: x, Z: z};
-					found = true;
-				}
-			}
-		}
-
-		if (!found)
-			return {Objects: [], Roads: [], Center: center};
-
-		for (i = 0; i < count * 6 && objects.length < count; i++) {
-			var angle = i * 2.39996 + random() * 0.5;
-			var far = radius * (0.35 + 0.65 * Math.sqrt((objects.length + random()) / count));
-			var hx = center.X + Math.cos(angle) * far;
-			var hz = center.Z + Math.sin(angle) * far;
-			var name = shapes[objects.length ? Math.floor(random() * shapes.length) : 0];
-			var size = name === 'barracks' ? 12 : name === 'windmill' ? 11 : name === 'tower' ? 9 : 8;
-			if (!self.Level(field, hx, hz, size * 0.55) || objects.some(function (other) {
-				return Math.abs(other.X - hx) < (other.Size + size) * 0.6 && Math.abs(other.Y - hz) < (other.Size + size) * 0.6;
-			})) continue;
-
-			objects.push({Kind: name, X: Math.round(hx), Y: Math.round(hz), Size: size, Blocks: true});
-			roads.push([[center.X, center.Z], [hx, hz]]);
-		}
-
-		/* The road out of it. */
-		var away = Math.atan2(-center.Z, -center.X) + (random() - 0.5);
-		var out = field.Path({X: center.X, Z: center.Z}, {X: center.X + Math.cos(away) * radius * 2.4, Z: center.Z + Math.sin(away) * radius * 2.4}, {MaxSlope: 0.4});
-
-		if (out) {
-			roads.push(out.map(function (point) {
-				return [point.X, point.Z];
-			}));
-		}
-
-		return {Objects: objects, Roads: roads, Center: center};
+		return {Objects: made.Objects || [], Roads: made.Roads || [], Center: made.Center};
 	}
 });

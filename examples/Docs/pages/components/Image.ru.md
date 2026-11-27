@@ -48,6 +48,8 @@
 ## Тесты
 
 - [an image of src="{{Image}}" asks only for its image, never for the text {{Image}}](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/attribute-interpolation.test.js#L98) — `tests/regression/attribute-interpolation.test.js`
+- [refuses a graph of another kind and one of no Image](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js#L76) — `libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js`
 - [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6225) — `tests/examples/ui-kit.spec.js`
+- [declares the kind image and its blocks, and makes a picture of each pixel of a graph](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js#L41) — `libraries/ElemenxGraphics/services/ImageBlueprints/ImageBlueprints.test.js`
 - [in a program gives the windows the icon drawn into a PNG at every change of Elemenx.Icon, and the count and the progress to the system](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/services/Platform/Platform.test.js#L224) — `libraries/ElemenxUI/services/Platform/Platform.test.js`
 - [exports the page as a template and imports a template back from the backstage, keeping the elements it does not know](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L325) — `tests/examples/designer.spec.js`

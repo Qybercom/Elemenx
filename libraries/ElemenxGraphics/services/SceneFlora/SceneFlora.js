@@ -13,8 +13,10 @@
  *   ridges, fibrous, bands, diamonds, rings, each calling bark/base; inputs CX, CZ, T, Split, Rings, its Low and High colors,
  *   SFine and SCells, the seeds of its two noises; results R, G, B and Bump; Bark.Graph one of its own; BarkRun(bark) its
  *   function, BarkMake(bark) its code, BarkCode those of the library carried to the workers) and its leaves (an atlas of four clusters, their alpha the cut, and below them the same in
- *   shade: the leaves deep in its crown). A preset may give its own
- *   pictures instead (Bark.Image, Leaves.Image: {Width, Height, Data} RGBA).
+ *   shade: the leaves deep in its crown). Each picture is a graph of an image (ImageBlueprints: blueprints/image/bark, each
+ *   pixel of its pattern, 256 by 1024, its normal map; blueprints/image/leaves, the atlas LeafPicture(p, sizes) draws,
+ *   512 by 1024), carried to the workers compiled (ImageCode; ImageOf(name, p, own)); Bark.ImageGraph one of its own. A
+ *   preset may give its own pictures instead (Bark.Image, Leaves.Image: {Width, Height, Data} RGBA).
  * - Species() the names of its presets; Preset(name) a copy of one (with what it does not tell); Tree(preset, variant)
  *   the plant {Height, Bark: geometry, Leaves: geometry ({Positions, Normals, UVs, Indices}, metres, standing on 0),
  *   Triangles, Nodes}; Textures(preset) its pictures {Bark, BarkNormal, Leaves} ({Width, Height, Data}); Asset(tree,
@@ -58,7 +60,7 @@ Elemenx.Service('SceneFlora', {
 	},
 
 	/* What a worker carries of it besides its methods: its presets, the code of the graphs of its barks (made in the page). */
-	Carried: ['Presets', 'BarkCode', 'BarkPatterns'],
+	Carried: ['Presets', 'BarkCode', 'BarkPatterns', 'ImageCode'],
 
 	/* The patterns of bark of the library (blueprints/flora/bark/<name>): one not of them is plain. */
 	BarkPatterns: ['plain', 'plates', 'birch', 'ridges', 'fibrous', 'bands', 'diamonds', 'rings'],
@@ -158,13 +160,16 @@ Elemenx.Service('SceneFlora', {
 	},
 
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneFlora', {Math: true, Noise: true, Random: true, SceneFlora: true});
+		return this.$Service('Workers').Pool('SceneFlora', {Math: true, Noise: true, Random: true, Blueprints: true, ImageBlueprints: true, SceneFlora: true});
 	},
 
 	Source: function (names) {
 		this.BarkPatterns.forEach(function (name) {
 			this.BarkMake({Pattern: name});
 		}, this);
+
+		this.ImageCode.bark = this.ImageCode.bark || this.$Service('ImageBlueprints').Compiled('ElemenxGraphics/image/bark');
+		this.ImageCode.leaves = this.ImageCode.leaves || this.$Service('ImageBlueprints').Compiled('ElemenxGraphics/image/leaves');
 
 		return this.$Service('Workers').Source(this, names);
 	},
@@ -1299,7 +1304,7 @@ Elemenx.Service('SceneFlora', {
 		var p = this.Preset(preset);
 		var bark = p.Bark.Image ? {Picture: p.Bark.Image, Normal: this.Flat(p.Bark.Image.Width, p.Bark.Image.Height)} : this.BarkPicture(p);
 
-		return {Bark: bark.Picture, BarkNormal: bark.Normal, Leaves: p.Leaves.Image || this.LeafPicture(p)};
+		return {Bark: bark.Picture, BarkNormal: bark.Normal, Leaves: p.Leaves.Image || this.ImageOf('leaves', p).Picture};
 	},
 
 	/* A normal map of nothing: what the bark of its own picture has. */
@@ -1317,90 +1322,35 @@ Elemenx.Service('SceneFlora', {
 		return {Width: width, Height: height, Data: data};
 	},
 
+	/*
+	 * Its bark (Width 256, Height 1024: round its trunk and up the plant; its colors from Low below to High from Split up, its
+	 * pattern; its relief as a normal map): a graph of a picture (ImageBlueprints: blueprints/image/bark, Bark.ImageGraph a
+	 * graph of its own), each pixel of the graph of its pattern. {Picture, Normal}.
+	 */
 	BarkPicture: function (p) {
-		var width = 256;
-		var height = 1024;
-		var math = this.$Service('Math');
-		var run = this.BarkRun(p.Bark);
-		var bumps = new Float32Array(width * height);
-		var data = new Uint8Array(width * height * 4);
-		var normal = new Uint8Array(width * height * 4);
-		/* Its numbers, the same for every point: its colors, where it turns, its rings, the seeds of its two noises. */
-		var fixed = {Split: p.Bark.Split, Rings: p.Bark.Rings || 140, LowR: p.Bark.Low[0], LowG: p.Bark.Low[1], LowB: p.Bark.Low[2], HighR: p.Bark.High[0], HighG: p.Bark.High[1], HighB: p.Bark.High[2], SFine: math.SeedOffset(p.Name + ':bark'), SCells: math.SeedOffset(p.Name + ':plates')};
-		var list = run.Inputs.map(function (name) {
-			return fixed[name] === undefined ? 0 : fixed[name];
-		});
-		var at = {CX: run.Inputs.indexOf('CX'), CZ: run.Inputs.indexOf('CZ'), T: run.Inputs.indexOf('T')};
-		var x;
-		var y;
-
-		/*
-		 * Each point of it of the graph of its pattern (blueprints/flora/bark/<Pattern>, plain for one of none; Bark.Graph: its
-		 * own): its color shaded and its relief. Round the trunk: seamless along u (a circle), up the plant along v.
-		 * Regression: a branch of the code for each pattern.
-		 */
-		for (y = 0; y < height; y++) {
-			for (x = 0; x < width; x++) {
-				var a = x / width * Math.PI * 2;
-				var made;
-				var o = (y * width + x) * 4;
-
-				list[at.CX] = Math.cos(a);
-				list[at.CZ] = Math.sin(a);
-				list[at.T] = y / height;
-				made = run.Main.apply(null, list);
-
-				bumps[y * width + x] = made[3];
-				data[o] = Math.round(Math.max(0, Math.min(1, made[0])) * 255);
-				data[o + 1] = Math.round(Math.max(0, Math.min(1, made[1])) * 255);
-				data[o + 2] = Math.round(Math.max(0, Math.min(1, made[2])) * 255);
-				data[o + 3] = 255;
-			}
-		}
-
-		/* Its relief: the slopes of its bumps (round its trunk wrapped), as a normal map of tangent space. */
-		for (y = 0; y < height; y++) {
-			for (x = 0; x < width; x++) {
-				var dx = bumps[y * width + (x + 1) % width] - bumps[y * width + (x + width - 1) % width];
-				var dy = bumps[Math.min(height - 1, y + 1) * width + x] - bumps[Math.max(0, y - 1) * width + x];
-				var nx = -dx * 2.5;
-				var ny = -dy * 2.5;
-				var l = Math.sqrt(nx * nx + ny * ny + 1);
-				var q = (y * width + x) * 4;
-
-				normal[q] = Math.round((nx / l * 0.5 + 0.5) * 255);
-				normal[q + 1] = Math.round((ny / l * 0.5 + 0.5) * 255);
-				normal[q + 2] = Math.round((1 / l * 0.5 + 0.5) * 255);
-				normal[q + 3] = 255;
-			}
-		}
-
-		/* Its mean color (0 to 1): what a far copy of the plant is painted (SceneModels.Painted). */
-		var mean = [0, 0, 0];
-
-		for (x = 0; x < width * height; x += 7) {
-			mean[0] += data[x * 4] / 255;
-			mean[1] += data[x * 4 + 1] / 255;
-			mean[2] += data[x * 4 + 2] / 255;
-		}
-
-		mean = mean.map(function (part) {
-			return part / Math.ceil(width * height / 7);
-		});
-
-		return {Picture: {Width: width, Height: height, Data: data, Mean: mean}, Normal: {Width: width, Height: height, Data: normal}};
+		return this.ImageOf('bark', p, p.Bark.ImageGraph);
 	},
 
+	/* The graphs of the pictures of the library (blueprints/image: bark, leaves), compiled in the page, carried to the workers. */
+	ImageCode: {},
+
+	/* A picture of a preset of a graph of the library (name) or of its own (own: a graph): {Picture, Normal}. */
+	ImageOf: function (name, p, own) {
+		var images = this.$Service('ImageBlueprints');
+		var compiled = own ? images.Compiled(own) : this.ImageCode[name] || (this.ImageCode[name] = images.Compiled('ElemenxGraphics/image/' + name));
+
+		return images.Run(compiled, {}, {Preset: p});
+	},
 	/*
 	 * Its leaves: four clusters in an atlas, each a twig from the foot of its tile up with its leaves (broad: ovals with
 	 * a darker rib, lighter where they face up; needles: fans of thin lines; a frond: a rib with leaflets each side),
 	 * their colors between Shade and Light; where there is no leaf its color is the leaves' mean (no dark rims in its
 	 * smaller levels), its alpha 0.
 	 */
-	LeafPicture: function (p) {
-		var size = 512;
-		var tall = 1024;
-		var tile = 256;
+	LeafPicture: function (p, sizes) {
+		var size = sizes && Number(sizes.Size) || 512;
+		var tall = sizes && Number(sizes.Tall) || 1024;
+		var tile = sizes && Number(sizes.Tile) || 256;
 		var data = new Uint8Array(size * tall * 4);
 		var random = this.$Service('Random').Sequence(p.Name + ':leaves');
 		var kind = p.Leaves.Kind;

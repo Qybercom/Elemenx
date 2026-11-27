@@ -505,7 +505,8 @@ function create (options) {
 			 */
 			if (!error && stat.isDirectory() && fs.existsSync(path.join(file, 'index.html'))) {
 				if (pathname.charAt(pathname.length - 1) !== '/') {
-					response.writeHead(301, {'Location': encodeURI(pathname) + '/' + query});
+					/* One slash before it: //ui/ would send the browser to the host ui (regression). */
+					response.writeHead(301, {'Location': encodeURI(pathname.replace(/^\/+/, '/')) + '/' + query});
 					response.end();
 
 					return;

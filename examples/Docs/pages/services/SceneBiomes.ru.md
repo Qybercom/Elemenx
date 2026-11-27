@@ -1,7 +1,7 @@
 <!-- generated -->
 # SceneBiomes
 
-Земли игры: Names(), Has(name), Get(name), Define(name, {Ground, Scatter, Grass}) — temperate, taiga, tundra, desert, savanna, swamp, alien, rainforest, semidesert и steppe; Village(field, {X, Y, Houses, Radius, Seed, Shapes}) выкладывает дома и дороги на ровном и сухом месте. Работает и в Node.
+Земли игры: Names(), Has(name), Get(name), Define(name, {Ground, Scatter, Grass}) — temperate, taiga, tundra, desert, savanna, swamp, alien, rainforest, semidesert и steppe; Village(field, {X, Y, Houses, Radius, Seed, Shapes, Graph}) выкладывает дома и дороги на ровном и сухом месте — граф раскладки blueprints/layout/village (LayoutBlueprints: Site, Houses, Out), Graph — свой. Работает и в Node.
 
 У биомов есть Climate — где они лежат на земле с биомами по климату (Biomes у SceneTerrainGenerator.Flat): {Height, Moisture, Temperature} или список таких конвертов. Встроенные temperate, taiga, tundra, desert, savanna и swamp вместе покрывают весь климат без пробелов; у alien конверта нет. Биом с Over (список имён) занимает место этих биомов там, где лежит сам: их вес уменьшается на его вес. Так rainforest (тепло и влажность от 0,6: тёмный густой тропический лес) встаёт на место swamp, temperate и savanna, semidesert (тепло, влажность 0,15–0,33: светлая пятнистая земля, кусты и камни) — на место desert и savanna, steppe (умеренное тепло, влажность до 0,3: травянистая равнина) — на место temperate. Без них в списке прежняя шестёрка лежит как раньше; все девять — список биомов планеты по умолчанию.
 
@@ -44,13 +44,14 @@ Check(list, field) проверяет, как биомы покрывают зе
 ## Тесты
 
 - [reads the lands of their resources, in their order](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/blueprints.test.js#L1019) — `tests/regression/blueprints.test.js`
+- [lays a village on a ground as the code did](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/layout-graphs.test.js#L81) — `tests/regression/layout-graphs.test.js`
 - [makes the provider only as a name of it is wanted, in the Application that wants it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L47) — `tests/regression/library-provides.test.js`
 - [makes the providers for a list, and none for a name no one declares](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-provides.test.js#L62) — `tests/regression/library-provides.test.js`
 - [draws the far ground of a body of no air in depths of its own, lit and coloured as the location, no weather over it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L693) — `tests/regression/library-scene-landing.test.js`
 - [takes the air round an eye and the lands of a ground of the envelope of a body, the Earth as it was](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1059) — `tests/regression/library-scene.test.js`
 - [makes a whole land of one biome of its World, and a village with its roads that nothing grows on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L13192) — `tests/regression/library-scene.test.js`
-- [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L14420) — `tests/regression/library-scene.test.js`
-- [takes the lands of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L14453) — `tests/regression/library-scene.test.js`
+- [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L14488) — `tests/regression/library-scene.test.js`
+- [takes the lands of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L14521) — `tests/regression/library-scene.test.js`
 - [gives the very numbers it gave, in a range too, the same in each Service that had its own](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Random/Random.test.js#L27) — `libraries/ElemenxCommon/services/Random/Random.test.js`
 - [lays a rainforest, a semidesert and a steppe in place of others where they hold, the usual six as they were](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js#L702) — `libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js`
 - [tells where lands by their climate leave heights and climates of a ground bare, and lands it never has](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js#L718) — `libraries/ElemenxGraphics/services/SceneTerrainGenerator/SceneTerrainGenerator.test.js`

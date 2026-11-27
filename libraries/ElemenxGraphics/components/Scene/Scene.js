@@ -14,7 +14,8 @@
  * library; SceneNebula), planet (Orbit: Distance, Eccentricity,
  * Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water,
  * Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count,
- * Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what
+ * Inclination, Colors, Rocks; Blueprint: its rocks as a cloud graph, Parameters on those it is given, cloud/belt of the
+ * library by default), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what
  * they go round, a Model and parts: modules, a dock), fighter, cruiser and freighter (ships: Model; their health is of a game: Vitals of ElemenxGaming), fleet
  * (Mover: Speed; Formation: Count, Ship, Spacing: its ships are parts). An application defines its own (SceneKinds.Define)
  * and systems of its own for traits of its own (Systems: {Trait: {Update(object, scene), Draw(object, scene)}}).
@@ -248,6 +249,8 @@ Elemenx.Component('Scene', {
 			ShipButtons: 'Its own buttons of the commands of a ship (Landing, Take off, To orbit) over the view; false: none, the commands given by a game (ShipCommands, ShipCommand: on its consoles, its panels).',
 			MassLock: 'Ships near ships of another team go no faster than a fight goes, by the frame of their fight (the soft mass lock: MassLockGraph); off by default.',
 			MassLockGraph: 'How fast a ship may go near ships of another team (Distance, Top -> Top, Lock): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/masslock).',
+			StarsGraph: 'The stars round the eye in space (Seed, Count, Power, Scale, Low, Radius -> Position, Color): a cloud graph of the Blueprints Service (CloudBlueprints; or its JSON); empty, Graphs of cloud/sky, else the one of the library (blueprints/cloud/sky).',
+			NightGraph: 'The stars of the night of a ground (Seed, Count, Power, Scale, Low, Radius -> Position, Color): a cloud graph of the Blueprints Service (CloudBlueprints; or its JSON); empty, Graphs of cloud/night, else the one of the library (blueprints/cloud/night).',
 			BoardGraph: 'How one gets into a vehicle and out of it step by step (Kind, Height, Door -> Open, Enter, Sit, Close: seconds; Clip, Duck): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/board).',
 			ReadoutGraph: 'What the instruments of a vehicle or of a character on foot read (Speed, TopSpeed, SpeedPart, RpmPart, Gear, Left, Right, Lights, HealthPart of Forward, Top, Rpm, Redline, Gear, Indicate, Hazard, Blink, Lights, Health, MaxHealth): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/readout); ReadoutGraph of a vehicle wins.',
 			DrivesGraph: 'What each moving part, lamp, emitter and pop of a vehicle is driven to of its state (steer, gas, wipers, stroke, lamp-brake... of Steer, Gas, Swept, Stroke...): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/drives); DrivesGraph of a vehicle wins.',
@@ -346,6 +349,8 @@ Elemenx.Component('Scene', {
 	SeasonGraph: null,
 	DrivesGraph: null,
 	ReadoutGraph: null,
+	StarsGraph: null,
+	NightGraph: null,
 	BoardGraph: null,
 	MassLock: false,
 	MassLockGraph: null,
@@ -539,17 +544,18 @@ Elemenx.Component('Scene', {
 			'barycentre': {Traits: {Barycentre: {Mass: null, Members: null}}},
 			/*
 			 * A star cluster (open, globular, nuclear): the middle its stars go round as round a barycentre, and its stars too many
-			 * to tell one by one (Count) a swarm round it Radius light-years across, of its Seed (GalaxyData.Cluster).
+			 * to tell one by one (Count) a swarm round it Radius light-years across, of its Seed (GalaxyData.Cluster); Blueprint:
+			 * its swarm as a cloud graph (Parameters on those it is given; cloud/cluster of the library by default).
 			 */
 			/* A cloud of gas and dust (SceneNebula): Type hii, planetary, remnant (Subtype Ia, II, Ib, Ic) or dark, Radius in light years. */
 			'nebula': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 0}), Nebula: {Type: 'hii', Subtype: '', Radius: 3, Seed: '', Density: 1, Glow: 1, Colors: '', Blueprint: null, Parameters: null}, Selectable: {}}},
-			'cluster': {Traits: {Barycentre: {Mass: null, Members: null}, Cluster: {Type: 'open', Radius: 6, Count: 0, Seed: ''}}},
+			'cluster': {Traits: {Barycentre: {Mass: null, Members: null}, Cluster: {Type: 'open', Radius: 6, Count: 0, Seed: '', Blueprint: null, Parameters: null}}},
 			'blackhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 40}), BlackHole: {Mass: 10, Disk: true, Inner: 3, Outer: 14, Tilt: 12, Color: '', Brightness: 1}, Selectable: {}}},
 			'wormhole': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 12}), Wormhole: {Radius: 1, Cosmos: 'nebula', Star: '#ffd9a0', Leads: '', To: '', Tilt: 0}, Selectable: {}}},
 			'comet': {Traits: {Orbit: Object.assign({}, orbit, {Distance: 6, Eccentricity: 0.85, Inclination: 18}), Comet: {Radius: 5, Tail: 1, Color: '', Ion: ''}, Selectable: {}}},
 			'quasar': {Traits: {Quasar: {Azimuth: 40, Elevation: 20, Color: '#bcd4ff', Brightness: 1, Jets: true}, Selectable: {}}},
 			'planetoid': {Extends: 'moon', Traits: {Body: {Radius: 120, Day: 9}, Surface: {Type: 'dwarf', Atmosphere: 'none', Clouds: 0}}},
-			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: '', Rocks: 1}}},
+			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: '', Rocks: 1, Blueprint: null, Parameters: null}}},
 			'ring': {Traits: {Ring: {Inner: 1.3, Outer: 2.3, Inclination: 0, Colors: ''}}},
 			'module': {Traits: {Model: {Shape: 'box', Size: 1, Scale: [1, 1, 1], Color: '#d6d9e0'}}},
 			'station': {
@@ -633,6 +639,7 @@ Elemenx.Component('Scene', {
 		var meshes = this.$Service('Meshes');
 		var math = this.$Service('Math');
 		var astronomy = this.$Service('Astronomy');
+		var clouds = this.$Service('CloudBlueprints');
 		var kinds = this.$Service('SceneKinds');
 		var library = this.$Service('SceneModels');
 		var random = this.$Service('Random');
@@ -2257,38 +2264,45 @@ Elemenx.Component('Scene', {
 			return simple[name] ? simple[name]() : meshes.Box({});
 		}
 
-		/* The stars far away: points on a ball round the view, of the colors of their temperatures. */
 		/*
-		 * Points of stars on a sphere of 50 round the eye, of a seed: count of them, their colours of the temperatures of stars,
-		 * their brightness a random number to power, times scale and over low: the one way of the sky of space and the night
-		 * of a ground.
+		 * A cloud of points of a graph (CloudBlueprints): of its own (own, a graph, its JSON or the name of a resource), else
+		 * of prop of the scene or its Graphs[name], else the one of the library (ElemenxGraphics/<name>). One that cannot be
+		 * made is told, the library one made.
 		 */
-		function starPoints (seed, count, power, scale, low) {
-			var generator = astronomy.Random(seed);
-			var positions = [];
-			var colors = [];
-			var i;
+		function cloudOf (own, prop, name, parameters) {
+			var given = own || self.GraphOf(prop, name);
 
-			for (i = 0; i < count; i++) {
-				var z = generator.Float(-1, 1);
-				var angle = generator.Float(0, Math.PI * 2);
-				var radius = Math.sqrt(1 - z * z);
-				var color = paint(astronomy.Color(generator.Pick([3200, 4500, 5600, 6500, 8000, 12000])));
-
-				positions.push(Math.cos(angle) * radius * 50, z * 50, Math.sin(angle) * radius * 50);
-				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), power) * scale + low);
+			try {
+				return clouds.Points(given || 'ElemenxGraphics/' + name, parameters);
 			}
+			catch (error) {
+				if (!given)
+					throw error;
 
-			return renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+				if (window.console && window.console.warn)
+					window.console.warn('Elemenx Scene: the cloud graph ' + name + ' cannot be made, the one of the library is: ' + error.message);
+
+				return clouds.Points('ElemenxGraphics/' + name, parameters);
+			}
+		}
+
+		/*
+		 * The stars far away: points on a ball of 50 round the eye, of the colors of their temperatures, a cloud of a graph:
+		 * of space (StarsGraph, cloud/sky) and of the night of a ground (NightGraph, cloud/night: faint ones by the thousand
+		 * and a few bright).
+		 */
+		function starPoints (prop, name) {
+			var cloud = cloudOf(null, prop, name);
+
+			return renderer.Points(cloud.Positions || new Float32Array(0), {aColor: {Size: 4, Data: cloud.Colors || new Float32Array(cloud.Count * 4).fill(1)}});
 		}
 
 		function stars () {
-			return starPoints('sky', 2600, 3, 0.9, 0.1);
+			return starPoints('StarsGraph', 'cloud/sky');
 		}
 
-		/* The stars of a night sky from the ground: the sky of a planet, faint ones by the thousand and a few bright. */
 		function nightStars () {
-			return starPoints('night', 9000, 6, 1, 0);
+			return starPoints('NightGraph', 'cloud/night');
 		}
 
 		/* The meshes of the orbits, rings and belts, made again with the objects; the baked surfaces kept by their look. */
@@ -2346,17 +2360,9 @@ Elemenx.Component('Scene', {
 		function swarmOf (object) {
 			var settings = trait(object, 'Cluster');
 			var count = Math.max(0, Math.min(20000, Math.round(number(settings.Count, 0))));
-			var generator;
-			var scale;
-			var positions = [];
-			var colors = [];
-			var temperatures = settings.Type === 'open' ? [4200, 5600, 6500, 8500, 12000, 20000] : [3300, 3800, 4300, 4900, 5400, 6000];
+			var cloud;
+			var positions;
 			var place;
-			var color;
-			var u;
-			var r;
-			var z;
-			var angle;
 			var i;
 
 			spreadKept();
@@ -2367,22 +2373,19 @@ Elemenx.Component('Scene', {
 			if (scene.Swarms[object.ID])
 				return scene.Swarms[object.ID];
 
-			generator = astronomy.Random(String(settings.Seed || object.ID));
-			scale = number(settings.Radius, 6) * 0.35 * astronomy.Units.ly;
+			/* Its stars, a cloud of its Blueprint (Parameters on those it is given), else of cloud/cluster. */
+			cloud = cloudOf(settings.Blueprint, '', 'cloud/cluster', Object.assign({Seed: String(settings.Seed || object.ID), Count: count, Scale: number(settings.Radius, 6) * 0.35 * astronomy.Units.ly, Temperatures: settings.Type === 'open' ? '4200, 5600, 6500, 8500, 12000, 20000' : '3300, 3800, 4300, 4900, 5400, 6000'}, settings.Parameters || {}));
+			positions = new Float32Array(cloud.Count * 3);
 
-			for (i = 0; i < count; i++) {
-				u = generator.Float(0.02, 0.97);
-				r = scale / Math.sqrt(Math.pow(u, -2 / 3) - 1);
-				z = generator.Float(-1, 1);
-				angle = generator.Float(0, Math.PI * 2);
-				place = spread([Math.cos(angle) * Math.sqrt(1 - z * z) * r, z * r, Math.sin(angle) * Math.sqrt(1 - z * z) * r], object);
-				color = paint(astronomy.Color(generator.Pick(temperatures)));
+			for (i = 0; i < cloud.Count; i++) {
+				place = spread([cloud.Positions[i * 3], cloud.Positions[i * 3 + 1], cloud.Positions[i * 3 + 2]], object);
 
-				positions.push(place[0], place[1], place[2]);
-				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), 3) * 0.75 + 0.08);
+				positions[i * 3] = place[0];
+				positions[i * 3 + 1] = place[1];
+				positions[i * 3 + 2] = place[2];
 			}
 
-			scene.Swarms[object.ID] = renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+			scene.Swarms[object.ID] = renderer.Points(positions, {aColor: {Size: 4, Data: cloud.Colors || new Float32Array(cloud.Count * 4).fill(1)}});
 
 			return scene.Swarms[object.ID];
 		}
@@ -2806,7 +2809,6 @@ Elemenx.Component('Scene', {
 			var settings = trait(object, 'Belt');
 			var parent = parentOf(object);
 			var round = parent && parent.Radius;
-			var generator = astronomy.Random(object.ID + ':' + object.Seed);
 			var count = Math.max(1, Math.min(4000, Math.round(number(settings.Count, 260))));
 			var inner = number(settings.Inner, round ? 2 : 2.2);
 			var outer = number(settings.Outer, round ? 4 : 3.2);
@@ -2815,6 +2817,8 @@ Elemenx.Component('Scene', {
 				return paint(String(color).trim()).slice(0, 3);
 			});
 			var rocks = [];
+			var cloud;
+			var field;
 			var i;
 
 			spreadKept();
@@ -2822,13 +2826,17 @@ Elemenx.Component('Scene', {
 			if (scene.Rocks[object.ID])
 				return scene.Rocks[object.ID];
 
-			for (i = 0; i < count; i++) {
+			/* Its rocks, a cloud of its Blueprint (Parameters on those it is given), else of cloud/belt: each its orbit, size, axis and spin. */
+			cloud = cloudOf(settings.Blueprint, '', 'cloud/belt', Object.assign({Seed: object.ID + ':' + object.Seed, Count: count, Inner: inner, Outer: outer, Tilt: tilt, Radius: round ? parent.Radius : 1, Unit: round ? KM : 1, Factor: between(1, 0.02, realness()), Body: round ? parent.Size : 1, Rocks: number(settings.Rocks, 1), Colors: colors}, settings.Parameters || {}));
+			field = cloud.Fields;
+
+			for (i = 0; i < cloud.Count; i++) {
 				rocks.push({
-					Orbit: {Distance: round ? generator.Float(inner, outer) * parent.Radius * KM : generator.Float(inner, outer), Eccentricity: generator.Float(0, 0.12), Inclination: tilt + generator.Float(-6, 6), Node: generator.Float(0, 360), Periapsis: generator.Float(0, 360), Anomaly: generator.Float(0, 360)},
-					Size: generator.Float(0.03, 0.11) * between(1, 0.02, realness()) * (round ? parent.Size : 1) * number(settings.Rocks, 1),
-					Axis: vectors.Normalize([generator.Float(-1, 1), generator.Float(-1, 1), generator.Float(-1, 1)]),
-					Spin: generator.Float(0.5, 3),
-					Color: generator.Pick(colors)
+					Orbit: {Distance: field.Distance ? field.Distance[i] : inner, Eccentricity: field.Eccentricity ? field.Eccentricity[i] : 0, Inclination: field.Inclination ? field.Inclination[i] : tilt, Node: field.Node ? field.Node[i] : 0, Periapsis: field.Periapsis ? field.Periapsis[i] : 0, Anomaly: field.Anomaly ? field.Anomaly[i] : 0},
+					Size: cloud.Sizes ? cloud.Sizes[i] : 0.07,
+					Axis: vectors.Normalize([field.AxisX ? field.AxisX[i] : 0, field.AxisY ? field.AxisY[i] : 1, field.AxisZ ? field.AxisZ[i] : 0]),
+					Spin: field.Spin ? field.Spin[i] : 1,
+					Color: cloud.Colors ? [cloud.Colors[i * 4], cloud.Colors[i * 4 + 1], cloud.Colors[i * 4 + 2]] : colors[0]
 				});
 			}
 
@@ -3046,13 +3054,23 @@ Elemenx.Component('Scene', {
 		 * The tiles of the data of a planet read in part (Levels) round the eye as it comes near: those over three times its
 		 * height round it, as fine as a twentieth of it, asked for once a second at most; given to the workers as they come.
 		 */
+		/*
+		 * The time first: once a second at most it asks for the data of a planet. Regression: it made the whole base of the
+		 * planet (its rules, its air, its presets read again) in every frame before it saw that a second had not gone by,
+		 * a third of a frame of the Orbit demo.
+		 */
 		function needData (object, globe) {
-			var base = planetBase(object);
-			var data = base && typeof base.Data === 'string' ? planets.DataSets[base.Data] : null;
 			var now = performance.now();
-			if (!data || !data.Source || !globe.Eye || now - (globe.Needed || 0) < 1000) return;
+			var base;
+			var data;
+
+			if (!globe.Eye || now - (globe.Needed || 0) < 1000) return;
 
 			globe.Needed = now;
+			base = planetBase(object);
+			data = base && typeof base.Data === 'string' ? planets.DataSets[base.Data] : null;
+
+			if (!data || !data.Source) return;
 
 			self.$Service('PlanetData').Need(data, vectors.Normalize(globe.Eye), Math.max(200, globe.Altitude * 3), Math.max(1, globe.Altitude / 20), function (error, names) {
 				if (!error && names.length && !scene.Gone)
@@ -3060,12 +3078,48 @@ Elemenx.Component('Scene', {
 			});
 		}
 
+		/*
+		 * Made once a frame for a body (and again when its planet or its size is another). Regression: the globe, the bake and
+		 * the loops over the bodies each made it again, its rules, its air and the presets of its envelope read anew, many
+		 * times a frame: a third of a frame of the Orbit demo. Each caller a copy of its own, all the way down: one adds the
+		 * keys of its rivers, settlements and highways to it (planetOf), others change what is in it. Regression: given the one kept, the next found its rivers made, and the
+		 * weather of a storm was never baked.
+		 */
 		function planetBase (object) {
 			var surface = trait(object, 'Surface');
 			var planet = surface && surface.Planet;
+			var bases = scene.PlanetBases = scene.PlanetBases || {};
+			var kept = bases[object.ID];
+
 			if (!planet)
 				return null;
 
+			if (kept && kept.At === scene.Frames && kept.Object === object && kept.Planet === planet && kept.Radius === object.Radius) return copied(kept.Made);
+
+			bases[object.ID] = {At: scene.Frames, Object: object, Planet: planet, Radius: object.Radius, Made: planetMade(object, planet)};
+
+			return copied(bases[object.ID].Made);
+		}
+
+		/* A copy of plain objects and lists, all the way down (a typed list and a text kept: no one changes them). */
+		function copied (value) {
+			var made;
+
+			if (Array.isArray(value))
+				return value.map(copied);
+
+			if (!value || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) return value;
+
+			made = {};
+
+			Object.keys(value).forEach(function (key) {
+				made[key] = copied(value[key]);
+			});
+
+			return made;
+		}
+
+		function planetMade (object, planet) {
 			/* Its rules of detail made code here, for the workers that make its ground (ScenePlanet.Ruled); its climate and winds of its air. */
 			var own = typeof planet === 'string' ? JSON.parse(planet) : planet;
 			/* Its far ground of the graph of the scene (GroundFarGraph, Graphs['shader/ground-far']), its own before it. */
@@ -3174,7 +3228,7 @@ Elemenx.Component('Scene', {
 
 						if (--left) return;
 
-						planets.Work().Run('ScenePlanet', 'Drainage', [heights, size], function (wrong, made) {
+						planets.Work().Run('ScenePlanet', 'Drainage', [heights, size, undefined, planets.RiversSourceOf(base)], function (wrong, made) {
 							var rivers = wrong || !made ? [] : made.Rivers;
 
 							if (scene.Gone) return;
@@ -4577,6 +4631,8 @@ Elemenx.Component('Scene', {
 			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
 
 			scene.BakedThisFrame = 0;
+			/* The frames drawn: what is made once a frame (planetBase) made again at each. */
+			scene.Frames = (scene.Frames || 0) + 1;
 
 			/* The uniforms of a draw: its own over the common ones of the frame (read through, never copied: a copy of all of them for each draw took milliseconds). */
 			function uniforms (extra) {

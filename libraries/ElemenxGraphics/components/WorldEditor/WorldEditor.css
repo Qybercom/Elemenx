@@ -122,8 +122,24 @@
 	border-bottom: 1px solid var(--elemenx-border);
 }
 
+.elemenx-world-editor-graph-body {
+	display: grid;
+	min-height: 0;
+}
+
+/* A graph that makes a thing of data: what it gives drawn beside it. */
+.elemenx-world-editor-graph-body.previewed {
+	grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
+}
+
 .elemenx-world-editor-graph-blueprint {
 	min-height: 0;
+}
+
+.elemenx-world-editor-graph-preview {
+	padding: 8px;
+	border-left: 1px solid var(--elemenx-border);
+	overflow: auto;
 }
 
 /* A cutscene of the world: its location to choose above, the scene of it, its editor under it. */

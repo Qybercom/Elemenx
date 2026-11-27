@@ -59,7 +59,7 @@
 Elemenx.Service('SceneRoads', {
 	$Meta: {
 		Description: 'The roads of a scene, of any kind: motorways, streets, country roads, race tracks, paths, runways and railways, their cross-sections, lines and models.',
-		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Grade(type)', 'Class(type)', 'Meeting(a, b)', 'Clearance(type)', 'InterchangeForm(a, b, ending)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'JunctionSurface(junction, x, z)', 'JunctionWalks(junction)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Carves(roads, junctions)', 'TunnelGraph(roads, junctions)', 'TunnelLamps(road)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
+		Methods: ['Surface(name, surface)', 'Define(name, type)', 'Type(name)', 'Types()', 'Line(points, options)', 'Road(spec)', 'Grade(type)', 'Class(type)', 'Meeting(a, b)', 'Clearance(type)', 'InterchangeForm(a, b, ending)', 'InterchangeGraph(form, settings)', 'InterchangePlaces(form, settings)', 'Network(specs, junctions, options)', 'JunctionAt(junctions, x, z)', 'JunctionSurface(junction, x, z)', 'JunctionWalks(junction)', 'Near(road, x, z, hint)', 'Under(roads, x, z, hints)', 'BarrierHit(roads, x, z, fromX, fromZ, hints, size)', 'FreeBarrier(spec, options)', 'Sketch(roads, junctions)', 'Carves(roads, junctions)', 'TunnelGraph(roads, junctions)', 'TunnelLamps(road)', 'Asset(roads, options)', 'AssetOf(roads, options)', 'Work()']
 	},
 
 	$OnCreate: function () {
@@ -810,7 +810,8 @@ Elemenx.Service('SceneRoads', {
 	 * found), from the edge of the motorway, where it leaves it or comes onto it, to the other road: at its edge (a motorway
 	 * too) or at a junction on it (diamond: one each side; roundabout: a ring each side; trumpet: one at the end of the road,
 	 * cut back from the motorway). Its heights from those of the two roads, straight between. Made after the overpasses
-	 * (Network), its ramps and junctions added to them. {Interchanges: [{ID, Form, X, Z, Roads, Ramps}]}.
+	 * (Network), its ramps and junctions added to them. {Interchanges: [{ID, Form, X, Z, Roads, Ramps}]}. Each form is a graph of
+	 * a layout (blueprints/layout/<form> of LayoutBlueprints; Interchange of the settings: {form: one of its own}).
 	 */
 	Interchanges: function (made, junctions, told, settings) {
 		var self = this;
@@ -953,7 +954,11 @@ Elemenx.Service('SceneRoads', {
 		 * onto it under a hill. Regression: a road over a hill that a motorway went under in a tunnel got ramps down to it. The
 		 * places along the motorway of each form (metres from the crossing), and along the other road.
 		 */
-		var places = {diamond: [-260, 260], roundabout: [-260, 260], cloverleaf: [-260, -70, 70, 260], stack: [-430, -320, 320, 430], trumpet: [-215, -205, 98, 205]};
+		var places = {};
+
+		['diamond', 'roundabout', 'cloverleaf', 'stack', 'trumpet'].forEach(function (form) {
+			places[form] = self.InterchangePlaces(form, settings);
+		});
 
 		found = found.filter(function (one) {
 			var inTunnel = function (road, metres) {
@@ -993,153 +998,8 @@ Elemenx.Service('SceneRoads', {
 
 			var quadrants = [quadrant(1, 1), quadrant(1, -1), quadrant(-1, 1), quadrant(-1, -1)];
 
-			if (one.Form === 'diamond' || one.Form === 'roundabout') {
-				var reach = (halfA + 45) / sine;
-				var ends = {};
-
-				quadrants.forEach(function (q, index) {
-					var mA = one.AtA + q.SA * 260;
-					var mB = one.AtB + q.SB * reach;
-					var start = at(A, mA, q.OnA * (halfA - 3));
-					var bend = at(A, mA - q.SA * 70, q.OnA * (halfA + 10));
-					var near = at(B, mB, q.OnB * (halfB + (one.Form === 'roundabout' ? 32 : 22)));
-					var end = at(B, mB, 0);
-
-					ramps.push(ramp(id + '-ramp-' + index, [start, {X: bend.X, Z: bend.Z}, {X: near.X, Z: near.Z}, end], id));
-
-					ends[q.SB] = end;
-				});
-
-				Object.keys(ends).forEach(function (side) {
-					lasts[side] = junctionOn(id + '-' + (side < 0 ? 'a' : 'b'), ends[side], one.Form === 'roundabout');
-				});
-			}
-			else if (one.Form === 'cloverleaf') {
-				var radius = 45;
-
-				quadrants.forEach(function (q, index) {
-					/* Its loop: round a middle in the quadrant, from the edge of A to the edge of B, three quarters of a turn. */
-					var middleA = (halfB + radius + 12) / sine;
-					var middleB = (halfA + radius + 12) / sine;
-					var c = at(A, one.AtA, 0);
-					var middle = {X: c.X + q.SA * a[0] * middleA + q.SB * b[0] * middleB, Z: c.Z + q.SA * a[1] * middleA + q.SB * b[1] * middleB};
-					var from = at(A, one.AtA + q.SA * middleA, q.OnA * (halfA - 3));
-					var to = at(B, one.AtB + q.SB * middleB, q.OnB * (halfB - 3));
-					var start = Math.atan2(from.Z - middle.Z, from.X - middle.X);
-					var stop = Math.atan2(to.Z - middle.Z, to.X - middle.X);
-					var turn = stop - start;
-					var knots = [from];
-					var k;
-
-					/* The long way round: three quarters of a turn, not one. */
-					while (turn <= 0) turn += Math.PI * 2;
-
-					if (turn < Math.PI)
-						turn -= Math.PI * 2;
-
-					for (k = 1; k < 10; k++) {
-						var angle = start + turn * k / 10;
-
-						knots.push({X: middle.X + Math.cos(angle) * radius, Z: middle.Z + Math.sin(angle) * radius});
-					}
-
-					knots.push(to);
-					ramps.push(ramp(id + '-loop-' + index, knots, id));
-
-					/* Its outer ramp: round the loop, from farther along A to farther along B. */
-					var far = 2 * radius + 90;
-					var out = Math.hypot(middle.X - c.X, middle.Z - c.Z) || 1;
-					var corner = {X: middle.X + (middle.X - c.X) / out * (radius + 22), Z: middle.Z + (middle.Z - c.Z) / out * (radius + 22)};
-					var outer = [at(A, one.AtA + q.SA * (far + middleA), q.OnA * (halfA - 3)), at(A, one.AtA + q.SA * (far * 0.6 + middleA), q.OnA * (halfA + 12)), corner, at(B, one.AtB + q.SB * (far * 0.6 + middleB), q.OnB * (halfB + 12)), at(B, one.AtB + q.SB * (far + middleB), q.OnB * (halfB - 3))];
-
-					ramps.push(ramp(id + '-ramp-' + index, outer.map(function (knot, place) {
-						return place === 0 || place === outer.length - 1 ? knot : {X: knot.X, Z: knot.Z};
-					}), id));
-				});
-			}
-			else if (one.Form === 'stack') {
-				var top = Math.max(at(A, one.AtA, 0).Y, at(B, one.AtB, 0).Y);
-
-				quadrants.forEach(function (q, index) {
-					var c = at(A, one.AtA, 0);
-					/* The higher a ramp, the farther it starts: no steeper than a ramp may climb. */
-					var reach = 320 + (index === 2 ? 110 : 0);
-					var start = at(A, one.AtA + q.SA * reach, q.OnA * (halfA - 3));
-					var end = at(B, one.AtB + q.SB * reach, q.OnB * (halfB - 3));
-					/* Two levels over the upper road: the two that turn left cross one over the other at the middle. */
-					var lift = top + 7.5 * (index === 1 ? 1 : 2);
-					var knots;
-
-					/* Turning right: in its quadrant, low; turning left: over the middle on a level of its own. */
-					if (index === 0 || index === 3) {
-						knots = [start, {X: c.X + q.SA * a[0] * 70 + q.SB * b[0] * 70, Z: c.Z + q.SA * a[1] * 70 + q.SB * b[1] * 70}, end];
-					}
-					else {
-						knots = [start, {X: c.X + q.SA * a[0] * 90 - q.SB * b[0] * 30, Z: c.Z + q.SA * a[1] * 90 - q.SB * b[1] * 30, Y: lift}, {X: c.X - q.SA * a[0] * 30 + q.SB * b[0] * 90, Z: c.Z - q.SA * a[1] * 30 + q.SB * b[1] * 90, Y: lift}, end];
-					}
-
-					ramps.push(ramp(id + '-ramp-' + index, knots, id));
-				});
-			}
-			else if (one.Form === 'trumpet') {
-				/* The road cut back from the motorway; its end where the ramps part. */
-				var back = halfA + 150;
-				var total = B.Points[B.Points.length - 1].Along;
-				var keep = one.End > 0 ? total - back : back;
-
-				B.Points = B.Points.filter(function (point) {
-					return one.End > 0 ? point.Along <= keep : point.Along >= keep;
-				});
-
-				if (one.End < 0) {
-					B.Points.forEach(function (point) {
-						point.Along -= keep;
-					});
-				}
-
-				B.Spans = (B.Spans || []).map(function (span) {
-					return Object.assign({}, span, one.End < 0 ? {From: span.From - keep, To: span.To - keep} : {To: Math.min(span.To, keep)});
-				}).filter(function (span) {
-					return span.To > span.From && span.To > 0;
-				});
-
-				var head = at(B, one.End > 0 ? B.Points[B.Points.length - 1].Along : 0, 0);
-				var c2 = at(A, one.AtA, 0);
-				var nearSide = sign(dot([head.X - c2.X, head.Z - c2.Z], c2.Left));
-				var over = c2.Y + 7.2;
-				var loop = 40;
-				var side = halfA + 14;
-				var turn;
-
-				/* A point by the motorway: u metres along it from the crossing, v aside of it, towards the road (v over 0) or away. */
-				var uv = function (u, v, y) {
-					var made = at(A, one.AtA + u, nearSide * v);
-
-					return y === undefined ? {X: made.X, Z: made.Z} : {X: made.X, Z: made.Z, Y: y};
-				};
-
-				/*
-				 * The loop on the far side: off the far carriageway, three quarters of a turn round a middle away from the motorway,
-				 * then straight across over it, 8 m aside of the road, into the head of the road.
-				 */
-				var knots2 = [at(A, one.AtA + 8 - loop + 130, -nearSide * (halfA - 3)), uv(8 - loop + 55, -(halfA + 8))];
-
-				for (turn = 0; turn <= 6; turn++) {
-					var angle2 = Math.PI / 2 + Math.PI * 1.5 * turn / 6;
-
-					knots2.push(uv(8 - loop + Math.cos(angle2) * loop, -(side + loop) + Math.sin(angle2) * loop));
-				}
-
-				knots2.push(uv(8, 0, over), uv(8, side), head);
-
-				/* Near side: off it and onto it straight; far side, onto it: over the motorway 8 m the other side of the road, then out along it. */
-				ramps.push(ramp(id + '-ramp-0', [at(A, one.AtA - 205, nearSide * (halfA - 3)), uv(-125, side), head], id));
-				ramps.push(ramp(id + '-ramp-1', [head, uv(125, side), at(A, one.AtA + 205, nearSide * (halfA - 3))], id));
-				ramps.push(ramp(id + '-ramp-2', [head, uv(-8, side), uv(-8, 0, over), uv(-30, -(side + 6)), uv(-115, -(halfA + 8)), at(A, one.AtA - 215, -nearSide * (halfA - 3))], id));
-				ramps.push(ramp(id + '-loop-3', knots2, id));
-
-				lasts.head = junctionOn(id + '-head', head, true);
-			}
+			/* Its ramps and junctions: a graph of a layout of its form (LayoutBlueprints: the library's, else Interchange of the settings). */
+			self.$Service('LayoutBlueprints').Make(self.InterchangeGraph(one.Form, settings), {}, {Frame: {One: one, RoadA: A, RoadB: B, WayA: a, WayB: b, HalfA: halfA, HalfB: halfB, Sine: sine, Quadrants: quadrants, Ramps: ramps, Lasts: lasts, ID: id, At: at, Ramp: ramp, JunctionOn: junctionOn, Dot: dot, Sign: sign}});
 
 			/*
 			 * A bridge of a ramp where it goes over a road of the interchange or another of its ramps (4 m over it or more), as
@@ -1184,6 +1044,27 @@ Elemenx.Service('SceneRoads', {
 		return {Interchanges: found.map(function (one) {
 			return {ID: one.ID, Form: one.Form, X: one.X, Z: one.Z, Roads: [one.A.ID, one.B.ID], Ramps: one.Ramps};
 		})};
+	},
+
+	/* The graph of the layout of a form of interchange: Interchange[form] of the settings (a graph or the name of one), else the library's. */
+	InterchangeGraph: function (form, settings) {
+		var own = settings && settings.Interchange && settings.Interchange[form];
+
+		return own || 'ElemenxGraphics/layout/' + form;
+	},
+
+	/* The metres from the crossing along the roads where a form makes its ramps (Places of its block), none of them in a tunnel. */
+	InterchangePlaces: function (form, settings) {
+		var blueprints = this.$Service('Blueprints');
+		var given = this.InterchangeGraph(form, settings);
+		var graph = blueprints.Read(typeof given === 'string' && !/^\s*\{/.test(given) ? Elemenx.Resources('Blueprints', given) : given);
+		var block = graph.blocks.filter(function (one) {
+			return ['Diamond', 'Cloverleaf', 'Stack', 'Trumpet'].indexOf(one.type) !== -1 && one.enabled !== false;
+		})[0];
+
+		return block ? String(blueprints.Properties(block).Places || '').split(',').filter(function (part) {
+			return part.trim() !== '';
+		}).map(Number).filter(isFinite) : [];
 	},
 
 	/*
@@ -3640,7 +3521,7 @@ Elemenx.Service('SceneRoads', {
 
 	/* The workers of the models of roads: all of this Service, the ground of noise for the height of their piers. */
 	Work: function () {
-		return this.$Service('Workers').Pool('SceneRoads', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneRoads: true});
+		return this.$Service('Workers').Pool('SceneRoads', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, ScenePlanet: true, SceneTerrainGenerator: true, LayoutBlueprints: true, SceneRoads: true});
 	},
 
 	/* What a worker carries of this Service besides its methods: the surfaces and the types the library defined. */

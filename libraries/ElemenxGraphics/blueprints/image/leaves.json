@@ -1,0 +1,78 @@
+{
+	"version": 1,
+	"type": "image",
+	"name": "leaves",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "leaves-input-preset",
+			"type": "Input",
+			"x": 40,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Preset"
+				}
+			]
+		},
+		{
+			"id": "leaves-atlas",
+			"type": "Leaves",
+			"x": 280,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Size",
+					"value": 512
+				},
+				{
+					"key": "Tall",
+					"value": 1024
+				},
+				{
+					"key": "Tile",
+					"value": 256
+				}
+			]
+		},
+		{
+			"id": "leaves-image",
+			"type": "Image",
+			"x": 520,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Width",
+					"value": 512
+				},
+				{
+					"key": "Height",
+					"value": 1024
+				},
+				{
+					"key": "Strength",
+					"value": 0
+				},
+				{
+					"key": "Wrap",
+					"value": false
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "leaves-link-0",
+			"p1": "leaves-input-preset-out-Value",
+			"p2": "leaves-atlas-in-Preset",
+			"kind": "value"
+		},
+		{
+			"id": "leaves-link-1",
+			"p1": "leaves-atlas-out-Picture",
+			"p2": "leaves-image-in-Picture",
+			"kind": "value"
+		}
+	]
+}

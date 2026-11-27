@@ -136,14 +136,13 @@ jobs:
           - editor: visualstudio
             os: windows-latest
             file: elemenx-visualstudio.vsix
+    # Only whether each secret is set, for the job: a secret itself goes to the one step that publishes with it, not to
+    # npm ci, the build and the packages they run (a package of npm could read every variable of its job).
     env:
       ELEMENX_INTELLIJ: download
-      VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
-      JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
-      JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
-      JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+      HAS_VSCE: ${{ secrets.VSCE_PAT != '' }}
+      HAS_OVSX: ${{ secrets.OVSX_PAT != '' }}
+      HAS_JETBRAINS: ${{ secrets.JETBRAINS_TOKEN != '' }}
     permissions:
       contents: write
     defaults:
@@ -176,7 +175,9 @@ jobs:
       # The extensions in the marketplaces, with the version of Elemenx; a prerelease as a pre-release (VS Code) or in the
       # channel beta (JetBrains).
       - name: VS Code Marketplace
-        if: matrix.editor == 'vscode' && env.VSCE_PAT != ''
+        if: matrix.editor == 'vscode' && env.HAS_VSCE == 'true'
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           case "$(node -p "require('./package.json').version")" in
             *-*) pre=--pre-release ;;
@@ -184,7 +185,9 @@ jobs:
           esac
           npx --yes @vscode/vsce@4.0.0 publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$VSCE_PAT"
       - name: Open VSX (VSCodium, Cursor, Windsurf)
-        if: matrix.editor == 'vscode' && env.OVSX_PAT != ''
+        if: matrix.editor == 'vscode' && env.HAS_OVSX == 'true'
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
           case "$(node -p "require('./package.json').version")" in
             *-*) pre=--pre-release ;;
@@ -192,7 +195,12 @@ jobs:
           esac
           npx --yes ovsx@0.10.1 publish dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$OVSX_PAT"
       - name: JetBrains Marketplace
-        if: matrix.editor == 'intellij' && env.JETBRAINS_TOKEN != ''
+        if: matrix.editor == 'intellij' && env.HAS_JETBRAINS == 'true'
+        env:
+          JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
+          JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
         run: |
           channel=default
           case "$(node -p "require('./package.json').version")" in
@@ -200,8 +208,10 @@ jobs:
           esac
           sh editors/intellij/gradlew --project-dir editors/intellij publishPlugin --no-daemon -PpluginChannel="$channel"
       - name: Visual Studio Marketplace
-        if: matrix.editor == 'visualstudio' && env.VSCE_PAT != ''
+        if: matrix.editor == 'visualstudio' && env.HAS_VSCE == 'true'
         shell: pwsh
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           $publisher = Get-ChildItem "$env:USERPROFILE\.nuget\packages\microsoft.vssdk.buildtools" -Recurse -Filter VsixPublisher.exe | Where-Object { $_.Directory.Name -eq 'bin' } | Select-Object -First 1
           & $publisher.FullName publish -payload dist\editors\elemenx-visualstudio.vsix -publishManifest editors\visualstudio\publishManifest.json -personalAccessToken $env:VSCE_PAT -ignoreWarnings "VSIXValidatorWarning01,VSIXValidatorWarning02"

@@ -241,7 +241,11 @@ function Request (project, entry, page) {
 
 		file = path.resolve(root, pathname.substring('/__project/files/'.length));
 
-		if (pathname.indexOf('/__project/files/') !== 0 || file.indexOf(prefix) !== 0 || /(^|[\\/])(node_modules|\.git)([\\/]|$)/.test(path.relative(root, file)) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+		/*
+		 * Never the packages, nor a file or folder of a dot (.git, .env), in any case of its letters. Regression: on Windows
+		 * /__project/files/.GIT/config was served (the test was of .git alone), and .env was not kept back at all.
+		 */
+		if (pathname.indexOf('/__project/files/') !== 0 || file.indexOf(prefix) !== 0 || /(^|[\\/])(node_modules|\.[^\\/]*)([\\/]|$)/i.test(path.relative(root, file)) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
 			response.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
 			response.end('Not Found');
 

@@ -86,7 +86,10 @@
 					<span class="elemenx-world-editor-note">{{$T('graphics.worldEditor.graphNote', {name: GraphOf(Tab)})}}</span>
 					<Button Size="small" Variant="ghost" Icon="undo" [Label]="$T('graphics.worldEditor.resetGraph')" (click)="ResetGraph(GraphOf(Tab))" />
 				</div>
-				<Blueprint class="elemenx-world-editor-graph-blueprint" Type="generator" [value]="GraphValue(Version, Tab)" (change)="GraphChanged(Tab, $event)" />
+				<div class="elemenx-world-editor-graph-body" [class]="[Previewed(Version, Tab) ? 'previewed' : '']">
+					<Blueprint class="elemenx-world-editor-graph-blueprint" [Type]="GraphType(Version, Tab)" [value]="GraphValue(Version, Tab)" (change)="GraphChanged(Tab, $event)" />
+					<BlueprintPreview *if="Previewed(Version, Tab)" class="elemenx-world-editor-graph-preview" [Graph]="GraphValue(Version, Tab)" Height="320" />
+				</div>
 			</div>
 		</div>
 	</div>

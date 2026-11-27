@@ -9,9 +9,44 @@ var resources = Resources.Reader();
 
 var source = fs.readFileSync(path.join(import.meta.dirname, 'SceneRoads.js'), 'utf8');
 
-/* The SceneRoads Service, as the Library defines it. */
+/* A Service of a Library by its folder and name, as the Library defines it, the others it asks for of services. */
+function service (folder, name, services) {
+	var definition;
+
+	vm.runInNewContext(fs.readFileSync(path.join(import.meta.dirname, '../../../', folder, 'services', name, name + '.js'), 'utf8'), {
+		Elemenx: {
+			Service: function (named, value) {
+				definition = value;
+			},
+			Resources: resources
+		}
+	});
+
+	return Object.assign({}, definition, {$Service: function (other) {
+		return services(other);
+	}});
+}
+
+/*
+ * The SceneRoads Service, as the Library defines it; the Services of the graphs of its interchanges (Blueprints,
+ * LayoutBlueprints and those they ask for) made as it asks for them.
+ */
 function create () {
 	var definition;
+	var made = {};
+
+	function services (name) {
+		var folder = ['Blueprints', 'Math', 'Noise', 'Random'].indexOf(name) !== -1 ? 'ElemenxCommon' : 'ElemenxGraphics';
+
+		if (!made[name]) {
+			made[name] = service(folder, name, services);
+
+			if (typeof made[name].$OnCreate === 'function')
+				made[name].$OnCreate();
+		}
+
+		return made[name];
+	}
 
 	vm.runInNewContext(source, {
 		Elemenx: {
@@ -22,7 +57,10 @@ function create () {
 		}
 	});
 
-	return Object.assign({}, definition);
+	services('Blueprints');
+	services('LayoutBlueprints');
+
+	return Object.assign({}, definition, {$Service: services});
 }
 
 describe('Regression: SceneRoads with large lists', function () {

@@ -1,0 +1,26 @@
+/* What a graph gives, drawn flat: a canvas as wide as its place, a note under it. */
+.elemenx-blueprint-preview {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	contain: layout style;
+}
+
+.elemenx-blueprint-preview-canvas {
+	display: block;
+	width: 100%;
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface-raised);
+	cursor: grab;
+	touch-action: none;
+}
+
+.elemenx-blueprint-preview-cloud .elemenx-blueprint-preview-canvas {
+	background: var(--elemenx-scene-background);
+}
+
+.elemenx-blueprint-preview-note {
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-text-muted);
+}

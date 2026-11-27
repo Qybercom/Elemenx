@@ -6,20 +6,26 @@
  * - Unzip(bytes): the files of a zip by their paths, each its bytes (a Uint8Array): what Zip made, or any zip of stored
  *   files; a file compressed in it is an error.
  * - Compress(files, callback(error, bytes)): a zip as Zip makes it, each file deflated where that makes it smaller;
- *   Expand(bytes, callback(error, files)): the files of any zip, stored or deflated.
+ *   Expand(bytes, callback(error, files), options): the files of any zip, stored or deflated; a deflated one unpacks to
+ *   the size its directory tells at most, its CRC checked ('Archive: <name> is not as its directory tells'), all of
+ *   them to options MaxBytes (MaxBytes, 1 GB) at most ('Archive: the files unpack to more than <most> bytes').
  * - Entries(bytes, base): the directory of a zip, of the whole file or of its end alone (bytes from the place base of the
  *   file on): [{Name, Method (0 stored, 8 deflated), Crc, Size, Compressed, Offset (of its local header in the file)}];
  *   Data(bytes, entry): the bytes kept of one entry, bytes being the file from its local header on.
- * - Deflate(bytes, callback(error, bytes)) and Inflate(bytes, callback(error, bytes)): raw deflate (RFC 1951) of the
- *   platform (CompressionStream), in a page, a worker and Node; an error where there is none.
+ * - Deflate(bytes, callback(error, bytes)) and Inflate(bytes, callback(error, bytes), most): raw deflate (RFC 1951) of
+ *   the platform (CompressionStream), in a page, a worker and Node; an error where there is none. Inflate makes most
+ *   bytes at most (MaxBytes by default): 'Archive: unpacked data of more than <most> bytes'.
  * - Crc(bytes): the CRC-32 of bytes, as a zip keeps it.
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('Archive', {
 	$Meta: {
 		Description: 'Archives made in the page: a zip of texts and bytes by their paths, stored or deflated, to download a project or a game in one file, and the files of a zip read back, its directory alone too.',
-		Methods: ['Zip(files)', 'Unzip(bytes)', 'Compress(files, callback)', 'Expand(bytes, callback)', 'Entries(bytes, base)', 'Data(bytes, entry)', 'Deflate(bytes, callback)', 'Inflate(bytes, callback)', 'Crc(bytes)']
+		Methods: ['Zip(files)', 'Unzip(bytes)', 'Compress(files, callback)', 'Expand(bytes, callback)', 'Entries(bytes, base)', 'Data(bytes, entry)', 'Deflate(bytes, callback)', 'Inflate(bytes, callback, most)', 'Crc(bytes)']
 	},
+
+	/* The most bytes what is unpacked may be (Inflate, Expand), when it is not told. */
+	MaxBytes: 1073741824,
 
 	Crc: function (bytes) {
 		var table = this.Table || (this.Table = (function () {
@@ -299,14 +305,27 @@ Elemenx.Service('Archive', {
 			if (entry.Method !== 0)
 				throw new Error('Archive: ' + entry.Name + ' is compressed');
 
-			files[entry.Name] = self.Data(data.subarray(entry.Offset), entry);
+			self.Put(files, entry.Name, self.Data(data.subarray(entry.Offset), entry));
 		});
 
 		return files;
 	},
 
-	/* Raw deflate or inflate of the platform: a stream of CompressionStream or DecompressionStream read whole. */
-	Stream: function (bytes, kind, callback) {
+	/* A file of a zip by its name, whatever its name: one named __proto__ is a file, not the prototype of the list. */
+	Put: function (files, name, value) {
+		if (name === '__proto__') Object.defineProperty(files, name, {value: value, writable: true, enumerable: true, configurable: true});
+		else files[name] = value;
+	},
+
+	/*
+	 * Raw deflate or inflate of the platform: a stream of CompressionStream or DecompressionStream read piece by piece, most
+	 * bytes at most (the reading stops there). Regression: read whole, a bomb of a megabyte unpacked to a gigabyte and more.
+	 */
+	Stream: function (bytes, kind, callback, most) {
+		var limit = Number(most) > 0 ? Number(most) : this.MaxBytes;
+		var pieces = [];
+		var total = 0;
+		var reader;
 		var Made = kind === 'deflate' ? typeof CompressionStream === 'undefined' ? null : CompressionStream : typeof DecompressionStream === 'undefined' ? null : DecompressionStream;
 		var stream;
 
@@ -325,19 +344,54 @@ Elemenx.Service('Archive', {
 			return;
 		}
 
-		new Response(stream).arrayBuffer().then(function (buffer) {
-			callback(null, new Uint8Array(buffer));
-		}, function (error) {
-			callback(error);
-		});
+		reader = stream.getReader();
+
+		function joined () {
+			var made = new Uint8Array(total);
+			var at = 0;
+
+			pieces.forEach(function (piece) {
+				made.set(piece, at);
+
+				at += piece.length;
+			});
+
+			return made;
+		}
+
+		(function next () {
+			reader.read().then(function (step) {
+				if (step.done) {
+					callback(null, joined());
+
+					return;
+				}
+
+				total += step.value.length;
+
+				if (total > limit) {
+					reader.cancel();
+
+					callback(new Error('Archive: unpacked data of more than ' + limit + ' bytes'));
+
+					return;
+				}
+
+				pieces.push(step.value);
+
+				next();
+			}, function (error) {
+				callback(error);
+			});
+		})();
 	},
 
 	Deflate: function (bytes, callback) {
 		this.Stream(this.Bytes(bytes), 'deflate', callback);
 	},
 
-	Inflate: function (bytes, callback) {
-		this.Stream(this.Bytes(bytes), 'inflate', callback);
+	Inflate: function (bytes, callback, most) {
+		this.Stream(this.Bytes(bytes), 'inflate', callback, most);
 	},
 
 	Compress: function (files, callback) {
@@ -376,9 +430,10 @@ Elemenx.Service('Archive', {
 		});
 	},
 
-	Expand: function (bytes, callback) {
+	Expand: function (bytes, callback, options) {
 		var self = this;
 		var data = bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes;
+		var most = options && Number(options.MaxBytes) > 0 ? Number(options.MaxBytes) : this.MaxBytes;
 		var files = {};
 		var failed = false;
 		var entries;
@@ -393,6 +448,14 @@ Elemenx.Service('Archive', {
 			return;
 		}
 
+		if (entries.reduce(function (sum, entry) {
+			return sum + entry.Size;
+		}, 0) > most) {
+			callback(new Error('Archive: the files unpack to more than ' + most + ' bytes'));
+
+			return;
+		}
+
 		left = entries.length;
 
 		if (!left) {
@@ -402,7 +465,7 @@ Elemenx.Service('Archive', {
 		}
 
 		function done (name, made) {
-			files[name] = made;
+			self.Put(files, name, made);
 
 			if (!--left)
 				callback(null, files);
@@ -429,19 +492,23 @@ Elemenx.Service('Archive', {
 				return;
 			}
 
+			/* As large as its directory tells, no larger, its CRC the one told: a bomb or a damaged file is an error. */
 			self.Inflate(kept, function (error, made) {
 				if (failed) return;
+
+				if (!error && (made.length !== entry.Size || self.Crc(made) !== entry.Crc))
+					error = new Error('Archive: ' + entry.Name + ' is not as its directory tells');
 
 				if (error) {
 					failed = true;
 
-					callback(error);
+					callback(/more than/.test(error.message) ? new Error('Archive: ' + entry.Name + ' is not as its directory tells') : error);
 
 					return;
 				}
 
 				done(entry.Name, made);
-			});
+			}, entry.Size || 1);
 		});
 	}
 });

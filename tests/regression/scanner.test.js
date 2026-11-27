@@ -25,4 +25,15 @@ describe('Regression: the scanner of the tools, the strings and the regular expr
 		expect(Scanner.Word.test('$')).toBe(true);
 		expect(Scanner.Start.test('1')).toBe(false);
 	});
+
+	/* Regression: --host "127.0.0.1&calc" with --open ran calc (start of cmd reads & as a command). */
+	it('opens in the browser of the system an address of a host and a port alone', function () {
+		var Common = require('../../tools/common.js');
+
+		expect(Common.openableURL('http://127.0.0.1:4180/')).toBe(true);
+		expect(Common.openableURL('http://[::1]:4180/')).toBe(true);
+		expect(Common.openableURL('http://127.0.0.1&calc:4180/')).toBe(false);
+		expect(Common.openableURL('http://a|b:1/')).toBe(false);
+		expect(Common.openableURL('file:///c:/x')).toBe(false);
+	});
 });

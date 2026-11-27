@@ -255,4 +255,57 @@ describe('Contract: the DataFormats Service', function () {
 		expect(Array.from(formats.Parse('base64', '-_8', {Bytes: true}))).toEqual([251, 255]);
 		expect(failure('base64', 'not base64!').message).toContain('not a text of Base64');
 	});
+
+	/*
+	 * Regression: a key __proto__ of a text read went into the prototype of every object of the page ([__proto__] of INI,
+	 * __proto__[a]=1 of a query, __proto__.a of TOML), or became the prototype of the result (__proto__: of YAML). It is a
+	 * key of its own now, kept as it was written.
+	 */
+	it('keeps a key __proto__ or constructor of a text as a key of its own, never as the prototype of objects', function () {
+		var texts = [
+			['ini', '[__proto__]\npolluted = yes'],
+			['ini', '[a.__proto__]\npolluted = yes'],
+			['query', '__proto__[polluted]=yes'],
+			['query', 'constructor[prototype][polluted]=yes'],
+			['toml', '__proto__.polluted = "yes"'],
+			['toml', '[__proto__]\npolluted = "yes"'],
+			['yaml', '__proto__:\n  polluted: yes'],
+			['yaml', '{__proto__: {polluted: yes}}'],
+			['xml', '<a __proto__="yes" />']
+		];
+
+		texts.forEach(function (one) {
+			var made = formats.Parse(one[0], one[1]);
+
+			expect(({}).polluted).toBeUndefined();
+			expect(Object.getPrototypeOf(made)).toBe(Object.prototype);
+		});
+
+		expect(Object.getOwnPropertyDescriptor(formats.Parse('ini', '[__proto__]\npolluted = yes'), '__proto__').value).toEqual({polluted: 'yes'});
+		expect(Object.getOwnPropertyDescriptor(formats.Parse('yaml', '__proto__:\n  polluted: yes'), '__proto__').value).toEqual({polluted: 'yes'});
+		expect(Object.getOwnPropertyDescriptor(formats.Parse('toml', '__proto__.polluted = "yes"'), '__proto__').value).toEqual({polluted: 'yes'});
+		expect(formats.Parse('query', 'constructor[prototype][polluted]=yes').constructor).toEqual({prototype: {polluted: 'yes'}});
+		expect(Object.getOwnPropertyDescriptor(formats.Parse('xml', '<a __proto__="yes" />').Attributes, '__proto__').value).toBe('yes');
+	});
+
+	/*
+	 * Regression: 20 000 nested elements of XML or [ of TOML made a RangeError of the stack, not an error of the text; nine
+	 * anchors of YAML of nine aliases each stood for a billion values, and whatever walked them hung.
+	 */
+	it('reads lists, tables and elements MaxDepth deep at most, and the aliases of YAML for MaxNodes values at most', function () {
+		var laughs = ['a: &a [x, x, x, x, x, x, x, x, x]'];
+		var i;
+
+		for (i = 1; i < 9; i++) {
+			laughs.push(String.fromCharCode(97 + i) + ': &' + String.fromCharCode(97 + i) + ' [' + new Array(10).join('*' + String.fromCharCode(96 + i) + ', ').replace(/, $/, '') + ']');
+		}
+
+		expect(failure('xml', new Array(2001).join('<a>') + new Array(2001).join('</a>')).message).toContain('elements nested deeper than 1000');
+		expect(failure('toml', 'a = ' + new Array(2001).join('[') + new Array(2001).join(']')).message).toContain('lists and tables nested deeper than 1000');
+		expect(formats.Parse('xml', new Array(11).join('<a>') + new Array(11).join('</a>'), {MaxDepth: 20}).Name).toBe('a');
+		expect(failure('xml', new Array(11).join('<a>') + new Array(11).join('</a>'), {MaxDepth: 5}).message).toContain('elements nested deeper than 5');
+		expect(failure('yaml', laughs.join('\n')).message).toContain('the aliases stand for more than 1000000 values');
+		expect(formats.Parse('yaml', laughs.slice(0, 3).join('\n')).c.length).toBe(9);
+		expect(failure('yaml', laughs.slice(0, 3).join('\n'), {MaxNodes: 50}).message).toContain('the aliases stand for more than 50 values');
+	});
 });

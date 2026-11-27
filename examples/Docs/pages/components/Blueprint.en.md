@@ -60,8 +60,8 @@ Many blocks are chosen at once: Shift or Ctrl and a press adds one or takes it a
 - [shows the parameters of the Blueprint of an effect, sets them on it, and edits its graph under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L242) — `tests/regression/library-scene-editor.test.js`
 - [tells a wind, a ground and a pass of its own that do not compile, draws the ones of the library, and goes on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-shader-errors.test.js#L26) — `tests/regression/library-shader-errors.test.js`
 - [marks on a block of a Blueprint the errors its owner gives it, with their lines](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-shader-errors.test.js#L126) — `tests/regression/library-shader-errors.test.js`
+- [changes a cloud, a network and a layout graph for the world alone in a Blueprint of its kind, what each gives drawn beside it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/components/WorldEditor/WorldEditor.test.js#L437) — `libraries/ElemenxGraphics/components/WorldEditor/WorldEditor.test.js`
 - [burns a star as its Blueprint says at each time: the prominences of the library rise and fall by a Curve of the Time, as much as its Activity](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js#L341) — `libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js`
 - [moves its prominences on by their speed a step at a time, however the speed changes, faster as the Speed of its Blueprint says](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js#L430) — `libraries/ElemenxGraphics/traits/SceneDeepSpace/SceneDeepSpace.test.js`
-- [draws its links to their pins again a little after its blocks, with no sizes told](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxUI/components/Blueprint/Blueprint.test.js#L97) — `libraries/ElemenxUI/components/Blueprint/Blueprint.test.js`
 
-+17 more in the same files
++18 more in the same files

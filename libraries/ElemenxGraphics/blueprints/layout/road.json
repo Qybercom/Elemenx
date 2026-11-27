@@ -1,0 +1,154 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "road",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "road-input-item",
+			"type": "Input",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Item"
+				}
+			]
+		},
+		{
+			"id": "road-input-others",
+			"type": "Input",
+			"x": 40,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Others"
+				}
+			]
+		},
+		{
+			"id": "road-input-kind",
+			"type": "Input",
+			"x": 40,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "road-input-sizes",
+			"type": "Input",
+			"x": 40,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Sizes"
+				}
+			]
+		},
+		{
+			"id": "road-area",
+			"type": "Area",
+			"x": 280,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "road-drawn",
+			"type": "Drawn",
+			"x": 520,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "road-road",
+			"type": "Road",
+			"x": 760,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "road-lots",
+			"type": "Lots",
+			"x": 1000,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "road-walls",
+			"type": "Walls",
+			"x": 1240,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "road-layout",
+			"type": "Layout",
+			"x": 1480,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "road-link-0",
+			"p1": "road-input-item-out-Value",
+			"p2": "road-area-in-Item",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-1",
+			"p1": "road-input-others-out-Value",
+			"p2": "road-area-in-Others",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-2",
+			"p1": "road-input-kind-out-Value",
+			"p2": "road-area-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-3",
+			"p1": "road-input-sizes-out-Value",
+			"p2": "road-area-in-Sizes",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-4",
+			"p1": "road-area-out-Layout",
+			"p2": "road-drawn-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-5",
+			"p1": "road-drawn-out-Layout",
+			"p2": "road-road-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-6",
+			"p1": "road-road-out-Layout",
+			"p2": "road-lots-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-7",
+			"p1": "road-lots-out-Layout",
+			"p2": "road-walls-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "road-link-8",
+			"p1": "road-walls-out-Layout",
+			"p2": "road-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}

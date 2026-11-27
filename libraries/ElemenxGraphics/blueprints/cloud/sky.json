@@ -1,0 +1,477 @@
+{
+	"version": 1,
+	"type": "cloud",
+	"name": "sky",
+	"parameters": [
+		{
+			"key": "Seed",
+			"type": "text",
+			"value": "sky",
+			"comment": "Seed"
+		},
+		{
+			"key": "Count",
+			"type": "float",
+			"value": 2600,
+			"comment": "Stars"
+		},
+		{
+			"key": "Power",
+			"type": "float",
+			"value": 3,
+			"comment": "How few are bright"
+		},
+		{
+			"key": "Scale",
+			"type": "float",
+			"value": 0.9,
+			"comment": "Brightness"
+		},
+		{
+			"key": "Low",
+			"type": "float",
+			"value": 0.1,
+			"comment": "Least brightness"
+		},
+		{
+			"key": "Radius",
+			"type": "float",
+			"value": 50,
+			"comment": "Radius of the ball round the eye"
+		}
+	],
+	"blocks": [
+		{
+			"id": "sky-p-seed",
+			"type": "Parameter",
+			"x": 0,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Seed"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "sky-p-count",
+			"type": "Parameter",
+			"x": 0,
+			"y": 130,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Count"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "sky-p-power",
+			"type": "Parameter",
+			"x": 0,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Power"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "sky-p-scale",
+			"type": "Parameter",
+			"x": 0,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Scale"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "sky-p-low",
+			"type": "Parameter",
+			"x": 0,
+			"y": 400,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Low"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "sky-p-radius",
+			"type": "Parameter",
+			"x": 0,
+			"y": 490,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Radius"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "sky-input-index",
+			"type": "Input",
+			"x": 0,
+			"y": 580,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Index"
+				}
+			]
+		},
+		{
+			"id": "sky-at0",
+			"type": "Formula",
+			"x": 220,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 0"
+				}
+			]
+		},
+		{
+			"id": "sky-d0",
+			"type": "Draw",
+			"x": 440,
+			"y": 760,
+			"properties": []
+		},
+		{
+			"id": "sky-at1",
+			"type": "Formula",
+			"x": 220,
+			"y": 850,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 1"
+				}
+			]
+		},
+		{
+			"id": "sky-d1",
+			"type": "Draw",
+			"x": 440,
+			"y": 940,
+			"properties": []
+		},
+		{
+			"id": "sky-at2",
+			"type": "Formula",
+			"x": 220,
+			"y": 1030,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 2"
+				}
+			]
+		},
+		{
+			"id": "sky-d2",
+			"type": "Draw",
+			"x": 440,
+			"y": 1120,
+			"properties": []
+		},
+		{
+			"id": "sky-at3",
+			"type": "Formula",
+			"x": 220,
+			"y": 1210,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "Index * 4 + 3"
+				}
+			]
+		},
+		{
+			"id": "sky-d3",
+			"type": "Draw",
+			"x": 440,
+			"y": 40,
+			"properties": []
+		},
+		{
+			"id": "sky-sphere",
+			"type": "Sphere",
+			"x": 660,
+			"y": 130,
+			"properties": []
+		},
+		{
+			"id": "sky-pick",
+			"type": "Pick",
+			"x": 660,
+			"y": 220,
+			"properties": [
+				{
+					"key": "Items",
+					"value": "3200, 4500, 5600, 6500, 8000, 12000"
+				}
+			]
+		},
+		{
+			"id": "sky-bright",
+			"type": "Formula",
+			"x": 660,
+			"y": 310,
+			"properties": [
+				{
+					"key": "Expression",
+					"value": "pow(D, Power) * Scale + Low"
+				}
+			]
+		},
+		{
+			"id": "sky-blackbody",
+			"type": "Blackbody",
+			"x": 880,
+			"y": 400,
+			"properties": []
+		},
+		{
+			"id": "sky-split",
+			"type": "Split",
+			"x": 1100,
+			"y": 490,
+			"properties": []
+		},
+		{
+			"id": "sky-combine",
+			"type": "Combine",
+			"x": 1320,
+			"y": 580,
+			"properties": []
+		},
+		{
+			"id": "sky-cloud",
+			"type": "Cloud",
+			"x": 1540,
+			"y": 670,
+			"properties": [
+				{
+					"key": "Count",
+					"value": 2600
+				},
+				{
+					"key": "Fields",
+					"value": ""
+				},
+				{
+					"key": "Least",
+					"value": 0
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "sky-link-0",
+			"p1": "sky-input-index-out-Value",
+			"p2": "sky-at0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-1",
+			"p1": "sky-p-seed-out-Value",
+			"p2": "sky-d0-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-2",
+			"p1": "sky-at0-out-Value",
+			"p2": "sky-d0-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-3",
+			"p1": "sky-input-index-out-Value",
+			"p2": "sky-at1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-4",
+			"p1": "sky-p-seed-out-Value",
+			"p2": "sky-d1-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-5",
+			"p1": "sky-at1-out-Value",
+			"p2": "sky-d1-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-6",
+			"p1": "sky-input-index-out-Value",
+			"p2": "sky-at2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-7",
+			"p1": "sky-p-seed-out-Value",
+			"p2": "sky-d2-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-8",
+			"p1": "sky-at2-out-Value",
+			"p2": "sky-d2-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-9",
+			"p1": "sky-input-index-out-Value",
+			"p2": "sky-at3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-10",
+			"p1": "sky-p-seed-out-Value",
+			"p2": "sky-d3-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-11",
+			"p1": "sky-at3-out-Value",
+			"p2": "sky-d3-in-Index",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-12",
+			"p1": "sky-d0-out-Value",
+			"p2": "sky-sphere-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-13",
+			"p1": "sky-d1-out-Value",
+			"p2": "sky-sphere-in-V",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-14",
+			"p1": "sky-p-radius-out-Value",
+			"p2": "sky-sphere-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-15",
+			"p1": "sky-d2-out-Value",
+			"p2": "sky-pick-in-Value",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-16",
+			"p1": "sky-d3-out-Value",
+			"p2": "sky-bright-in-D",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-17",
+			"p1": "sky-p-power-out-Value",
+			"p2": "sky-bright-in-Power",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-18",
+			"p1": "sky-p-scale-out-Value",
+			"p2": "sky-bright-in-Scale",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-19",
+			"p1": "sky-p-low-out-Value",
+			"p2": "sky-bright-in-Low",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-20",
+			"p1": "sky-pick-out-Out",
+			"p2": "sky-blackbody-in-Temperature",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-21",
+			"p1": "sky-blackbody-out-Color",
+			"p2": "sky-split-in-Vector",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-22",
+			"p1": "sky-split-out-X",
+			"p2": "sky-combine-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-23",
+			"p1": "sky-split-out-Y",
+			"p2": "sky-combine-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-24",
+			"p1": "sky-split-out-Z",
+			"p2": "sky-combine-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-25",
+			"p1": "sky-bright-out-Value",
+			"p2": "sky-combine-in-W",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-26",
+			"p1": "sky-p-count-out-Value",
+			"p2": "sky-cloud-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-27",
+			"p1": "sky-sphere-out-Point",
+			"p2": "sky-cloud-in-Position",
+			"kind": "value"
+		},
+		{
+			"id": "sky-link-28",
+			"p1": "sky-combine-out-XYZW",
+			"p2": "sky-cloud-in-Color",
+			"kind": "value"
+		}
+	]
+}

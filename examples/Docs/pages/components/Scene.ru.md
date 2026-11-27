@@ -220,16 +220,16 @@ SeasonGraph — граф сезона (по умолчанию blueprints/weathe
 ## Тесты
 
 - [fires by the Fire button with a Hold for a beam, and leaves the trigger of the pad to the Scene](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/advanced-combat.test.js#L35) — `tests/regression/advanced-combat.test.js`
+- [draws the numbers of a seed one after another, any of them at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cloud-graphs.test.js#L33) — `tests/regression/cloud-graphs.test.js`
+- [runs the clouds of the library as code, with no walk of their blocks for each point](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cloud-graphs.test.js#L69) — `tests/regression/cloud-graphs.test.js`
+- [makes the stars of space and of a night as the Scene made them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cloud-graphs.test.js#L77) — `tests/regression/cloud-graphs.test.js`
+- [makes the swarm of a cluster as the Scene made it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cloud-graphs.test.js#L89) — `tests/regression/cloud-graphs.test.js`
+- [makes the rocks of a belt as the Scene made them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cloud-graphs.test.js#L115) — `tests/regression/cloud-graphs.test.js`
 - [reads a graph of an effect and the blocks of the passes with no Scene: Blueprints makes what declares them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-effect-blueprints.test.js#L77) — `tests/regression/library-effect-blueprints.test.js`
 - [reads the speed, the revolutions of the redline of the car itself, the gear and the lamps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-dash.test.js#L51) — `tests/regression/library-game-dash.test.js`
 - [shows the instruments of the hero as it changes: of the car it drives, of the character once it left it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-dash.test.js#L78) — `tests/regression/library-game-dash.test.js`
 - [shows the systems of a ship and gives an engineer the hands of its power](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-dash.test.js#L134) — `tests/regression/library-game-dash.test.js`
 - [counts down, counts the laps of each racer through its checkpoints, their times and best, finishes and ends](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L100) — `tests/regression/library-game-race.test.js`
 - [counts no lap of a racer that goes back over the line, and tells the wrong way and the right way again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-race.test.js#L160) — `tests/regression/library-game-race.test.js`
-- [selects the units of its team only, by code, by Ctrl+A and by a frame drawn over them, and none by Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L75) — `tests/regression/library-game-strategy.test.js`
-- [orders by the right button and turns the view only with Ctrl; by fingers selects, orders, carries the map and frames](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L114) — `tests/regression/library-game-strategy.test.js`
-- [sends units to a place, each to its own spot, stops them, and has them attack a foe until it is gone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L204) — `tests/regression/library-game-strategy.test.js`
-- [hides in its fog the units of other teams that its units do not see, and tells what was seen and explored](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L252) — `tests/regression/library-game-strategy.test.js`
-- [sees no farther than the weather and the light let it: a fog takes the range of sight of its units](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-game-strategy.test.js#L280) — `tests/regression/library-game-strategy.test.js`
 
-+387 ещё в тех же файлах
++394 ещё в тех же файлах

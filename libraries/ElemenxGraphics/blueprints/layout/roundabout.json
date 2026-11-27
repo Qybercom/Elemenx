@@ -1,0 +1,57 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "roundabout",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "roundabout-input-frame",
+			"type": "Input",
+			"x": 40,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Frame"
+				}
+			]
+		},
+		{
+			"id": "roundabout-form",
+			"type": "Diamond",
+			"x": 280,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Gap",
+					"value": 32
+				},
+				{
+					"key": "Ring",
+					"value": true
+				}
+			]
+		},
+		{
+			"id": "roundabout-layout",
+			"type": "Layout",
+			"x": 520,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "roundabout-link-0",
+			"p1": "roundabout-input-frame-out-Value",
+			"p2": "roundabout-form-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "roundabout-link-1",
+			"p1": "roundabout-form-out-Layout",
+			"p2": "roundabout-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}

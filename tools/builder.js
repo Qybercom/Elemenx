@@ -334,6 +334,26 @@ function isInside (target, parent) {
 }
 
 /*
+ * The folder of a build, which the build empties first: never the project, a folder that holds it, the root of a disk,
+ * nor one that holds its entry, its page or its config. Regression: --out . (or .., or C:/) removed the sources of the
+ * project with the rest.
+ */
+function checkOutput (project, outputName, files) {
+	var output = path.resolve(project, outputName);
+	var held = [path.join(project, 'elemenx.config.js'), path.join(project, 'package.json')].concat(files || []);
+
+	if (isInside(project, output) || path.parse(output).root === output)
+		fail('--out ' + outputName + ' would empty the project (' + output + '): a build goes to a folder of its own');
+
+	held.forEach(function (file) {
+		if (isInside(file, output))
+			fail('--out ' + outputName + ' would empty the project (' + output + ' holds ' + path.relative(project, file) + '): a build goes to a folder of its own');
+	});
+
+	return output;
+}
+
+/*
  * The folders and files of a project that are never public, wherever its build goes: the packages of npm, the history
  * of git, and the native projects of Capacitor (android, ios) with its config.
  */
@@ -1011,7 +1031,7 @@ function build (project, options) {
 	var outputName = options.out || 'dist';
 	var app = path.join(project, appName);
 	var index = path.join(project, indexName);
-	var output = path.resolve(project, outputName);
+	var output = checkOutput(project, outputName, [app, index]);
 	var framework = path.resolve(__dirname, '..', 'elemenx.js');
 	var entities = {};
 	var appSource;
@@ -1293,7 +1313,7 @@ function buildTargets (project, options, list) {
  */
 function extension (project, options) {
 	var outputName = options.out || 'dist';
-	var target = path.resolve(project, outputName, 'extension');
+	var target = path.join(checkOutput(project, outputName, [path.join(project, options.entry || 'app.js'), path.join(project, options.index || 'index.html')]), 'extension');
 	var folder = path.join(target, 'app');
 	var settings = options.extensionSettings || {};
 	var result;
@@ -1355,7 +1375,7 @@ var NativeTargets = NativePlatforms.concat(['android-library']);
  */
 function native (project, options) {
 	var outputName = options.out || 'dist';
-	var root = path.resolve(project, outputName, 'native');
+	var root = path.join(checkOutput(project, outputName, [path.join(project, options.entry || 'app.js'), path.join(project, options.index || 'index.html')]), 'native');
 	var staging = path.resolve(project, outputName, 'native-app');
 	var platforms = options.native === true || options.native === 'all' ? NativePlatforms : [options.native];
 	var settings = options.nativeSettings || {};

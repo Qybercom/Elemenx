@@ -8,7 +8,9 @@
  *   true}; FromAsset(asset) its tree, Binary(tree) and Text(tree) a tree as a file; Typed(type, value) a value of a type
  *   of its own for them (I, L, D, S, l).
  * - Tree(data): the tree of a file, {Version, Nodes: [{Name, Props, Nodes}]}; Child(node, name), Children(node, name),
- *   Properties(node) ({name: [values]} of its Properties70); Inflate(bytes) unpacks zlib; IsBinary(bytes).
+ *   Properties(node) ({name: [values]} of its Properties70); Inflate(bytes, most) unpacks zlib (most: the bytes it may
+ *   make, MaxBytes, 1 GB, by default; more is 'Elemenx Fbx: packed data of more than <most> bytes'); IsBinary(bytes).
+ *   A record that ends before it begins, a list longer than its data, are errors of what is wrong.
  * - Parse(data) returns the skeleton and the clip of a file (text, or bytes binary or not): {Bones: [{ID, Name, Parent,
  *   Translation, Pre, Rotation}], Length, Curves}. Parent is an index, -1 for a root; Pre and Rotation are degrees, x, y,
  *   z. Curves: {bone index: {T: [x, y, z], R: [x, y, z]}}, each [{Times, Values}] in seconds, degrees and the units of the
@@ -21,8 +23,11 @@
 Elemenx.Service('Fbx', {
 	$Meta: {
 		Description: 'The files of FBX, binary and text: models with meshes, materials, pictures, skins and clips, read and written.',
-		Methods: ['Read(data)', 'Write(asset, options)', 'Tree(data)', 'Parse(data)', 'Skeleton(tree)', 'Sample(curve, time, fallback)', 'Load(url, callback)', 'FromAsset(asset)', 'Binary(tree)', 'Text(tree)', 'Inflate(bytes)']
+		Methods: ['Read(data)', 'Write(asset, options)', 'Tree(data)', 'Parse(data)', 'Skeleton(tree)', 'Sample(curve, time, fallback)', 'Load(url, callback)', 'FromAsset(asset)', 'Binary(tree)', 'Text(tree)', 'Inflate(bytes, most)']
 	},
+
+	/* The most bytes packed data unpacks to (Inflate), when its list does not say how many. */
+	MaxBytes: 1073741824,
 
 	Second: 46186158000,
 
@@ -379,8 +384,19 @@ Elemenx.Service('Fbx', {
 			var packed = view.getUint32(at + 4, true);
 			var size = view.getUint32(at + 8, true);
 			var raw = bytes.subarray(at + 12, at + 12 + size);
-			var data = packed ? self.Inflate(raw) : raw.slice();
+			var need = count * {f: 4, d: 8, i: 4, b: 1, l: 8}[type];
+			var data;
 			var numbers;
+
+			/* Regression: a count of billions with no data made a list of all of them before it failed. */
+			if (!packed && need > raw.length)
+				throw new Error('Elemenx Fbx: a list of ' + count + ' is longer than its data');
+
+			data = packed ? self.Inflate(raw, need) : raw.slice();
+
+			if (data.length < need)
+				throw new Error('Elemenx Fbx: a list of ' + count + ' is longer than its data');
+
 			var made;
 			var i;
 
@@ -462,6 +478,7 @@ Elemenx.Service('Fbx', {
 		}
 
 		function record () {
+			var start = at;
 			var end = offset();
 			var count = offset();
 			var made;
@@ -480,6 +497,10 @@ Elemenx.Service('Fbx', {
 
 			if (end > bytes.length)
 				throw new Error('Elemenx Fbx: a binary file cut short');
+
+			/* Regression: a record that ended where it began was read again and again, without end. */
+			if (end <= start)
+				throw new Error('Elemenx Fbx: a record ends before it begins');
 
 			made.Name = new TextDecoder().decode(bytes.subarray(at + 1, at + 1 + bytes[at]));
 			at += 1 + bytes[at];
@@ -512,8 +533,9 @@ Elemenx.Service('Fbx', {
 	},
 
 	/* The data of zlib (RFC 1950 and 1951): what the lists of a binary file are packed with. */
-	Inflate: function (bytes) {
-		var out = new Uint8Array(Math.max(1024, bytes.length * 4));
+	Inflate: function (bytes, most) {
+		var limit = Number(most) > 0 ? Number(most) : this.MaxBytes;
+		var out = new Uint8Array(Math.min(limit, Math.max(1024, bytes.length * 4)));
 		var size = 0;
 		var at = 2;
 		var bit = 0;
@@ -549,8 +571,12 @@ Elemenx.Service('Fbx', {
 		function put (value) {
 			var grown;
 
+			/* Regression: a bomb of a few bytes unpacked to all the memory of the page. */
+			if (size >= limit)
+				throw new Error('Elemenx Fbx: packed data of more than ' + limit + ' bytes');
+
 			if (size === out.length) {
-				grown = new Uint8Array(out.length * 2);
+				grown = new Uint8Array(Math.min(limit, out.length * 2));
 
 				grown.set(out);
 

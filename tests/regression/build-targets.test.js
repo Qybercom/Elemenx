@@ -59,6 +59,14 @@ describe('Builder: the targets of a build, and a Docker image', function () {
 		expect(config).toContain('add_header Content-Security-Policy "default-src \'self\'" always;');
 		expect(config).toContain('add_header X-Say "a \\"quote\\"" always;');
 
+		/* Regression: a line break in a value, or a name not of a header, ended the directive and began another one. */
+		expect(function () {
+			Docker.Configuration({'X-A': 'x";\n\treturn 302 http://evil;\n#'});
+		}).toThrow('Docker.Headers: the value of X-A has a line break or a control character');
+		expect(function () {
+			Docker.Configuration({'X-A always; return 302 x; add_header Y': 'y'});
+		}).toThrow('Docker.Headers: a name of letters, digits and - is expected');
+
 		/* A location with an add_header of its own loses the ones of the server: each repeats the safe headers. */
 		expect(config.split('X-Content-Type-Options').length - 1).toBe(3);
 	});

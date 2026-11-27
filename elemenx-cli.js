@@ -514,9 +514,18 @@ command('designer', 'Open the Designer on a project: its pages, components and r
 	]
 });
 
-/* Opens a URL in the browser of the system. */
+/*
+ * Opens a URL in the browser of the system: an address of http of a host and a port alone (start of cmd reads & and |
+ * as commands). Regression: --host "127.0.0.1&calc" with --open ran calc.
+ */
 function openBrowser (url) {
 	var child = require('child_process');
+
+	if (!require('./tools/common.js').openableURL(url)) {
+		process.stdout.write('Elemenx: not opened, the address is not of a host and a port: ' + url + '\n');
+
+		return;
+	}
 
 	if (process.platform === 'win32') child.spawn('cmd', ['/c', 'start', '""', url], {detached: true, stdio: 'ignore'}).unref();
 	else child.spawn(process.platform === 'darwin' ? 'open' : 'xdg-open', [url], {detached: true, stdio: 'ignore'}).unref();

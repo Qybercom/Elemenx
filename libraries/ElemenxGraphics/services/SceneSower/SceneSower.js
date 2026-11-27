@@ -35,7 +35,7 @@ Elemenx.Service('SceneSower', {
 	 */
 	Work: function () {
 		var self = this;
-		var pool = this.$Service('Workers').Pool('SceneSower', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, ScenePlanet: true, SceneTerrainGenerator: true, SceneSower: true});
+		var pool = this.$Service('Workers').Pool('SceneSower', {Math: true, Noise: true, Random: true, Pathfinding: true, Blueprints: true, Geometry: true, ScenePlanet: true, SceneTerrainGenerator: true, LayoutBlueprints: true, SceneSower: true});
 		var run;
 		var share;
 

@@ -45,7 +45,8 @@ data — {Manifest, Tiles: {имя: Int16Array или Uint8Array}, Vectors: {Riv
 ## Тесты
 
 - [draws nothing in its place till its data comes, then its globe of the tiles of its data](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-planet-data.test.js#L76) — `tests/regression/library-scene-planet-data.test.js`
-- [tells when the data of its planet is not there, and draws no other planet](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-planet-data.test.js#L135) — `tests/regression/library-scene-planet-data.test.js`
+- [makes the base of a planet once a frame, however many draws and loops ask for it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-planet-data.test.js#L139) — `tests/regression/library-scene-planet-data.test.js`
+- [tells when the data of its planet is not there, and draws no other planet](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-planet-data.test.js#L176) — `tests/regression/library-scene-planet-data.test.js`
 - [places a direction on a face of the cube and back, by equal angles](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js#L113) — `libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js`
 - [bakes the planet of options into its passport and the tiles of its heights and biomes, level by level](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js#L132) — `libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js`
 - [keeps the heights of the planet at the samples of its tiles, and its edge samples shared by two tiles](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js#L151) — `libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js`
@@ -55,6 +56,5 @@ data — {Manifest, Tiles: {имя: Int16Array или Uint8Array}, Vectors: {Riv
 - [makes a planet of its data: as coarse as its tiles, their heights; finer, its own relief and the edits of it](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js#L268) — `libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js`
 - [bakes its climate and its plates as tiles, and a planet of data reads them, of data alone its plates too](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js#L306) — `libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js`
 - [bakes its rivers, settlements and highways, keeps them in its file, and a planet of data has them](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js#L348) — `libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js`
-- [bakes its settlements with what was changed of them, and keeps the changes of its rivers to lay them again](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js#L376) — `libraries/ElemenxGraphics/services/PlanetData/PlanetData.test.js`
 
-+6 ещё в тех же файлах
++7 ещё в тех же файлах

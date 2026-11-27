@@ -12,7 +12,7 @@ SceneWorld: the world of a ground as a graph of its steps, the one place a groun
 - Border: the outline of a location (Points, Sides), what is past it (Beyond: far, cliff, void, sea, wall; Edge, Depth) and its passages (Passages of SceneLocations: roads, rivers and gates out of it).
 - Tunnel (Points [[x, z, y]...], Radius, Flat, Depth), Caves (natural ways and halls of noise under the ground round X, Z within Radius: Top, Bottom, Scale, Width, Halls, Seed), Passages (a graph of ways and of halls where they part: Nodes, Ways, Radius, Flat, Depth, Rough, Seed: SceneTerrainGenerator.Passages) and Overhangs (rock jutting out of steep slopes: Amount, Scale, Slope; X, Z and Radius for a place of them): the volume of the land, cut and grown (Carves of SceneTerrainGenerator.Volume); the squares of the ground they touch are made of its density.
 - Footings: the ground gives way under what stands on it: a level place under each building, Margin metres round it, at the height there (Mode mean, low, high), the ground coming to it within Edge (the trait SceneFootings of a Scene).
-- Roads: its settlements and the passages of its Border joined by roads along the ground (Main, Minor, Paths: the types of SceneRoads of each class; Rail: a railway beside the main ones), roads among its things.
+- Roads: its settlements and the passages of its Border joined by roads along the ground (Main, Minor, Paths: the types of SceneRoads of each class; Rail: a railway beside the main ones; Graph: a network graph of NetworkBlueprints of its own, blueprints/network/roads by default), roads among its things.
 - Settlement: a village laid on it (X, Y, Houses, Radius, Seed, Shapes), and Scatter: things sown over it by a rule (Kind, Shapes, Density, Size, MinHeight, MaxHeight, MaxSlope, Cover, Patch, Clumps, Seed, Blocks, Biome, and Graph, a rule of its own: LibraryScatter of SceneSower starts one). Each takes the things before it (Under) and gives them with its own.
 
 A block turned off lets what comes to it through. Any Service may add steps of its own: blocks of the kind world, declared to Blueprints in $Provides as these are, a land in and a land out, or things in and things out. The blocks of a generator (numbers, parameters) are there too, for the numbers of the steps.
@@ -42,4 +42,4 @@ The same functions run in Node: they read no page.
 - [makes the objects of the World of a ground in the scene, marked in the tree, not saved: they come again of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-editor.test.js#L746) — `tests/regression/library-scene-editor.test.js`
 - [preloads the globe of a planet into the store of the browser, and a scene of it takes it from there at once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene-landing.test.js#L162) — `tests/regression/library-scene-landing.test.js`
 
-+46 more in the same files
++47 more in the same files

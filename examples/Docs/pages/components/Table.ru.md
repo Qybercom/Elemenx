@@ -100,4 +100,4 @@
 - [table sorts, selects and opens rows](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4311) — `tests/examples/ui-kit.spec.js`
 - [tables fit their container without a horizontal scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5293) — `tests/examples/ui-kit.spec.js`
 - [carries a Service told whole: every method of it and the data of its list Carried, not the caches it fills](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Workers/Workers.test.js#L145) — `libraries/ElemenxCommon/services/Workers/Workers.test.js`
-- [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L415) — `tests/regression/server.test.js`
+- [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L418) — `tests/regression/server.test.js`

@@ -24,7 +24,8 @@
  * death ({ID, By}).
  */
 Elemenx.Component('GameStrategy', {
-	$Template: '<canvas class="elemenx-game-strategy" aria-hidden="true"></canvas>',
+	/* Its name for screen readers (Label): a picture of that name; with none it is hidden from them (regression: Label was read nowhere). */
+	$Template: '<canvas class="elemenx-game-strategy" [attribute.role]="Label ? \'img\' : null" [attribute.aria-label]="Label || null" [attribute.aria-hidden]="Label ? null : \'true\'"></canvas>',
 	$Traits: ['SceneBehaviour'],
 	$Meta: {
 		Group: 'game',

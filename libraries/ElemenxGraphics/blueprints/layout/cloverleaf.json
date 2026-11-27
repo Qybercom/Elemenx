@@ -1,0 +1,48 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "cloverleaf",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "cloverleaf-input-frame",
+			"type": "Input",
+			"x": 40,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Frame"
+				}
+			]
+		},
+		{
+			"id": "cloverleaf-form",
+			"type": "Cloverleaf",
+			"x": 280,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "cloverleaf-layout",
+			"type": "Layout",
+			"x": 520,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "cloverleaf-link-0",
+			"p1": "cloverleaf-input-frame-out-Value",
+			"p2": "cloverleaf-form-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "cloverleaf-link-1",
+			"p1": "cloverleaf-form-out-Layout",
+			"p2": "cloverleaf-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}

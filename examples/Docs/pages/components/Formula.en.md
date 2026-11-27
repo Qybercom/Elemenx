@@ -35,4 +35,4 @@ A formula written as in LaTeX (the part the Formulas Service reads: fractions, r
 - [makes its ground of the graphs of its Terrain (Graphs, as a world gives them), and of the library's again with none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/terrain-sketch.test.js#L224) — `tests/regression/terrain-sketch.test.js`
 - [computes what a formula reads once in a branch only when that branch is taken](https://github.com/Qybercom/Elemenx/blob/main/libraries/ElemenxCommon/services/Geometry/Geometry.test.js#L214) — `libraries/ElemenxCommon/services/Geometry/Geometry.test.js`
 
-+8 more in the same files
++11 more in the same files

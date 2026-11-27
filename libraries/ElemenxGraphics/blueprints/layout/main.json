@@ -1,0 +1,154 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "main",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "main-input-item",
+			"type": "Input",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Item"
+				}
+			]
+		},
+		{
+			"id": "main-input-others",
+			"type": "Input",
+			"x": 40,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Others"
+				}
+			]
+		},
+		{
+			"id": "main-input-kind",
+			"type": "Input",
+			"x": 40,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "main-input-sizes",
+			"type": "Input",
+			"x": 40,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Sizes"
+				}
+			]
+		},
+		{
+			"id": "main-area",
+			"type": "Area",
+			"x": 280,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "main-drawn",
+			"type": "Drawn",
+			"x": 520,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "main-main",
+			"type": "Main",
+			"x": 760,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "main-lots",
+			"type": "Lots",
+			"x": 1000,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "main-walls",
+			"type": "Walls",
+			"x": 1240,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "main-layout",
+			"type": "Layout",
+			"x": 1480,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "main-link-0",
+			"p1": "main-input-item-out-Value",
+			"p2": "main-area-in-Item",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-1",
+			"p1": "main-input-others-out-Value",
+			"p2": "main-area-in-Others",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-2",
+			"p1": "main-input-kind-out-Value",
+			"p2": "main-area-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-3",
+			"p1": "main-input-sizes-out-Value",
+			"p2": "main-area-in-Sizes",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-4",
+			"p1": "main-area-out-Layout",
+			"p2": "main-drawn-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-5",
+			"p1": "main-drawn-out-Layout",
+			"p2": "main-main-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-6",
+			"p1": "main-main-out-Layout",
+			"p2": "main-lots-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-7",
+			"p1": "main-lots-out-Layout",
+			"p2": "main-walls-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "main-link-8",
+			"p1": "main-walls-out-Layout",
+			"p2": "main-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}

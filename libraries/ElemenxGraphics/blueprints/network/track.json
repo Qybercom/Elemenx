@@ -1,0 +1,176 @@
+{
+	"version": 1,
+	"type": "network",
+	"name": "track",
+	"parameters": [
+		{
+			"key": "Seed",
+			"type": "text",
+			"value": "track",
+			"comment": "Seed"
+		},
+		{
+			"key": "Corners",
+			"type": "float",
+			"value": 0,
+			"comment": "Bends (0: 9 to 14 of the seed)"
+		},
+		{
+			"key": "Wild",
+			"type": "float",
+			"value": 0.55,
+			"comment": "How far it strays from a round"
+		},
+		{
+			"key": "Length",
+			"type": "float",
+			"value": 2400,
+			"comment": "The way round, metres"
+		}
+	],
+	"blocks": [
+		{
+			"id": "track-p-seed",
+			"type": "Parameter",
+			"x": 40,
+			"y": 60,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Seed"
+				},
+				{
+					"key": "Type",
+					"value": "text"
+				}
+			]
+		},
+		{
+			"id": "track-p-corners",
+			"type": "Parameter",
+			"x": 40,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Corners"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "track-p-wild",
+			"type": "Parameter",
+			"x": 40,
+			"y": 260,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Wild"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "track-p-length",
+			"type": "Parameter",
+			"x": 40,
+			"y": 360,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Length"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "track-ring",
+			"type": "Ring",
+			"x": 300,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Of",
+					"value": "random"
+				}
+			]
+		},
+		{
+			"id": "track-fit",
+			"type": "Fit",
+			"x": 540,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Step",
+					"value": 6
+				},
+				{
+					"key": "Places",
+					"value": 2
+				}
+			]
+		},
+		{
+			"id": "track-network",
+			"type": "Network",
+			"x": 780,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "track-link-0",
+			"p1": "track-p-seed-out-Value",
+			"p2": "track-ring-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "track-link-1",
+			"p1": "track-p-corners-out-Value",
+			"p2": "track-ring-in-Corners",
+			"kind": "value"
+		},
+		{
+			"id": "track-link-2",
+			"p1": "track-p-wild-out-Value",
+			"p2": "track-ring-in-Wild",
+			"kind": "value"
+		},
+		{
+			"id": "track-link-3",
+			"p1": "track-p-length-out-Value",
+			"p2": "track-ring-in-Length",
+			"kind": "value"
+		},
+		{
+			"id": "track-link-4",
+			"p1": "track-ring-out-Network",
+			"p2": "track-fit-in-Network",
+			"kind": "value"
+		},
+		{
+			"id": "track-link-5",
+			"p1": "track-p-length-out-Value",
+			"p2": "track-fit-in-Length",
+			"kind": "value"
+		},
+		{
+			"id": "track-link-6",
+			"p1": "track-fit-out-Network",
+			"p2": "track-network-in-Network",
+			"kind": "value"
+		}
+	]
+}

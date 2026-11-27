@@ -1827,12 +1827,22 @@ describe('Contract: SceneLanding, a ship that comes down to a planet and goes up
 		expect(stormy.Rain).toBeGreaterThan(driest.Over.Rain + 0.4);
 		expect(stormy.Cover).toBeGreaterThan(driest.Over.Cover + 0.3);
 
-		/* Its map baked again of it (InfluencesGLSL): the cloud the storm makes seen from space, as the forecast there tells. */
+		/*
+		 * Its map baked again of it (InfluencesGLSL): the cloud the storm makes seen from space, as the forecast there tells.
+		 * Regression: so many frames and no more; frames as fast as they are now (planetBase made once a frame) ended before the
+		 * card had made the program of the storm: frames till its map shows it.
+		 */
+		var seen = 0;
+
 		inner.Time += 3 / 24;
 
-		frames(14);
+		await waitFor(function () {
+			frames(1);
 
-		var seen = face(4)[(driest.Y * 256 + driest.X) * 4] / 255;
+			seen = face(4)[(driest.Y * 256 + driest.X) * 4] / 255;
+
+			return seen > driest.Over.Cover + 0.3;
+		}, 20000).catch(function () {});
 
 		inner.Time -= 3 / 24;
 

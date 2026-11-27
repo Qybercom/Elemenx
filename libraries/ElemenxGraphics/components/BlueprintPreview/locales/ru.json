@@ -1,0 +1,13 @@
+{
+	"graphics": {
+		"blueprintPreview": {
+			"label": "Что даёт граф",
+			"points": "Точек: {count}",
+			"none": "Граф вида {kind} здесь не рисуется",
+			"failed": "Граф не строится: {error}",
+			"ways": "Путей: {count}",
+			"layout": "Линий: {lines}, зданий: {boxes}",
+			"image": "{width} на {height} пикселей"
+		}
+	}
+}

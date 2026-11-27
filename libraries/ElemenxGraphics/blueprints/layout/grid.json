@@ -1,0 +1,154 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "grid",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "grid-input-item",
+			"type": "Input",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Item"
+				}
+			]
+		},
+		{
+			"id": "grid-input-others",
+			"type": "Input",
+			"x": 40,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Others"
+				}
+			]
+		},
+		{
+			"id": "grid-input-kind",
+			"type": "Input",
+			"x": 40,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "grid-input-sizes",
+			"type": "Input",
+			"x": 40,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Sizes"
+				}
+			]
+		},
+		{
+			"id": "grid-area",
+			"type": "Area",
+			"x": 280,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "grid-drawn",
+			"type": "Drawn",
+			"x": 520,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "grid-grid",
+			"type": "Grid",
+			"x": 760,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "grid-lots",
+			"type": "Lots",
+			"x": 1000,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "grid-walls",
+			"type": "Walls",
+			"x": 1240,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "grid-layout",
+			"type": "Layout",
+			"x": 1480,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "grid-link-0",
+			"p1": "grid-input-item-out-Value",
+			"p2": "grid-area-in-Item",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-1",
+			"p1": "grid-input-others-out-Value",
+			"p2": "grid-area-in-Others",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-2",
+			"p1": "grid-input-kind-out-Value",
+			"p2": "grid-area-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-3",
+			"p1": "grid-input-sizes-out-Value",
+			"p2": "grid-area-in-Sizes",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-4",
+			"p1": "grid-area-out-Layout",
+			"p2": "grid-drawn-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-5",
+			"p1": "grid-drawn-out-Layout",
+			"p2": "grid-grid-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-6",
+			"p1": "grid-grid-out-Layout",
+			"p2": "grid-lots-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-7",
+			"p1": "grid-lots-out-Layout",
+			"p2": "grid-walls-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "grid-link-8",
+			"p1": "grid-walls-out-Layout",
+			"p2": "grid-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}

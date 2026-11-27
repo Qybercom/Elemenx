@@ -1,0 +1,132 @@
+{
+	"version": 1,
+	"type": "image",
+	"name": "bark",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "bark-input-preset",
+			"type": "Input",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Preset"
+				}
+			]
+		},
+		{
+			"id": "bark-input-u",
+			"type": "Input",
+			"x": 40,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "U"
+				}
+			]
+		},
+		{
+			"id": "bark-input-v",
+			"type": "Input",
+			"x": 40,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "V"
+				}
+			]
+		},
+		{
+			"id": "bark-bark",
+			"type": "Bark",
+			"x": 280,
+			"y": 140,
+			"properties": []
+		},
+		{
+			"id": "bark-color",
+			"type": "Combine",
+			"x": 520,
+			"y": 100,
+			"properties": []
+		},
+		{
+			"id": "bark-image",
+			"type": "Image",
+			"x": 760,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Width",
+					"value": 256
+				},
+				{
+					"key": "Height",
+					"value": 1024
+				},
+				{
+					"key": "Strength",
+					"value": 2.5
+				},
+				{
+					"key": "Wrap",
+					"value": true
+				}
+			]
+		}
+	],
+	"links": [
+		{
+			"id": "bark-link-0",
+			"p1": "bark-input-preset-out-Value",
+			"p2": "bark-bark-in-Preset",
+			"kind": "value"
+		},
+		{
+			"id": "bark-link-1",
+			"p1": "bark-input-u-out-Value",
+			"p2": "bark-bark-in-U",
+			"kind": "value"
+		},
+		{
+			"id": "bark-link-2",
+			"p1": "bark-input-v-out-Value",
+			"p2": "bark-bark-in-V",
+			"kind": "value"
+		},
+		{
+			"id": "bark-link-3",
+			"p1": "bark-bark-out-R",
+			"p2": "bark-color-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "bark-link-4",
+			"p1": "bark-bark-out-G",
+			"p2": "bark-color-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "bark-link-5",
+			"p1": "bark-bark-out-B",
+			"p2": "bark-color-in-Z",
+			"kind": "value"
+		},
+		{
+			"id": "bark-link-6",
+			"p1": "bark-color-out-XYZW",
+			"p2": "bark-image-in-Color",
+			"kind": "value"
+		},
+		{
+			"id": "bark-link-7",
+			"p1": "bark-bark-out-Bump",
+			"p2": "bark-image-in-Bump",
+			"kind": "value"
+		}
+	]
+}

@@ -197,7 +197,7 @@ Available() — true в нативной программе, Platform() — 'ele
 
 ## Тесты
 
-- [is what the Platform Service asks: its handlers in the program, the rest as on the web](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/android-bridge.test.js#L74) — `tests/regression/android-bridge.test.js`
+- [is what the Platform Service asks: its handlers in the program, the rest as on the web](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/android-bridge.test.js#L121) — `tests/regression/android-bridge.test.js`
 - [opens files with the picker of its web view, the bridge having no handler for them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-mobile.test.js#L49) — `tests/regression/native-mobile.test.js`
 - [saves a text or a binary file in the Documents of the device and gives its path](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-mobile.test.js#L73) — `tests/regression/native-mobile.test.js`
 - [hides the screen of the system once the page shows, with @capacitor/splash-screen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-mobile.test.js#L102) — `tests/regression/native-mobile.test.js`
@@ -210,4 +210,4 @@ Available() — true в нативной программе, Platform() — 'ele
 - [draws a card of a Component of its own, as an invitation to a call: over the limit, its sound until it goes, its choice told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-notify.test.js#L284) — `tests/regression/native-notify.test.js`
 - [needs a title or a text](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-notify.test.js#L333) — `tests/regression/native-notify.test.js`
 
-+22 ещё в тех же файлах
++23 ещё в тех же файлах

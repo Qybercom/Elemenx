@@ -16,6 +16,10 @@
  *   KHR_materials_clearcoat, KHR_materials_emissive_strength, EXT_meshopt_compression
  *   (Meshopt(mode, source, count, stride, filter) decodes one buffer); a file that requires another is refused:
  *   'Elemenx Gltf: extension <name> is not supported'.
+ * - A file of another is read with care: an accessor that reads past its buffer view, an index past the vertices, a node
+ *   that is a child twice or of itself (a cycle), a meshopt stream of a wrong stride, are errors ('Elemenx Gltf: ...');
+ *   an accessor with no buffer view holds MaxValues numbers at most (16 777 216; options MaxValues of Parse), a meshopt
+ *   buffer MaxBytes (1 GB; options MaxBytes).
  * The same functions run in Node: they read no page, but for the pictures of Load.
  */
 Elemenx.Service('Gltf', {
@@ -23,6 +27,11 @@ Elemenx.Service('Gltf', {
 		Description: 'glTF 2.0 and GLB: meshes, materials, skins and animations of the models other programs make.',
 		Methods: ['Parse(data, callback, options)', 'Load(url, callback)', 'Write(asset, options)', 'Meshopt(mode, source, count, stride, filter)']
 	},
+
+	/* What a file may ask for at most (options MaxValues, MaxBytes of Parse): the numbers of an accessor of no buffer, the bytes a meshopt buffer unpacks to. */
+	MaxValues: 16777216,
+
+	MaxBytes: 1073741824,
 
 	Supported: ['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_unlit', 'KHR_materials_specular', 'KHR_materials_clearcoat', 'KHR_materials_emissive_strength', 'KHR_materials_transmission', 'KHR_materials_pbrSpecularGlossiness', 'EXT_meshopt_compression'],
 
@@ -131,7 +140,18 @@ Elemenx.Service('Gltf', {
 			callback(null, buffers);
 
 		names.forEach(function (name) {
-			self.Fetch(self.Beside(url, name), function (error, file) {
+			var address = self.Beside(url, name);
+
+			if (!address) {
+				if (left > 0)
+					callback(new Error('Elemenx Gltf: a buffer of a scheme not of http: ' + name), null);
+
+				left = -1;
+
+				return;
+			}
+
+			self.Fetch(address, function (error, file) {
 				if (error && left > 0) {
 					left = -1;
 
@@ -149,8 +169,15 @@ Elemenx.Service('Gltf', {
 		});
 	},
 
+	/*
+	 * A file a .gltf names, beside it: its path, or an address of http or https; none of another scheme (javascript:, file:,
+	 * blob:), null. Regression: a file of another set any address of any scheme to the pictures of the page.
+	 */
 	Beside: function (url, name) {
-		return /^[a-z]+:|^\//i.test(name) ? name : url.replace(/[^/]*$/, '') + name;
+		if (/^[a-z][a-z0-9+.-]*:/i.test(name))
+			return /^https?:/i.test(name) ? name : null;
+
+		return /^\//.test(name) ? name : url.replace(/[^/]*$/, '') + name;
 	},
 
 	/* The pictures as elements of the page, each with its mean color; nothing where there is no page. */
@@ -199,6 +226,12 @@ Elemenx.Service('Gltf', {
 
 			var picture = new Image();
 			var address = image.Data ? URL.createObjectURL(new Blob([image.Data], {type: image.Type || 'image/png'})) : self.Beside(url, image.URI);
+
+			if (!address) {
+				finished();
+
+				return;
+			}
 
 			picture.crossOrigin = 'anonymous';
 
@@ -613,11 +646,17 @@ Elemenx.Service('Gltf', {
 
 	Read: function (data, options) {
 		var self = this;
-		var chunks = this.Chunks(data);
-		var json = chunks.Json;
+		var chunks;
+		var json;
 		var buffers;
 		var views;
 		var asset;
+
+		this.Limits = {Values: Number(options.MaxValues) > 0 ? Number(options.MaxValues) : this.MaxValues, Bytes: Number(options.MaxBytes) > 0 ? Number(options.MaxBytes) : this.MaxBytes};
+
+		chunks = this.Chunks(data);
+		json = chunks.Json;
+
 		if (!json.asset || String(json.asset.version).charAt(0) !== '2')
 			throw new Error('Elemenx Gltf: only glTF 2 is read');
 
@@ -681,10 +720,32 @@ Elemenx.Service('Gltf', {
 			return self.Node(node);
 		});
 
+		/*
+		 * Each node a child of one node at most, never of itself nor of its own children. Regression: a node listed twice
+		 * (children [1, 1] all the way down) was walked 2^n times, a cycle without end; the page hung.
+		 */
 		asset.Nodes.forEach(function (node, index) {
 			node.Children.forEach(function (child) {
+				if (child !== Math.floor(child) || child < 0 || child >= asset.Nodes.length)
+					throw new Error('Elemenx Gltf: node ' + index + ' has a child ' + child + ' that is not a node');
+
+				if (asset.Nodes[child].Parent !== -1 || child === index)
+					throw new Error('Elemenx Gltf: node ' + child + ' is a child twice');
+
 				asset.Nodes[child].Parent = index;
 			});
+		});
+
+		asset.Nodes.forEach(function (node, index) {
+			var up = node.Parent;
+			var steps = 0;
+
+			while (up !== -1) {
+				if (++steps > asset.Nodes.length)
+					throw new Error('Elemenx Gltf: node ' + index + ' is in a cycle of nodes');
+
+				up = asset.Nodes[up].Parent;
+			}
 		});
 
 		asset.Skins = (json.skins || []).map(function (skin) {
@@ -829,7 +890,7 @@ Elemenx.Service('Gltf', {
 		var sizes = {SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT2: 4, MAT3: 9, MAT4: 16};
 		var size = sizes[accessor.type];
 		var count = accessor.count;
-		var values = new Float32Array(count * size);
+		var values;
 		var kinds = {5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4};
 		var bytes = kinds[accessor.componentType];
 		var view = accessor.bufferView === undefined ? null : json.bufferViews[accessor.bufferView];
@@ -841,8 +902,25 @@ Elemenx.Service('Gltf', {
 		var j;
 		var at;
 
+		var limits = this.Limits || {Values: this.MaxValues};
+
 		if (accessor.sparse)
 			throw new Error('Elemenx Gltf: sparse accessors are not read');
+
+		/*
+		 * Its numbers within what it reads. Regression: a count of 150 million in a file of 200 bytes made gigabytes of floats
+		 * before anything failed, and a view too short failed as a RangeError of a DataView.
+		 */
+		if (!size || !bytes || typeof count !== 'number' || count !== Math.floor(count) || count < 0)
+			throw new Error('Elemenx Gltf: accessor ' + index + ' is not of a known type, component or count');
+
+		if (data && count > 0 && offset + (count - 1) * stride + bytes * size > data.byteLength)
+			throw new Error('Elemenx Gltf: accessor ' + index + ' reads past its buffer view');
+
+		if (!data && count * size > limits.Values)
+			throw new Error('Elemenx Gltf: accessor ' + index + ' of no buffer holds more than ' + limits.Values + ' numbers (MaxValues)');
+
+		values = new Float32Array(count * size);
 
 		if (data) {
 			reader = new DataView(data.buffer, data.byteOffset, data.byteLength);
@@ -911,6 +989,11 @@ Elemenx.Service('Gltf', {
 
 		if (primitive.indices !== undefined) {
 			geometry.Indices = Array.prototype.slice.call(this.Accessor(json, views, primitive.indices).Values);
+
+			for (i = 0; i < geometry.Indices.length; i++) {
+				if (geometry.Indices[i] >= count)
+					throw new Error('Elemenx Gltf: an index ' + geometry.Indices[i] + ' is past the ' + count + ' vertices');
+			}
 		}
 		else {
 			geometry.Indices = [];
@@ -1086,7 +1169,23 @@ Elemenx.Service('Gltf', {
 	 * size, filter NONE, OCTAHEDRAL, QUATERNION or EXPONENTIAL. Returns a Uint8Array of count * stride bytes.
 	 */
 	Meshopt: function (mode, source, count, stride, filter) {
-		var result = new Uint8Array(count * stride);
+		var most = this.Limits ? this.Limits.Bytes : this.MaxBytes;
+		var result;
+
+		/*
+		 * A stride the format allows (attributes: 4 to 256, a multiple of 4; indices: 2 or 4), a count of what it can hold.
+		 * Regression: a stride of 0 or over 512 made the step 0, and the decoding went on without end.
+		 */
+		if (typeof count !== 'number' || count !== Math.floor(count) || count < 0)
+			throw new Error('Elemenx Gltf: a meshopt count ' + count + ' is not a count');
+
+		if (mode === 'ATTRIBUTES' ? !(stride >= 4 && stride <= 256 && stride % 4 === 0) : stride !== 2 && stride !== 4)
+			throw new Error('Elemenx Gltf: a meshopt stride ' + stride + ' is not one of ' + mode);
+
+		if (count * stride > most)
+			throw new Error('Elemenx Gltf: a meshopt buffer of more than ' + most + ' bytes (MaxBytes)');
+
+		result = new Uint8Array(count * stride);
 
 		if (mode === 'ATTRIBUTES') this.MeshoptAttributes(source, result, count, stride);
 		else if (mode === 'TRIANGLES') this.MeshoptTriangles(source, result, count, stride);

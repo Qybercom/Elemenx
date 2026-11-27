@@ -5,6 +5,9 @@
  * - Register(name, format) adds a format of the Application (or replaces one): {Parse(text, options),
  *   Stringify(value, options), Extensions: ['.ext'], Mime, Label}. Find(name) returns one, Names() lists them,
  *   For(file) the name of the format of a file name (by its extension) or of a type of MIME, or null.
+ * - A text of another is read with care: a key __proto__ is a key of its own, never the prototype of objects; lists,
+ *   tables and elements go MaxDepth deep at most (1000; options MaxDepth: TOML, XML), the aliases of YAML stand for
+ *   MaxNodes values at most (1 000 000; options MaxNodes); past them an error that names the place.
  * Built in, with their options:
  * - json: Indent (2) for Stringify; jsonc reads comments and trailing commas too.
  * - yaml (yml), YAML 1.2 of the core schema: block and flow collections, plain, quoted and block scalars (| and >,
@@ -26,6 +29,29 @@ Elemenx.Service('DataFormats', {
 	$Meta: {
 		Description: 'The formats of data and of files: JSON, YAML, CSV, INI, TOML, XML, query strings and Base64 read and written, and formats of your own.',
 		Methods: ['Parse(name, text, options)', 'Stringify(name, value, options)', 'Register(name, format)', 'Find(name)', 'Names()', 'For(file)']
+	},
+
+	/*
+	 * A key of a text read kept as a key of its own, whatever its name. Regression: a key __proto__ ([__proto__] of INI,
+	 * __proto__[a]=1 of a query, __proto__.a of TOML, __proto__: of YAML) was written into the prototype of all objects of
+	 * the page, or became the prototype of the result.
+	 */
+	Keep: function (object, key, value) {
+		if (key === '__proto__') Object.defineProperty(object, key, {value: value, writable: true, enumerable: true, configurable: true});
+		else object[key] = value;
+
+		return value;
+	},
+
+	/* How deep the lists, tables and elements of a text go at most (options MaxDepth of Parse: TOML, XML). */
+	MaxDepth: 1000,
+
+	/* How many values the aliases of a YAML text stand for at most (options MaxNodes of Parse). */
+	MaxNodes: 1000000,
+
+	/* What an object holds itself at a key (undefined for what it only inherits: constructor, __proto__). */
+	OwnValue: function (object, key) {
+		return Object.prototype.hasOwnProperty.call(object, key) ? object[key] : undefined;
 	},
 
 	$OnCreate: function () {
@@ -64,13 +90,13 @@ Elemenx.Service('DataFormats', {
 		}, Stringify: function (value) {
 			return self.IniWrite(value);
 		}});
-		this.Register('toml', {Label: 'TOML', Extensions: ['.toml'], Mime: 'application/toml', Parse: function (text) {
-			return self.Toml(text);
+		this.Register('toml', {Label: 'TOML', Extensions: ['.toml'], Mime: 'application/toml', Parse: function (text, options) {
+			return self.Toml(text, options || {});
 		}, Stringify: function (value) {
 			return self.TomlWrite(value);
 		}});
-		this.Register('xml', {Label: 'XML', Extensions: ['.xml', '.svg', '.xhtml'], Mime: 'application/xml', Parse: function (text) {
-			return self.Xml(text);
+		this.Register('xml', {Label: 'XML', Extensions: ['.xml', '.svg', '.xhtml'], Mime: 'application/xml', Parse: function (text, options) {
+			return self.Xml(text, options || {});
 		}, Stringify: function (value, options) {
 			return self.XmlWrite(value, options || {});
 		}});
@@ -263,10 +289,45 @@ Elemenx.Service('DataFormats', {
 
 	/* YAML: the document, or with All every document of the text. */
 	Yaml: function (text, options) {
+		var keep = this.Keep;
 		var source = String(text).replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '');
 		var documents = [];
 		var anchors = {};
 		var lines;
+		var most = options && Number(options.MaxNodes) > 0 ? Number(options.MaxNodes) : this.MaxNodes;
+		var expanded = 0;
+		var sizes = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+		/* The values a value stands for, all of its own counted (an alias in it, once more each time). */
+		function sizeOf (value) {
+			var size = 1;
+
+			if (!value || typeof value !== 'object') return 1;
+
+			if (sizes && sizes.has(value)) return sizes.get(value);
+
+			Object.keys(value).forEach(function (key) {
+				size += sizeOf(value[key]);
+			});
+
+			if (sizes)
+				sizes.set(value, size);
+
+			return size;
+		}
+
+		/*
+		 * An alias counted as all it stands for: no more than most of them in a text. Regression: nine anchors of nine aliases
+		 * each were read at once, then a billion values hung whatever walked them (Stringify, JSON).
+		 */
+		function alias (value, line, column) {
+			expanded += sizeOf(value);
+
+			if (expanded > most)
+				throw fail(line, column, 'the aliases stand for more than ' + most + ' values');
+
+			return value;
+		}
 
 		function fail (line, column, message) {
 			var error = new Error('Elemenx DataFormats yaml: line ' + line + ', column ' + column + ': ' + message);
@@ -384,7 +445,7 @@ Elemenx.Service('DataFormats', {
 				if (!Object.prototype.hasOwnProperty.call(anchors, match[1]))
 					throw fail(line, column, 'no anchor &' + match[1]);
 
-				return anchors[match[1]];
+				return alias(anchors[match[1]], line, column);
 			}
 
 			return read(text);
@@ -486,10 +547,11 @@ Elemenx.Service('DataFormats', {
 
 						if (text.charAt(at) === ':') {
 							at++;
-							map[key] = entry();
+
+							keep(map, key, entry());
 						}
 						else {
-							map[key] = null;
+							keep(map, key, null);
 						}
 
 						space();
@@ -894,7 +956,8 @@ Elemenx.Service('DataFormats', {
 						throw fail(current.Number, current.Indent + 1, 'the key ' + pair.Key + ' is there twice');
 
 					seen[pair.Key] = true;
-					map[pair.Key] = result.Value;
+
+					keep(map, pair.Key, result.Value);
 				}
 
 				k = result.Next;
@@ -1179,12 +1242,12 @@ Elemenx.Service('DataFormats', {
 
 			if ((match = /^\[([^\]]+)\]$/.exec(line))) {
 				section = match[1].split('.').reduce(function (place, name) {
+					var held;
+
 					name = name.trim();
+					held = self.OwnValue(place, name);
 
-					if (!place[name] || typeof place[name] !== 'object')
-						place[name] = {};
-
-					return place[name];
+					return held && typeof held === 'object' ? held : self.Keep(place, name, {});
 				}, result);
 
 				return;
@@ -1204,7 +1267,7 @@ Elemenx.Service('DataFormats', {
 				value = self.Typed(value);
 			}
 
-			section[match[1]] = value;
+			self.Keep(section, match[1], value);
 		});
 
 		return result;
@@ -1240,8 +1303,10 @@ Elemenx.Service('DataFormats', {
 		return lines.join('\n').replace(/^\n/, '') + '\n';
 	},
 
-	Toml: function (text) {
+	Toml: function (text, options) {
 		var self = this;
+		var most = options && Number(options.MaxDepth) > 0 ? Number(options.MaxDepth) : this.MaxDepth;
+		var depth = 0;
 		var source = String(text).replace(/\r\n?/g, '\n');
 		var result = {};
 		var table = result;
@@ -1371,7 +1436,20 @@ Elemenx.Service('DataFormats', {
 			});
 		}
 
+		/* A value, as deep as most at the deepest. Regression: 20 000 [ made a RangeError of the stack, not an error of the text. */
 		function value () {
+			var made;
+
+			if (++depth > most)
+				throw fail('lists and tables nested deeper than ' + most);
+
+			made = read();
+			depth--;
+
+			return made;
+		}
+
+		function read () {
 			var c = source.charAt(at);
 			var match;
 			var tail = source.substring(at);
@@ -1481,19 +1559,20 @@ Elemenx.Service('DataFormats', {
 			var last = path[path.length - 1];
 
 			path.slice(0, -1).forEach(function (name) {
-				if (place[name] === undefined)
-					place[name] = {};
+				var held = self.OwnValue(place, name);
+				if (held === undefined)
+					held = self.Keep(place, name, {});
 
-				if (typeof place[name] !== 'object' || Array.isArray(place[name]))
+				if (typeof held !== 'object' || Array.isArray(held))
 					throw fail('the key ' + name + ' is not a table');
 
-				place = place[name];
+				place = held;
 			});
 
 			if (Object.prototype.hasOwnProperty.call(place, last))
 				throw fail('the key ' + path.join('.') + ' is there twice');
 
-			place[last] = item;
+			self.Keep(place, last, item);
 		}
 
 		/* The table at a header path (an array of tables: its last one; a new one with push). */
@@ -1502,25 +1581,26 @@ Elemenx.Service('DataFormats', {
 
 			path.forEach(function (name, index) {
 				var last = index === path.length - 1;
+				var held = self.OwnValue(place, name);
 
 				if (last && push) {
-					if (place[name] === undefined)
-						place[name] = [];
+					if (held === undefined)
+						held = self.Keep(place, name, []);
 
-					if (!Array.isArray(place[name]))
+					if (!Array.isArray(held))
 						throw fail('the key ' + name + ' is not an array of tables');
 
-					place[name].push({});
+					held.push({});
 
-					place = place[name][place[name].length - 1];
+					place = held[held.length - 1];
 
 					return;
 				}
 
-				if (place[name] === undefined)
-					place[name] = {};
+				if (held === undefined)
+					held = self.Keep(place, name, {});
 
-				place = Array.isArray(place[name]) ? place[name][place[name].length - 1] : place[name];
+				place = Array.isArray(held) ? held[held.length - 1] : held;
 
 				if (typeof place !== 'object')
 					throw fail('the key ' + name + ' is not a table');
@@ -1551,10 +1631,10 @@ Elemenx.Service('DataFormats', {
 				at += push ? 2 : 1;
 
 				if (!push) {
-					if (defined[header.join('.')])
+					if (self.OwnValue(defined, header.join('.')))
 						throw fail('the table ' + header.join('.') + ' is there twice');
 
-					defined[header.join('.')] = true;
+					self.Keep(defined, header.join('.'), true);
 				}
 
 				table = open(header, push);
@@ -1655,8 +1735,10 @@ Elemenx.Service('DataFormats', {
 		return lines.join('\n').replace(/^\n/, '') + '\n';
 	},
 
-	Xml: function (text) {
+	Xml: function (text, options) {
 		var self = this;
+		var most = options && Number(options.MaxDepth) > 0 ? Number(options.MaxDepth) : this.MaxDepth;
+		var depth = 0;
 		var source = String(text);
 		var at = 0;
 		var root = null;
@@ -1728,7 +1810,7 @@ Elemenx.Service('DataFormats', {
 				var attribute = /^\s+([A-Za-z_][\w.:-]*)\s*=\s*("([^"]*)"|'([^']*)')/.exec(source.substring(at));
 				if (!attribute) break;
 
-				node.Attributes[attribute[1]] = entities(attribute[3] !== undefined ? attribute[3] : attribute[4]);
+				self.Keep(node.Attributes, attribute[1], entities(attribute[3] !== undefined ? attribute[3] : attribute[4]));
 
 				at += attribute[0].length;
 			}
@@ -1779,7 +1861,13 @@ Elemenx.Service('DataFormats', {
 					break;
 				}
 
+				/* As deep as most at the deepest. Regression: 20 000 <a> made a RangeError of the stack, not an error of the text. */
+				if (++depth > most)
+					throw fail('elements nested deeper than ' + most);
+
 				node.Children.push(element());
+
+				depth--;
 			}
 
 			/*
@@ -1858,6 +1946,7 @@ Elemenx.Service('DataFormats', {
 	},
 
 	Query: function (text) {
+		var self = this;
 		var result = {};
 
 		String(text).replace(/^[?#]/, '').split('&').forEach(function (pair) {
@@ -1882,15 +1971,12 @@ Elemenx.Service('DataFormats', {
 				if (last) {
 					if (part === '' && Array.isArray(place)) place.push(value);
 					else if (Object.prototype.hasOwnProperty.call(place, part)) place[part] = [].concat(place[part], value);
-					else place[part] = value;
+					else self.Keep(place, part, value);
 
 					return;
 				}
 
-				if (place[part] === undefined)
-					place[part] = nextPart === '' ? [] : {};
-
-				place = place[part];
+				place = self.OwnValue(place, part) === undefined ? self.Keep(place, part, nextPart === '' ? [] : {}) : place[part];
 			});
 		});
 

@@ -177,6 +177,9 @@ describe('Contract: SSR in Node: a page rendered as a server sends it, its marku
 		expect(built).not.toContain('data-elemenx-ssr');
 		expect(Prerender.Links('<a href="/a">a</a><a href="/a/">a</a><a href="/b.css">b</a><a href="/c?d#e">c</a>', '/')).toEqual(['/a', '/c']);
 
+		/* Regression: a link /../../outside wrote outside.html outside the build; one of \ of Windows too. */
+		expect(Prerender.Links('<a href="/../../outside">o</a><a href="/x/../y">y</a><a href="/..\\..\\win">w</a>', '/')).toEqual(['/outside', '/y']);
+
 		/* The server sends /items as items.html. */
 		server = Server.Create({Root: folder});
 

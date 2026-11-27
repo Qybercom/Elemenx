@@ -1,0 +1,139 @@
+{
+	"version": 1,
+	"type": "network",
+	"name": "rivers",
+	"parameters": [
+		{
+			"key": "Least",
+			"type": "float",
+			"value": 40,
+			"comment": "What a river drains at the least (cells)"
+		}
+	],
+	"blocks": [
+		{
+			"id": "rivers-input-heights",
+			"type": "Input",
+			"x": 40,
+			"y": 80,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Heights"
+				}
+			]
+		},
+		{
+			"id": "rivers-input-size",
+			"type": "Input",
+			"x": 40,
+			"y": 180,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Size"
+				}
+			]
+		},
+		{
+			"id": "rivers-p-least",
+			"type": "Parameter",
+			"x": 40,
+			"y": 280,
+			"properties": [
+				{
+					"key": "Key",
+					"value": "Least"
+				},
+				{
+					"key": "Type",
+					"value": "float"
+				}
+			]
+		},
+		{
+			"id": "rivers-drainage",
+			"type": "Drainage",
+			"x": 300,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "rivers-smooth",
+			"type": "Smooth",
+			"x": 540,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Rounds",
+					"value": 2
+				},
+				{
+					"key": "Sphere",
+					"value": true
+				}
+			]
+		},
+		{
+			"id": "rivers-round",
+			"type": "Round",
+			"x": 780,
+			"y": 160,
+			"properties": [
+				{
+					"key": "Places",
+					"value": 7
+				},
+				{
+					"key": "Digits",
+					"value": 0
+				}
+			]
+		},
+		{
+			"id": "rivers-network",
+			"type": "Network",
+			"x": 1020,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "rivers-link-0",
+			"p1": "rivers-input-heights-out-Value",
+			"p2": "rivers-drainage-in-Heights",
+			"kind": "value"
+		},
+		{
+			"id": "rivers-link-1",
+			"p1": "rivers-input-size-out-Value",
+			"p2": "rivers-drainage-in-Size",
+			"kind": "value"
+		},
+		{
+			"id": "rivers-link-2",
+			"p1": "rivers-p-least-out-Value",
+			"p2": "rivers-drainage-in-Least",
+			"kind": "value"
+		},
+		{
+			"id": "rivers-link-3",
+			"p1": "rivers-drainage-out-Network",
+			"p2": "rivers-smooth-in-Network",
+			"kind": "value"
+		},
+		{
+			"id": "rivers-link-4",
+			"p1": "rivers-smooth-out-Network",
+			"p2": "rivers-round-in-Network",
+			"kind": "value"
+		},
+		{
+			"id": "rivers-link-5",
+			"p1": "rivers-round-out-Network",
+			"p2": "rivers-network-in-Network",
+			"kind": "value"
+		}
+	]
+}

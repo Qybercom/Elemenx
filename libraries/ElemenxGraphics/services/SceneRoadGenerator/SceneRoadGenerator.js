@@ -7,7 +7,8 @@
  * its tunnels and bridges found). It returns {Seed, Spec, Length, Start: {X, Z, Heading, At}}: Start is on the middle of
  * its longest straight, At metres from the start of its line; of Scenery also Sketch ({Layers} of a world for it: on its
  * line a mountain it goes under, a canyon and a wide valley it goes over, a ridge across it; mountains round it) and Size
- * (of a world that holds it all).
+ * (of a world that holds it all). Graph: its line of a network graph of its own (NetworkBlueprints; blueprints/network/track
+ * of Seed, Corners, Wild and Length by default).
  */
 Elemenx.Service('SceneRoadGenerator', {
 	$Meta: {
@@ -17,36 +18,33 @@ Elemenx.Service('SceneRoadGenerator', {
 
 	Track: function (seed, options) {
 		var settings = options || {};
-		var generator = this.$Service('Random').Create(String(seed === undefined ? 'track' : seed));
-		var random = function () {
-			return generator.Next();
-		};
+		var key = String(seed === undefined ? 'track' : seed);
+		var blueprints = this.$Service('Blueprints');
 		var roads = this.$Service('SceneRoads');
 		var length = Number(settings.Length) > 0 ? Number(settings.Length) : 2400;
-		var corners = Number(settings.Corners) > 2 ? Number(settings.Corners) : 9 + Math.floor(random() * 6);
 		var wild = settings.Wild === undefined ? 0.55 : Number(settings.Wild);
 		var radius = length / (Math.PI * 2);
-		var knots = [];
+		/*
+		 * Its line, a graph of a network (Graph, else blueprints/network/track of NetworkBlueprints): its knots round a
+		 * middle, nearer and farther, so it never crosses itself (Ring), as long as it is asked to be (Fit).
+		 */
+		var way = this.$Service('NetworkBlueprints').Make(settings.Graph || 'ElemenxGraphics/network/track', {Seed: key, Corners: Number(settings.Corners) > 2 ? Number(settings.Corners) : 0, Wild: wild, Length: length}).Ways.filter(function (one) {
+			return one.Closed && one.Points.length > 2;
+		})[0];
+		/* The numbers of the seed after those its line drew. */
+		var drawn = way && way.Values.Draws || 0;
+		var random = function () {
+			return blueprints.Draw(key, drawn++, 'random');
+		};
+		var fit = way && way.Values.Fit || 1;
+		var knots;
 		var line;
-		var total;
-		var fit;
 		var i;
 
-		/* Round a middle, nearer and farther: so it never crosses itself. */
-		for (i = 0; i < corners; i++) {
-			var angle = (i + (random() - 0.5) * 0.5) / corners * Math.PI * 2;
-			var far = radius * (1 + (random() - 0.5) * wild * 1.3);
+		if (!way)
+			throw new Error('Elemenx SceneRoadGenerator: the graph of the track gives no closed way');
 
-			knots.push([Math.cos(angle) * far, Math.sin(angle) * far * (0.7 + wild * 0.2)]);
-		}
-
-		/* As long as it is asked to be. */
-		line = roads.Line(knots, {Closed: true, Step: 6});
-		total = line[line.length - 1].Along + Math.hypot(line[0].X - line[line.length - 1].X, line[0].Z - line[line.length - 1].Z);
-		fit = length / total;
-		knots = knots.map(function (knot) {
-			return [Math.round(knot[0] * fit * 100) / 100, Math.round(knot[1] * fit * 100) / 100];
-		});
+		knots = way.Points;
 		line = roads.Line(knots, {Closed: true, Step: 6});
 
 		/* It starts on the middle of its longest straight. */

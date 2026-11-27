@@ -1,0 +1,13 @@
+{
+	"graphics": {
+		"blueprintPreview": {
+			"label": "What the graph gives",
+			"points": "{count} points",
+			"none": "A graph of the kind {kind} is not drawn here",
+			"failed": "The graph cannot be made: {error}",
+			"ways": "{count} ways",
+			"layout": "{lines} lines, {boxes} buildings",
+			"image": "{width} by {height} pixels"
+		}
+	}
+}

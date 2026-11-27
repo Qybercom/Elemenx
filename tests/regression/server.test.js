@@ -122,6 +122,9 @@ describe('Elemenx production server', function () {
 			await withServer({Root: root}, async function (port) {
 				expect(await get(port, '/ui')).toMatchObject({Status: 301, Location: '/ui/'});
 				expect(await get(port, '/ui?theme=dark')).toMatchObject({Status: 301, Location: '/ui/?theme=dark'});
+
+				/* Regression: //ui went to //ui/, an address of the host ui. */
+				expect(await get(port, '//ui')).toMatchObject({Status: 301, Location: '/ui/'});
 				expect(await get(port, '/ui/')).toMatchObject({Status: 200, Text: '<main>ui</main>'});
 				expect(await get(port, '/ui/settings')).toMatchObject({Status: 200, Text: '<main>ui</main>'});
 				expect(await get(port, '/ui/deep/page')).toMatchObject({Status: 200, Text: '<main>ui</main>'});

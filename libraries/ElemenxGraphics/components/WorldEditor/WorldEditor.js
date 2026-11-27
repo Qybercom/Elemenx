@@ -12,8 +12,12 @@
  * library's back. Its planets have those of planet/ (planet/relief: the option ReliefGraph...), the grounds of its
  * locations those of sketch/ and carve/ (Graphs of their Terrain trait); the scenes of its systems and locations those of
  * shader/ (Graphs of Scene: the bake of a body of noise, the weather of the surfaces of things, the shape of a lightning)
- * and planet/envelope (what lies over and under the surface of their bodies, read by the scene), made again as one of them
- * changes.
+ * and planet/envelope (what lies over and under the surface of their bodies, read by the scene), and cloud/ (the stars of
+ * their skies and nights, the swarms of clusters and the rocks of belts), made again as one of them changes. A tab of a
+ * graph is a Blueprint of its kind; one that makes a thing of data (a cloud, a network, a layout, a picture) has what it gives drawn beside it as it is
+ * changed (BlueprintPreview). network/rivers are the rivers of its planets (their option RiversGraph), layout/ the plans of
+ * the settlements of its locations (grid, main, road, radial, districts: Graphs of their Terrain trait); image/ (the bark
+ * and the leaves of plants), the forms of interchanges and the race track are drawn beside them to be seen.
  * Value is the world: {Name, Galaxy (options of GalaxyData.Make, or its data), Planets ({'star/body': the options of a
  * planet}), Locations ({'star/body/location': a document of SceneEditor}), Resources ({Models, Plants, Cutscenes,
  * Materials}: {ID: {Name, Value}}; a cutscene with its Location too), Graphs ({'planet/relief', 'sketch/river'...: a graph})}. change emits it after
@@ -629,6 +633,10 @@ Elemenx.Component('WorldEditor', {
 				made[name + 'Graph'] = graphs['planet/' + name.toLowerCase()];
 		});
 
+		/* Its rivers of the network graph of the world (network/rivers). */
+		if (graphs['network/rivers'])
+			made.RiversGraph = graphs['network/rivers'];
+
 		shown.Planet = {Key: key, From: planet, Graphs: this.GraphsText(), Value: made};
 
 		return made;
@@ -641,6 +649,8 @@ Elemenx.Component('WorldEditor', {
 		this.$Service('ScenePlanet').ReliefNames.forEach(function (name) {
 			delete kept[name + 'Graph'];
 		});
+
+		delete kept.RiversGraph;
 
 		delete kept.ReliefSources;
 
@@ -893,7 +903,7 @@ Elemenx.Component('WorldEditor', {
 	/* The graphs of the library a world may change: planet/, sketch/, carve/ and shader/ of ElemenxGraphics, by their names. */
 	GraphNames: function () {
 		return (Elemenx.Resources('Blueprints') || []).filter(function (name) {
-			return /^ElemenxGraphics\/(planet|sketch|carve|shader)\/[^/]+$/.test(name);
+			return /^ElemenxGraphics\/(planet|sketch|carve|shader|cloud|network|layout|image)\/[^/]+$/.test(name);
 		}).map(function (name) {
 			return name.slice('ElemenxGraphics/'.length);
 		}).sort();
@@ -940,7 +950,7 @@ Elemenx.Component('WorldEditor', {
 
 	/* Whether a graph of the world is one of its scenes (shader/, planet/envelope). */
 	Scened: function (name) {
-		return String(name).indexOf('shader/') === 0 || name === 'planet/envelope';
+		return String(name).indexOf('shader/') === 0 || String(name).indexOf('cloud/') === 0 || name === 'planet/envelope';
 	},
 
 	/*
@@ -961,13 +971,13 @@ Elemenx.Component('WorldEditor', {
 		}, 0);
 	},
 
-	/* Those of the grounds of its locations (sketch/, carve/), or null with none. */
+	/* Those of the grounds of its locations (sketch/, carve/, layout/: the plans of their settlements), or null with none. */
 	GroundGraphs: function () {
 		var graphs = this.Own().World.Graphs;
 		var made = null;
 
 		Object.keys(graphs).forEach(function (name) {
-			if (/^(sketch|carve)\//.test(name)) {
+			if (/^(sketch|carve|layout)\//.test(name)) {
 				made = made || {};
 				made[name] = graphs[name];
 			}
@@ -1053,6 +1063,20 @@ Elemenx.Component('WorldEditor', {
 
 	GraphValue: function (version, tab) {
 		return this.Own().World.Graphs[this.GraphOf(tab)] || null;
+	},
+
+	/* The kind of a graph of the world: its Blueprint is of that type (a generator when it tells none). */
+	GraphType: function (version, tab) {
+		var graph = this.GraphValue(version, tab);
+
+		return graph && graph.type || 'generator';
+	},
+
+	/* The kinds of graphs that make a thing of data: what one gives is drawn beside its Blueprint as it is changed. */
+	Previews: ['cloud', 'network', 'layout', 'image'],
+
+	Previewed: function (version, tab) {
+		return this.Previews.indexOf(this.GraphType(version, tab)) !== -1;
 	},
 
 	GraphChanged: function (tab, value) {

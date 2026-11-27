@@ -211,7 +211,7 @@
 				"Entries(bytes, base)",
 				"Data(bytes, entry)",
 				"Deflate(bytes, callback)",
-				"Inflate(bytes, callback)",
+				"Inflate(bytes, callback, most)",
 				"Crc(bytes)"
 			],
 			"Sample": {}
@@ -568,6 +568,7 @@
 				"Invoke(name, inputs)",
 				"Hash2(a, b)",
 				"Chain(seed, index)",
+				"Draw(seed, index, of)",
 				"CurveAt(keys, x, smooth, loop)",
 				"Numeric(graph, values, types, keys)",
 				"NumericCode(graph, values, types, keys)",

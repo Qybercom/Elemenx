@@ -13552,6 +13552,74 @@ describe('Contract: Gltf, the models other programs make', function () {
 		}).toThrow('Elemenx Gltf: unknown meshopt attributes header 0x0');
 	});
 
+	/*
+	 * Regression: a file of another hung the page or took its memory: a meshopt stride of 0 decoded without end, a count of
+	 * 150 million in 200 bytes made gigabytes of floats, a node listed twice was walked 2^n times, a cycle of nodes without
+	 * end. Each is an error now, of what is wrong.
+	 */
+	it('refuses a glTF that reads past its buffers, is too large, indexes past its vertices or has nodes in a cycle', function () {
+		var positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+		var indices = new Uint16Array([0, 1, 5, 0]);
+		var bytes = new Uint8Array(44);
+
+		bytes.set(new Uint8Array(positions.buffer), 0);
+		bytes.set(new Uint8Array(indices.buffer), 36);
+
+		function file (change) {
+			var json = {
+				asset: {version: '2.0'},
+				buffers: [{uri: 'data:application/octet-stream;base64,' + btoa(String.fromCharCode.apply(null, bytes)), byteLength: 44}],
+				bufferViews: [{buffer: 0, byteOffset: 0, byteLength: 36}, {buffer: 0, byteOffset: 36, byteLength: 8}],
+				accessors: [{bufferView: 0, componentType: 5126, count: 3, type: 'VEC3'}, {bufferView: 1, componentType: 5123, count: 3, type: 'SCALAR'}],
+				meshes: [{primitives: [{attributes: {POSITION: 0}}]}],
+				nodes: [{mesh: 0}]
+			};
+
+			change(json);
+
+			return function () {
+				return gltf.Read(json, {});
+			};
+		}
+
+		expect(file(function () {})().Meshes.length).toBe(1);
+		expect(file(function (json) {
+			json.meshes[0].primitives[0].indices = 1;
+		})).toThrow('Elemenx Gltf: an index 5 is past the 3 vertices');
+		expect(file(function (json) {
+			json.accessors[0].count = 4;
+		})).toThrow('Elemenx Gltf: accessor 0 reads past its buffer view');
+		expect(file(function (json) {
+			json.accessors.push({componentType: 5126, count: 150000000, type: 'VEC3'});
+
+			json.meshes[0].primitives[0].attributes.NORMAL = 2;
+		})).toThrow('Elemenx Gltf: accessor 2 of no buffer holds more than 16777216 numbers (MaxValues)');
+		expect(file(function (json) {
+			json.nodes = [{children: [1, 1]}, {}];
+		})).toThrow('Elemenx Gltf: node 1 is a child twice');
+		expect(file(function (json) {
+			json.nodes = [{children: [1]}, {children: [0]}];
+		})).toThrow('Elemenx Gltf: node 0 is in a cycle of nodes');
+		expect(file(function (json) {
+			json.nodes = [{children: [7]}];
+		})).toThrow('Elemenx Gltf: node 0 has a child 7 that is not a node');
+		expect(function () {
+			gltf.Meshopt('ATTRIBUTES', new Uint8Array(40), 1, 0, 'NONE');
+		}).toThrow('Elemenx Gltf: a meshopt stride 0 is not one of ATTRIBUTES');
+		expect(function () {
+			gltf.Meshopt('ATTRIBUTES', new Uint8Array(40), 1, 520, 'NONE');
+		}).toThrow('Elemenx Gltf: a meshopt stride 520 is not one of ATTRIBUTES');
+		expect(function () {
+			gltf.Meshopt('INDICES', new Uint8Array(40), 3, 3, 'NONE');
+		}).toThrow('Elemenx Gltf: a meshopt stride 3 is not one of INDICES');
+
+		/* The files it names: beside it or of http, never of another scheme (regression: any scheme went to the pictures). */
+		expect(gltf.Beside('https://a.test/m/x.gltf', 'tex.png')).toBe('https://a.test/m/tex.png');
+		expect(gltf.Beside('https://a.test/m/x.gltf', 'https://b.test/t.png')).toBe('https://b.test/t.png');
+		expect(gltf.Beside('https://a.test/m/x.gltf', 'javascript:alert(1)')).toBe(null);
+		expect(gltf.Beside('https://a.test/m/x.gltf', 'file:///etc/passwd')).toBe(null);
+	});
+
 	it('makes a model of a file: 1 tall on the ground, its clips found by their names, its skeleton in frames of a texture', function () {
 		var asset = parsed();
 		var model;

@@ -1,0 +1,182 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "village",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "village-input-field",
+			"type": "Input",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Field"
+				}
+			]
+		},
+		{
+			"id": "village-input-x",
+			"type": "Input",
+			"x": 40,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "X"
+				}
+			]
+		},
+		{
+			"id": "village-input-y",
+			"type": "Input",
+			"x": 40,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Y"
+				}
+			]
+		},
+		{
+			"id": "village-input-seed",
+			"type": "Input",
+			"x": 40,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Seed"
+				}
+			]
+		},
+		{
+			"id": "village-input-radius",
+			"type": "Input",
+			"x": 40,
+			"y": 440,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Radius"
+				}
+			]
+		},
+		{
+			"id": "village-input-count",
+			"type": "Input",
+			"x": 40,
+			"y": 540,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Count"
+				}
+			]
+		},
+		{
+			"id": "village-input-shapes",
+			"type": "Input",
+			"x": 40,
+			"y": 640,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Shapes"
+				}
+			]
+		},
+		{
+			"id": "village-site",
+			"type": "Site",
+			"x": 280,
+			"y": 200,
+			"properties": []
+		},
+		{
+			"id": "village-houses",
+			"type": "Houses",
+			"x": 520,
+			"y": 260,
+			"properties": []
+		},
+		{
+			"id": "village-out",
+			"type": "Out",
+			"x": 760,
+			"y": 260,
+			"properties": []
+		},
+		{
+			"id": "village-layout",
+			"type": "Layout",
+			"x": 1000,
+			"y": 260,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "village-link-0",
+			"p1": "village-input-field-out-Value",
+			"p2": "village-site-in-Field",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-1",
+			"p1": "village-input-x-out-Value",
+			"p2": "village-site-in-X",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-2",
+			"p1": "village-input-y-out-Value",
+			"p2": "village-site-in-Y",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-3",
+			"p1": "village-input-seed-out-Value",
+			"p2": "village-site-in-Seed",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-4",
+			"p1": "village-input-radius-out-Value",
+			"p2": "village-site-in-Radius",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-5",
+			"p1": "village-site-out-Layout",
+			"p2": "village-houses-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-6",
+			"p1": "village-input-count-out-Value",
+			"p2": "village-houses-in-Count",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-7",
+			"p1": "village-input-shapes-out-Value",
+			"p2": "village-houses-in-Shapes",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-8",
+			"p1": "village-houses-out-Layout",
+			"p2": "village-out-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "village-link-9",
+			"p1": "village-out-out-Layout",
+			"p2": "village-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}

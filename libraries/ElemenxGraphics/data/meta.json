@@ -70,6 +70,93 @@
 			}
 		},
 		{
+			"Name": "BlueprintPreview",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "eye",
+			"Description": "What a graph of Blueprints that makes a thing of data gives (a cloud of points, a network, a layout, a picture), drawn flat as it is changed.",
+			"Props": [
+				{
+					"Name": "Graph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The graph: an object, its JSON, or the name of a resource (ElemenxGraphics/cloud/sky)."
+				},
+				{
+					"Name": "Parameters",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the graph is run with: {key: value}."
+				},
+				{
+					"Name": "Inputs",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What a network graph is given: {name: value} of its Input blocks; empty, a sample of each (NetworkBlueprints.Sample)."
+				},
+				{
+					"Name": "Turn",
+					"Type": "number",
+					"Default": 0.4,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far it is turned round its height, in radians."
+				},
+				{
+					"Name": "Pitch",
+					"Type": "number",
+					"Default": 0.35,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far it is seen from over it, in radians."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 280,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its height in pixels."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"drawn"
+			],
+			"EventDescriptions": {
+				"drawn": "It was drawn: {Kind, Count}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Graph": "ElemenxGraphics/cloud/sky",
+				"Height": 240
+			}
+		},
+		{
 			"Name": "SceneMark",
 			"Kind": "Component",
 			"Group": "game",
@@ -1035,6 +1122,24 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "How fast a ship may go near ships of another team (Distance, Top -> Top, Lock): a generator graph of the Blueprints Service (or its JSON); empty, the one of the library (blueprints/vehicles/masslock)."
+				},
+				{
+					"Name": "StarsGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The stars round the eye in space (Seed, Count, Power, Scale, Low, Radius -> Position, Color): a cloud graph of the Blueprints Service (CloudBlueprints; or its JSON); empty, Graphs of cloud/sky, else the one of the library (blueprints/cloud/sky)."
+				},
+				{
+					"Name": "NightGraph",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The stars of the night of a ground (Seed, Count, Power, Scale, Low, Radius -> Position, Color): a cloud graph of the Blueprints Service (CloudBlueprints; or its JSON); empty, Graphs of cloud/night, else the one of the library (blueprints/cloud/night)."
 				},
 				{
 					"Name": "BoardGraph",
@@ -3088,6 +3193,8 @@
 				"CarveRun(type, own)",
 				"CarveMake(type, graph)",
 				"GraphCodeOf(graphs)",
+				"SettlementPlan(item, others, sizes, own)",
+				"LayoutRun(name)",
 				"SketchCodeOf(type, graph)",
 				"CarveCodeOf(type, graph)",
 				"BakeRun(own)",
@@ -3189,7 +3296,7 @@
 				"FromAsset(asset)",
 				"Binary(tree)",
 				"Text(tree)",
-				"Inflate(bytes)"
+				"Inflate(bytes, most)"
 			],
 			"Sample": {}
 		},
@@ -3261,6 +3368,8 @@
 				"Meeting(a, b)",
 				"Clearance(type)",
 				"InterchangeForm(a, b, ending)",
+				"InterchangeGraph(form, settings)",
+				"InterchangePlaces(form, settings)",
 				"Network(specs, junctions, options)",
 				"JunctionAt(junctions, x, z)",
 				"JunctionSurface(junction, x, z)",
@@ -3313,6 +3422,88 @@
 			"Methods": [
 				"Recipe(graph, parameters, inputs)",
 				"Compiled(graph)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "CloudBlueprints",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Clouds of points made of graphs of Blueprints: stars of a sky, swarms of clusters, rocks of belts; each point of the same graph.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Points(graph, parameters, inputs)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "NetworkBlueprints",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Networks made of graphs of Blueprints: rivers, roads, rails and tracks, each step an algorithm told by its properties.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(graph, parameters, inputs)",
+				"Code(graph)",
+				"Sample(graph)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "LayoutBlueprints",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Layouts made of graphs of Blueprints: the streets, lots and walls of settlements, each stage an algorithm told by its properties.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(graph, parameters, inputs)",
+				"Code(graph)",
+				"Area(item, others, kind, sizes, properties)",
+				"Next(layout)",
+				"Plan(layout)",
+				"Drawing(graph, parameters)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ImageBlueprints",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Pictures made on the processor of graphs of Blueprints: the bark and the leaves of plants, each pixel of a graph or a picture of an algorithm.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Compiled(graph)",
+				"Run(compiled, parameters, inputs)",
+				"Make(graph, parameters, inputs)",
+				"Sample(graph)"
 			],
 			"Sample": {}
 		},
@@ -3719,7 +3910,9 @@
 				"Picture(options, view, rect, step, overlay)",
 				"Face(options, face, size, row, rows)",
 				"Heights(options, face, size, row, rows)",
-				"Drainage(heights, size, least)",
+				"Drainage(heights, size, least, source)",
+				"DrainageWays(heights, size, least)",
+				"RiversOf(options)",
 				"UseRivers(key, rivers)",
 				"UseData(key, data)",
 				"AddTiles(key, names)",
@@ -4054,6 +4247,10 @@
 		"elemenx-scene-axes-end": [
 			"other"
 		],
+		"elemenx-blueprint-preview": [],
+		"elemenx-blueprint-preview-canvas": [],
+		"elemenx-blueprint-preview-cloud": [],
+		"elemenx-blueprint-preview-note": [],
 		"elemenx-scene-mark": [],
 		"elemenx-view-actions": [],
 		"elemenx-view-actions-hand": [],
@@ -4278,7 +4475,11 @@
 		"elemenx-world-editor-main": [],
 		"elemenx-world-editor-graph": [],
 		"elemenx-world-editor-graph-bar": [],
+		"elemenx-world-editor-graph-body": [
+			"previewed"
+		],
 		"elemenx-world-editor-graph-blueprint": [],
+		"elemenx-world-editor-graph-preview": [],
 		"elemenx-world-editor-cutscene": [],
 		"elemenx-world-editor-cutscene-scene": [],
 		"elemenx-model-editor": [],

@@ -28,7 +28,15 @@ function links (html, base) {
 
 		if (!/^\//.test(href) || /^\/\//.test(href)) continue;
 
+		/*
+		 * Its path as the browser reads it (/a/../b is /b; no \ of Windows): never outside the site. Regression: a link
+		 * /../../outside of a page wrote outside.html outside the build.
+		 */
 		url = href.split('#')[0].split('?')[0];
+
+		if (url.indexOf('\\') !== -1) continue;
+
+		url = path.posix.normalize(url);
 
 		if (base !== '/' && url.indexOf(base) !== 0) continue;
 		if (/\.[a-z0-9]{1,5}$/i.test(url)) continue;
@@ -92,6 +100,14 @@ function Run (options, callback) {
 			}
 
 			file = fileOf(output, base, url);
+
+			if (path.relative(output, file).split(path.sep)[0] === '..' || path.isAbsolute(path.relative(output, file))) {
+				pages.push({URL: url, File: null, Error: new Error('Elemenx prerender: ' + url + ' is outside the build')});
+
+				next();
+
+				return;
+			}
 
 			fs.mkdirSync(path.dirname(file), {recursive: true});
 			fs.writeFileSync(file, rendered);

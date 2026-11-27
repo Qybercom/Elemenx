@@ -1,0 +1,154 @@
+{
+	"version": 1,
+	"type": "layout",
+	"name": "districts",
+	"parameters": [],
+	"blocks": [
+		{
+			"id": "districts-input-item",
+			"type": "Input",
+			"x": 40,
+			"y": 40,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Item"
+				}
+			]
+		},
+		{
+			"id": "districts-input-others",
+			"type": "Input",
+			"x": 40,
+			"y": 140,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Others"
+				}
+			]
+		},
+		{
+			"id": "districts-input-kind",
+			"type": "Input",
+			"x": 40,
+			"y": 240,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Kind"
+				}
+			]
+		},
+		{
+			"id": "districts-input-sizes",
+			"type": "Input",
+			"x": 40,
+			"y": 340,
+			"properties": [
+				{
+					"key": "Name",
+					"value": "Sizes"
+				}
+			]
+		},
+		{
+			"id": "districts-area",
+			"type": "Area",
+			"x": 280,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "districts-drawn",
+			"type": "Drawn",
+			"x": 520,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "districts-districts",
+			"type": "Districts",
+			"x": 760,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "districts-lots",
+			"type": "Lots",
+			"x": 1000,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "districts-walls",
+			"type": "Walls",
+			"x": 1240,
+			"y": 160,
+			"properties": []
+		},
+		{
+			"id": "districts-layout",
+			"type": "Layout",
+			"x": 1480,
+			"y": 160,
+			"properties": []
+		}
+	],
+	"links": [
+		{
+			"id": "districts-link-0",
+			"p1": "districts-input-item-out-Value",
+			"p2": "districts-area-in-Item",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-1",
+			"p1": "districts-input-others-out-Value",
+			"p2": "districts-area-in-Others",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-2",
+			"p1": "districts-input-kind-out-Value",
+			"p2": "districts-area-in-Kind",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-3",
+			"p1": "districts-input-sizes-out-Value",
+			"p2": "districts-area-in-Sizes",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-4",
+			"p1": "districts-area-out-Layout",
+			"p2": "districts-drawn-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-5",
+			"p1": "districts-drawn-out-Layout",
+			"p2": "districts-districts-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-6",
+			"p1": "districts-districts-out-Layout",
+			"p2": "districts-lots-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-7",
+			"p1": "districts-lots-out-Layout",
+			"p2": "districts-walls-in-Layout",
+			"kind": "value"
+		},
+		{
+			"id": "districts-link-8",
+			"p1": "districts-walls-out-Layout",
+			"p2": "districts-layout-in-Layout",
+			"kind": "value"
+		}
+	]
+}
